@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hồ sơ cá nhân – VehicleBook</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #3730A3;
+            --accent: #F59E0B;
+            --danger: #EF4444;
+            --success: #10B981;
+            --bg: #F8FAFC;
+            --surface: #fff;
+            --border: #E2E8F0;
+            --text: #1E293B;
+            --muted: #64748B;
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .navbar-brand::before {
+            content: '🚗 ';
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: .25rem;
+            margin-left: auto;
+            list-style: none;
+        }
+
+        .nav-link {
+            padding: .5rem .85rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--muted);
+            font-size: .9rem;
+            font-weight: 500;
+            transition: all .2s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        /* Main */
+        .main {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        /* Alerts */
+        .alert {
+            padding: .85rem 1.2rem;
+            border-radius: 8px;
+            margin-bottom: 1.2rem;
+            font-size: .9rem;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #F0FDF4;
+            color: #166534;
+            border-left: 4px solid var(--success);
+        }
+
+        /* Profile Hero */
+        .profile-hero {
+            background: linear-gradient(135deg, #4F46E5, #7C3AED);
+            border-radius: var(--radius);
+            padding: 2rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            flex-shrink: 0;
+            overflow: hidden;
+            border: 3px solid rgba(255, 255, 255, .4);
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-info h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .profile-info p {
+            opacity: .85;
+            margin-top: .25rem;
+            font-size: .9rem;
+        }
+
+        .profile-badges {
+            display: flex;
+            gap: .5rem;
+            margin-top: .6rem;
+            flex-wrap: wrap;
+        }
+
+        .pbadge {
+            padding: .25rem .7rem;
+            border-radius: 999px;
+            font-size: .75rem;
+            font-weight: 700;
+            background: rgba(255, 255, 255, .2);
+        }
+
+        .pbadge.premium {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        /* Card */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.2rem;
+        }
+
+        .card-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+
+        /* Detail grid */
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.2rem;
+        }
+
+        @media(max-width:600px) {
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .detail-item label {
+            font-size: .78rem;
+            color: var(--muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .detail-item p {
+            margin-top: .25rem;
+            font-weight: 500;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .55rem 1.2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: .875rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all .2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--border);
+            color: var(--muted);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: .75rem;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a class="navbar-brand" href="/">VehicleBook</a>
+        <ul class="navbar-nav">
+            <li th:if="${user?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/users}">Quản lý Users</a>
+            </li>
+            <li><a class="nav-link active" th:href="@{/profile}">👤 Hồ sơ</a></li>
+            <li th:if="${user?.role?.name() == 'CUSTOMER'}"><a class="nav-link" th:href="@{/premium}">⭐ Premium</a></li>
+            <li><a class="nav-link" th:href="@{/auth/logout}" style="color:#EF4444;">Đăng xuất</a></li>
+        </ul>
+    </nav>
+
+    <main class="main">
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+        <!-- Profile Hero -->
+        <div class="profile-hero">
+            <div class="avatar">
+                <img th:if="${user.avatarUrl != null}" th:src="${user.avatarUrl}" alt="Avatar">
+                <span th:unless="${user.avatarUrl != null}">👤</span>
+            </div>
+            <div class="profile-info">
+                <h2 th:text="${customer?.fullName ?: driver?.fullName ?: user.email}">Tên người dùng</h2>
+                <p th:text="${user.email}">email@example.com</p>
+                <div class="profile-badges">
+                    <span class="pbadge" th:text="${user.role}">CUSTOMER</span>
+                    <span class="pbadge premium" th:if="${customer?.membership?.name() == 'PREMIUM'}">⭐ Premium</span>
+                    <span class="pbadge" th:if="${customer?.membership?.name() == 'STANDARD'}">Standard</span>
+                    <span class="pbadge" th:if="${driver?.verificationStatus != null}"
+                        th:text="${driver.verificationStatus}">PENDING</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Basic Info Card -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Thông tin tài khoản</span>
+            </div>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <label>Email</label>
+                    <p th:text="${user.email}">—</p>
+                </div>
+                <div class="detail-item">
+                    <label>Số điện thoại</label>
+                    <p th:text="${user.phone}">—</p>
+                </div>
+                <div class="detail-item">
+                    <label>Loại tài khoản</label>
+                    <p th:text="${user.role}">—</p>
+                </div>
+                <div class="detail-item">
+                    <label>Trạng thái</label>
+                    <p th:text="${user.isActive ? 'Đang hoạt động' : 'Đã bị khoá'}">—</p>
+                </div>
+                <div class="detail-item">
+                    <label>Ngày tạo</label>
+                    <p th:text="${#temporals.format(user.createdAt,'dd/MM/yyyy HH:mm')}">—</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Card -->
+        <div class="card" th:if="${customer != null}">
+            <div class="card-header"><span class="card-title">Hồ sơ Khách hàng</span></div>
+            <div class="detail-grid">
+                <div class="detail-item"><label>Họ tên</label>
+                    <p th:text="${customer.fullName}">—</p>
+                </div>
+                <div class="detail-item"><label>Địa chỉ</label>
+                    <p th:text="${customer.address ?: '—'}">—</p>
+                </div>
+                <div class="detail-item">
+                    <label>Gói tài khoản</label>
+                    <p th:text="${customer.membership}">—</p>
+                </div>
+                <div class="detail-item" th:if="${customer.premiumExp != null}">
+                    <label>Hết hạn Premium</label>
+                    <p th:text="${#temporals.format(customer.premiumExp, 'dd/MM/yyyy')}">—</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Driver Card -->
+        <div class="card" th:if="${driver != null}">
+            <div class="card-header"><span class="card-title">Hồ sơ Tài xế</span></div>
+            <div class="detail-grid">
+                <div class="detail-item"><label>Họ tên</label>
+                    <p th:text="${driver.fullName}">—</p>
+                </div>
+                <div class="detail-item"><label>CCCD</label>
+                    <p th:text="${driver.cccd}">—</p>
+                </div>
+                <div class="detail-item"><label>Bằng lái xe</label>
+                    <p th:text="${driver.driverLicense}">—</p>
+                </div>
+                <div class="detail-item"><label>Hết hạn bằng lái</label>
+                    <p th:text="${#temporals.format(driver.licenseExpiry,'dd/MM/yyyy')}">—</p>
+                </div>
+                <div class="detail-item"><label>Loại xe</label>
+                    <p th:text="${driver.vehicleTypes}">—</p>
+                </div>
+                <div class="detail-item"><label>Trạng thái xét duyệt</label>
+                    <p th:text="${driver.verificationStatus}">—</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="btn-group">
+            <a class="btn btn-primary" th:href="@{/profile/edit}">✏️ Chỉnh sửa hồ sơ</a>
+            <a class="btn btn-outline" th:href="@{/profile/change-password}">🔒 Đổi mật khẩu</a>
+            <a class="btn btn-outline" th:if="${user?.role?.name() == 'CUSTOMER'}" th:href="@{/premium}">⭐ Quản lý
+                Premium</a>
+        </div>
+    </main>
+</body>
+
+</html>

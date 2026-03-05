@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký – VehicleBook</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #3730A3;
+            --danger: #EF4444;
+            --success: #10B981;
+            --border: #E2E8F0;
+            --muted: #64748B;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%);
+            padding: 2rem 1rem;
+        }
+
+        .auth-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .2);
+        }
+
+        .auth-logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-logo span {
+            font-size: 2.5rem;
+        }
+
+        .auth-logo h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-top: .25rem;
+        }
+
+        .auth-logo p {
+            color: var(--muted);
+            font-size: .9rem;
+            margin-top: .25rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: .85rem;
+            font-weight: 600;
+            margin-bottom: .4rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: .7rem 1rem;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: .95rem;
+            font-family: inherit;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, .15);
+        }
+
+        .role-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: .75rem;
+        }
+
+        .role-option {
+            display: none;
+        }
+
+        .role-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: .4rem;
+            padding: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: border-color .2s, background .2s;
+            font-weight: 600;
+            font-size: .9rem;
+            text-align: center;
+        }
+
+        .role-label span {
+            font-size: 1.8rem;
+        }
+
+        .role-option:checked+.role-label {
+            border-color: var(--primary);
+            background: #EEF2FF;
+            color: var(--primary);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: .8rem;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .2s, transform .15s;
+            margin-top: .5rem;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .alert-danger {
+            background: #FEF2F2;
+            color: #991B1B;
+            border-left: 4px solid var(--danger);
+            padding: .75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: .9rem;
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: .875rem;
+            color: var(--muted);
+        }
+
+        .auth-footer a {
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .form-hint {
+            font-size: .78rem;
+            color: var(--muted);
+            margin-top: .3rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="auth-card">
+        <div class="auth-logo">
+            <span>🚗</span>
+            <h1>VehicleBook</h1>
+            <p>Tạo tài khoản mới</p>
+        </div>
+
+        <div th:if="${error}" class="alert-danger" th:text="${error}"></div>
+
+        <form th:action="@{/auth/register}" method="post" th:object="${form}">
+
+            <div class="form-group">
+                <label class="form-label">Tôi muốn đăng ký với tư cách</label>
+                <div class="role-grid">
+                    <div>
+                        <input type="radio" id="role_customer" class="role-option" name="role" value="CUSTOMER" checked>
+                        <label for="role_customer" class="role-label">
+                            <span>🧑‍💼</span> Khách hàng
+                        </label>
+                    </div>
+                    <div>
+                        <input type="radio" id="role_driver" class="role-option" name="role" value="DRIVER">
+                        <label for="role_driver" class="role-label">
+                            <span>🚕</span> Tài xế
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="fullName">👤 Họ và tên</label>
+                <input type="text" id="fullName" class="form-control" name="fullName" th:value="*{fullName}"
+                    placeholder="Nguyễn Văn A" required autofocus>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="email">📧 Email</label>
+                <input type="email" id="email" class="form-control" name="email" th:value="*{email}"
+                    placeholder="example@email.com" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="phone">📱 Số điện thoại</label>
+                <input type="tel" id="phone" class="form-control" name="phone" th:value="*{phone}"
+                    placeholder="0901234567" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">🔒 Mật khẩu</label>
+                <input type="password" id="password" class="form-control" name="password"
+                    placeholder="Tối thiểu 6 ký tự" required>
+                <p class="form-hint">Ít nhất 6 ký tự, nên có chữ hoa và số.</p>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="confirmPassword">🔒 Xác nhận mật khẩu</label>
+                <input type="password" id="confirmPassword" class="form-control" name="confirmPassword"
+                    placeholder="Nhập lại mật khẩu" required>
+            </div>
+
+            <button type="submit" class="btn-primary">Tạo tài khoản →</button>
+        </form>
+
+        <div class="auth-footer">
+            Đã có tài khoản? <a th:href="@{/auth/login}">Đăng nhập</a>
+        </div>
+    </div>
+</body>
+
+</html>
