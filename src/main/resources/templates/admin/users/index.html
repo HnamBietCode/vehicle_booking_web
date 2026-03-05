@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản lý Users – Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #3730A3;
+            --danger: #EF4444;
+            --success: #10B981;
+            --bg: #F8FAFC;
+            --surface: #fff;
+            --border: #E2E8F0;
+            --text: #1E293B;
+            --muted: #64748B;
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .navbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .navbar-brand::before {
+            content: '🚗 ';
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: .25rem;
+            margin-left: auto;
+            list-style: none;
+        }
+
+        .nav-link {
+            padding: .5rem .85rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--muted);
+            font-size: .9rem;
+            font-weight: 500;
+            transition: all .2s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .main {
+            max-width: 1100px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .alert {
+            padding: .85rem 1.2rem;
+            border-radius: 8px;
+            margin-bottom: 1.2rem;
+            font-size: .9rem;
+            font-weight: 500;
+        }
+
+        .alert-danger {
+            background: #FEF2F2;
+            color: #991B1B;
+            border-left: 4px solid var(--danger);
+        }
+
+        .alert-success {
+            background: #F0FDF4;
+            color: #166534;
+            border-left: 4px solid var(--success);
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .55rem 1.1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: .875rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all .2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .btn-sm {
+            padding: .3rem .65rem;
+            font-size: .78rem;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--border);
+            color: var(--muted);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* Summary stats */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .stat-count {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: .8rem;
+            color: var(--muted);
+            font-weight: 500;
+            margin-top: .25rem;
+        }
+
+        /* Table */
+        .table-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .875rem;
+        }
+
+        th {
+            background: var(--bg);
+            font-weight: 600;
+            color: var(--muted);
+            padding: .75rem 1rem;
+            text-align: left;
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: .75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: #f8faff;
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: .2rem .6rem;
+            border-radius: 999px;
+            font-size: .72rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .badge-admin {
+            background: #EDE9FE;
+            color: #5B21B6;
+        }
+
+        .badge-customer {
+            background: #DBEAFE;
+            color: #1D4ED8;
+        }
+
+        .badge-driver {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .badge-active {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .badge-inactive {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        /* Action buttons */
+        .action-group {
+            display: flex;
+            gap: .4rem;
+            flex-wrap: nowrap;
+        }
+
+        /* Search */
+        .table-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .search-box {
+            flex: 1;
+            padding: .55rem 1rem;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: .875rem;
+            font-family: inherit;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a class="navbar-brand" href="/">VehicleBook</a>
+        <ul class="navbar-nav">
+            <li><a class="nav-link active" th:href="@{/admin/users}">👥 Quản lý Users</a></li>
+            <li><a class="nav-link" th:href="@{/profile}">👤 Hồ sơ</a></li>
+            <li><a class="nav-link" th:href="@{/auth/logout}" style="color:#EF4444;">Đăng xuất</a></li>
+        </ul>
+    </nav>
+
+    <main class="main">
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+        <div class="page-header">
+            <h1 class="page-title">👥 Quản lý tài khoản</h1>
+            <a class="btn btn-primary" th:href="@{/admin/users/add}">➕ Thêm tài khoản</a>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-count" th:text="${users.size()}">0</div>
+                <div class="stat-label">Tổng users</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-count" th:text="${#lists.size(users.?[role.name() == 'ADMIN'])}">0</div>
+                <div class="stat-label">Admin</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-count" th:text="${#lists.size(users.?[role.name() == 'CUSTOMER'])}">0</div>
+                <div class="stat-label">Khách hàng</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-count" th:text="${#lists.size(users.?[role.name() == 'DRIVER'])}">0</div>
+                <div class="stat-label">Tài xế</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-count" th:text="${#lists.size(users.?[isActive])}">0</div>
+                <div class="stat-label">Đang hoạt động</div>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-card">
+            <div class="table-toolbar">
+                <input type="text" class="search-box" placeholder="🔍 Tìm kiếm email, tên…"
+                    oninput="filterTable(this.value)" id="searchInput">
+            </div>
+            <div class="table-wrap">
+                <table id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Email</th>
+                            <th>SĐT</th>
+                            <th>Vai trò</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày tạo</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="u, iter : ${users}">
+                            <td th:text="${iter.count}">1</td>
+                            <td th:text="${u.email}">—</td>
+                            <td th:text="${u.phone}">—</td>
+                            <td>
+                                <span class="badge"
+                                    th:classappend="${u.role.name() == 'ADMIN' ? 'badge-admin' : (u.role.name() == 'CUSTOMER' ? 'badge-customer' : 'badge-driver')}"
+                                    th:text="${u.role}">—</span>
+                            </td>
+                            <td>
+                                <span class="badge" th:classappend="${u.isActive ? 'badge-active' : 'badge-inactive'}"
+                                    th:text="${u.isActive ? 'Hoạt động' : 'Khoá'}">—</span>
+                            </td>
+                            <td th:text="${#temporals.format(u.createdAt,'dd/MM/yyyy')}">—</td>
+                            <td>
+                                <div class="action-group">
+                                    <a class="btn btn-outline btn-sm" th:href="@{/admin/users/{id}(id=${u.id})}">👁</a>
+                                    <a class="btn btn-outline btn-sm"
+                                        th:href="@{/admin/users/{id}/edit(id=${u.id})}">✏️</a>
+                                    <form th:action="@{/admin/users/{id}/toggle-active(id=${u.id})}" method="post"
+                                        style="display:inline;">
+                                        <button type="submit" class="btn btn-outline btn-sm"
+                                            th:title="${u.isActive ? 'Khoá' : 'Mở khoá'}">
+                                            <span th:text="${u.isActive ? '🔒' : '🔓'}">🔒</span>
+                                        </button>
+                                    </form>
+                                    <form th:action="@{/admin/users/{id}/delete(id=${u.id})}" method="post"
+                                        style="display:inline;" th:if="${u.id != loggedUser.id}"
+                                        onsubmit="return confirm('Xoá tài khoản này?')">
+                                        <button type="submit" class="btn btn-danger btn-sm">🗑</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(users)}">
+                            <td colspan="7" style="text-align:center;color:var(--muted);padding:2rem;">Chưa có tài khoản
+                                nào.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function filterTable(query) {
+            const q = query.toLowerCase();
+            document.querySelectorAll('#usersTable tbody tr').forEach(tr => {
+                tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+            });
+        }
+    </script>
+</body>
+
+</html>
