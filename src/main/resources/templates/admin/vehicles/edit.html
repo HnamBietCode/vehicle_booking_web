@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sửa tài khoản – Admin</title>
+    <title>Sửa xe – Admin</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -83,7 +83,7 @@
         }
 
         .main {
-            max-width: 640px;
+            max-width: 700px;
             margin: 2rem auto;
             padding: 0 1.5rem;
         }
@@ -121,6 +121,18 @@
             border: 1px solid var(--border);
             border-radius: var(--radius);
             padding: 1.75rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0 1.2rem;
+        }
+
+        @media(max-width: 560px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .form-group {
@@ -214,19 +226,6 @@
             padding-bottom: .5rem;
             border-bottom: 1px solid var(--border);
         }
-
-        .toggle-group {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        input[type=checkbox] {
-            width: 1.1rem;
-            height: 1.1rem;
-            accent-color: var(--primary);
-            cursor: pointer;
-        }
     </style>
 </head>
 
@@ -235,107 +234,116 @@
         <a class="navbar-brand" href="/">VehicleBook</a>
         <ul class="navbar-nav">
             <li><a class="nav-link" th:href="@{/vehicles/search}">🔍 Tìm xe</a></li>
-            <li><a class="nav-link active" th:href="@{/admin/users}">👥 Quản lý Users</a></li>
-            <li><a class="nav-link" th:href="@{/admin/vehicles}">🚗 Quản lý Xe</a></li>
+            <li><a class="nav-link" th:href="@{/admin/users}">👥 Users</a></li>
+            <li><a class="nav-link active" th:href="@{/admin/vehicles}">🚗 Xe</a></li>
             <li><a class="nav-link" th:href="@{/auth/logout}" style="color:#EF4444;">Đăng xuất</a></li>
         </ul>
     </nav>
 
     <main class="main">
         <div class="breadcrumb">
-            <a th:href="@{/admin/users}">Quản lý Users</a>
-            <span th:text="${'#' + target.id}">Detail</span>
+            <a th:href="@{/admin/vehicles}">Quản lý Xe</a>
+            <a th:href="@{/admin/vehicles/{id}(id=${vehicle.id})}" th:text="${vehicle.name}">Chi tiết</a>
             <span>Sửa</span>
         </div>
-        <h1 class="page-title">✏️ Sửa tài khoản</h1>
-        <p style="color:var(--muted);font-size:.9rem;margin-bottom:1.5rem;" th:text="${target.email}">email</p>
-
+        <h1 class="page-title">✏️ Sửa thông tin xe</h1>
         <div th:if="${error}" class="alert-danger" th:text="${error}"></div>
 
         <div class="card">
-            <form th:action="@{/admin/users/{id}/edit(id=${target.id})}" method="post" th:object="${form}">
+            <form th:action="@{/admin/vehicles/{id}/edit(id=${vehicle.id})}" method="post" th:object="${form}">
 
-                <div class="section-title">Thông tin cá nhân</div>
-
-                <div class="form-group">
-                    <label class="form-label" for="fullName">👤 Họ và tên</label>
-                    <input type="text" id="fullName" class="form-control" name="fullName" th:value="*{fullName}"
-                        required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="phone">📱 Số điện thoại</label>
-                    <input type="tel" id="phone" class="form-control" name="phone" th:value="*{phone}" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="address">📍 Địa chỉ (Customer)</label>
-                    <input type="text" id="address" class="form-control" name="address" th:value="*{address}"
-                        placeholder="Chỉ áp dụng cho Khách hàng">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="avatarUrl">🖼️ URL Ảnh đại diện</label>
-                    <input type="url" id="avatarUrl" class="form-control" name="avatarUrl" th:value="*{avatarUrl}">
-                </div>
-
-                <div class="form-group" id="cccdGroup" style="display: none;">
-                    <label class="form-label" for="cccd">🪪 Căn cước công dân (Chỉ dành cho Tài xế)</label>
-                    <input type="text" id="cccd" class="form-control" name="cccd" th:value="*{cccd}"
-                        placeholder="Nhập 12 số CCCD nếu đổi sang Tài xế">
-                </div>
-
-                <div class="section-title">Phân quyền & Trạng thái</div>
-
-                <div class="form-group">
-                    <label class="form-label" for="role">Vai trò</label>
-                    <select id="role" class="form-control" name="role">
-                        <option value="ADMIN" th:selected="${target.role.name() == 'ADMIN'}">🛡️ Admin</option>
-                        <option value="CUSTOMER" th:selected="${target.role.name() == 'CUSTOMER'}">🧑‍💼 Khách hàng
-                        </option>
-                        <option value="DRIVER" th:selected="${target.role.name() == 'DRIVER'}">🚕 Tài xế</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Trạng thái tài khoản</label>
-                    <div class="toggle-group">
-                        <input type="checkbox" id="isActive" name="isActive" th:checked="${target.isActive}"
-                            value="true">
-                        <label for="isActive" style="font-size:.9rem;cursor:pointer;">
-                            Tài khoản đang <strong th:text="${target.isActive ? 'hoạt động' : 'bị khoá'}">hoạt
-                                động</strong>
-                        </label>
+                <div class="section-title">Thông tin cơ bản</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="category">Loại xe *</label>
+                        <select id="category" class="form-control" name="category" required>
+                            <option value="MOTORCYCLE" th:selected="*{category == 'MOTORCYCLE'}">🏍️ Xe máy</option>
+                            <option value="CAR_4" th:selected="*{category == 'CAR_4'}">🚗 Ô tô 4 chỗ</option>
+                            <option value="CAR_7" th:selected="*{category == 'CAR_7'}">🚐 Ô tô 7 chỗ</option>
+                            <option value="CAR_16" th:selected="*{category == 'CAR_16'}">🚐 Ô tô 16 chỗ</option>
+                            <option value="CAR_29" th:selected="*{category == 'CAR_29'}">🚌 Ô tô 29 chỗ</option>
+                            <option value="CAR_45" th:selected="*{category == 'CAR_45'}">🚌 Ô tô 45 chỗ</option>
+                            <option value="TRUCK_SMALL" th:selected="*{category == 'TRUCK_SMALL'}">🚚 Xe tải nhỏ
+                            </option>
+                            <option value="TRUCK_MEDIUM" th:selected="*{category == 'TRUCK_MEDIUM'}">🚚 Xe tải trung
+                            </option>
+                            <option value="TRUCK_LARGE" th:selected="*{category == 'TRUCK_LARGE'}">🚛 Xe tải lớn
+                            </option>
+                        </select>
                     </div>
+                    <div class="form-group">
+                        <label class="form-label" for="status">Trạng thái *</label>
+                        <select id="status" class="form-control" name="status" required>
+                            <option value="AVAILABLE" th:selected="*{status == 'AVAILABLE'}">✅ Trống (chưa có khách)
+                            </option>
+                            <option value="ON_TRIP" th:selected="*{status == 'ON_TRIP'}">🚦 Đang hoạt động (có khách)
+                            </option>
+                            <option value="MAINTENANCE" th:selected="*{status == 'MAINTENANCE'}">🔧 Bảo trì</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="name">Tên xe *</label>
+                    <input type="text" id="name" class="form-control" name="name" th:value="*{name}" required>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="licensePlate">Biển số xe *</label>
+                        <input type="text" id="licensePlate" class="form-control" name="licensePlate"
+                            th:value="*{licensePlate}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="color">Màu sắc</label>
+                        <input type="text" id="color" class="form-control" name="color" th:value="*{color}">
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="year">Năm sản xuất</label>
+                        <input type="number" id="year" class="form-control" name="year" th:value="*{year}" min="1990"
+                            max="2030">
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label class="form-label" for="imageUrl">URL ảnh xe</label>
+                        <input type="url" id="imageUrl" class="form-control" name="imageUrl" th:value="*{imageUrl}">
+                    </div>
+                </div>
+
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label class="form-label" for="currentAddress">Khu vực / Địa chỉ hiện tại</label>
+                    <textarea id="currentAddress" class="form-control" name="currentAddress" rows="2"
+                        placeholder="Ví dụ: Quận 1, TP. HCM" th:text="*{currentAddress}"></textarea>
+                </div>
+
+                <div class="section-title">Bảng giá</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="pricePerKm">Giá / km (đồng) *</label>
+                        <input type="number" id="pricePerKm" class="form-control" name="pricePerKm"
+                            th:value="*{pricePerKm}" min="0" step="500" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="pricePerHour">Giá / giờ (đồng) *</label>
+                        <input type="number" id="pricePerHour" class="form-control" name="pricePerHour"
+                            th:value="*{pricePerHour}" min="0" step="1000" required>
+                    </div>
+                </div>
+                <div class="form-group" style="max-width: 320px;">
+                    <label class="form-label" for="pricePerDay">Giá / ngày (đồng) *</label>
+                    <input type="number" id="pricePerDay" class="form-control" name="pricePerDay"
+                        th:value="*{pricePerDay}" min="0" step="5000" required>
                 </div>
 
                 <div class="btn-group">
                     <button type="submit" class="btn btn-primary">💾 Lưu thay đổi</button>
-                    <a class="btn btn-outline" th:href="@{/admin/users/{id}(id=${target.id})}">← Huỷ</a>
+                    <a class="btn btn-outline" th:href="@{/admin/vehicles/{id}(id=${vehicle.id})}">← Huỷ</a>
                 </div>
             </form>
         </div>
     </main>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const roleSelect = document.getElementById('role');
-            const cccdGroup = document.getElementById('cccdGroup');
-            const cccdInput = document.getElementById('cccd');
-
-            function toggleCccd() {
-                if (roleSelect.value === 'DRIVER') {
-                    cccdGroup.style.display = 'block';
-                    cccdInput.setAttribute('required', 'required');
-                } else {
-                    cccdGroup.style.display = 'none';
-                    cccdInput.removeAttribute('required');
-                }
-            }
-
-            roleSelect.addEventListener('change', toggleCccd);
-            toggleCccd();
-        });
-    </script>
 </body>
 
 </html>

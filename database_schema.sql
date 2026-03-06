@@ -340,7 +340,7 @@ CREATE TABLE ratings (
     CONSTRAINT fk_ratings_reviewer FOREIGN KEY (reviewer_id) REFERENCES users (id) ON DELETE CASCADE,
     CONSTRAINT chk_ratings_stars   CHECK (stars BETWEEN 1 AND 5),
     -- Mỗi đơn chỉ được đánh giá 1 lần cho mỗi loại target
-    CONSTRAINT uq_ratings_ref      UNIQUE (reviewer_id, target_type, ref_type, ref_id),
+    CONSTRAINT uq_ratings_ref      UNIQUE (reviewer_id, target_type, target_id, ref_type, ref_id),
 
     INDEX idx_ratings_target  (target_type, target_id),
     INDEX idx_ratings_reviewer (reviewer_id)

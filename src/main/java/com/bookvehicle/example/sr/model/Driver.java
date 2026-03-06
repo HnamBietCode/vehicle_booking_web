@@ -48,7 +48,7 @@ public class Driver {
     private String rejectionReason;
 
     @Column(name = "is_available", nullable = false)
-    private Boolean isAvailable = false;
+    private Boolean isAvailable = true;
 
     @Column(name = "approved_at")
     private LocalDateTime approvedAt;

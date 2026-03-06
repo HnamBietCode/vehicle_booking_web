@@ -227,7 +227,9 @@
     <nav class="navbar">
         <a class="navbar-brand" href="/">VehicleBook</a>
         <ul class="navbar-nav">
+            <li><a class="nav-link" th:href="@{/vehicles/search}">🔍 Tìm xe</a></li>
             <li><a class="nav-link active" th:href="@{/admin/users}">👥 Quản lý Users</a></li>
+            <li><a class="nav-link" th:href="@{/admin/vehicles}">🚗 Quản lý Xe</a></li>
             <li><a class="nav-link" th:href="@{/auth/logout}" style="color:#EF4444;">Đăng xuất</a></li>
         </ul>
     </nav>
@@ -276,6 +278,13 @@
                         placeholder="Nguyễn Văn A" required>
                 </div>
 
+                <div class="form-group" id="cccdGroup" style="display: none;">
+                    <label class="form-label" for="cccd">🪪 Căn Cước Công Dân (Dành cho tài xế)</label>
+                    <input type="text" id="cccd" class="form-control" name="cccd" th:value="*{cccd}"
+                        placeholder="Nhập 12 số CCCD">
+                    <p class="form-hint">Bắt buộc nhập 12 số đối với tài khoản Driver.</p>
+                </div>
+
                 <div class="section-title">Bảo mật</div>
 
                 <div class="form-group">
@@ -298,6 +307,30 @@
             </form>
         </div>
     </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const roleSelect = document.getElementById('role');
+            const cccdGroup = document.getElementById('cccdGroup');
+            const cccdInput = document.getElementById('cccd');
+
+            function toggleCccd() {
+                if (roleSelect.value === 'DRIVER') {
+                    cccdGroup.style.display = 'block';
+                    cccdInput.setAttribute('required', 'required');
+                } else {
+                    cccdGroup.style.display = 'none';
+                    cccdInput.removeAttribute('required');
+                    cccdInput.value = '';
+                }
+            }
+
+            roleSelect.addEventListener('change', toggleCccd);
+
+            // Chạy hàm toggleCccd ngay khi tải trang để xử lý trường hợp user chọn form lỗi và được load lại
+            toggleCccd();
+        });
+    </script>
 </body>
 
 </html>

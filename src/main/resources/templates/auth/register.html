@@ -198,13 +198,13 @@
                 <label class="form-label">Tôi muốn đăng ký với tư cách</label>
                 <div class="role-grid">
                     <div>
-                        <input type="radio" id="role_customer" class="role-option" name="role" value="CUSTOMER" checked>
+                        <input type="radio" id="role_customer" class="role-option" th:field="*{role}" value="CUSTOMER">
                         <label for="role_customer" class="role-label">
                             <span>🧑‍💼</span> Khách hàng
                         </label>
                     </div>
                     <div>
-                        <input type="radio" id="role_driver" class="role-option" name="role" value="DRIVER">
+                        <input type="radio" id="role_driver" class="role-option" th:field="*{role}" value="DRIVER">
                         <label for="role_driver" class="role-label">
                             <span>🚕</span> Tài xế
                         </label>
@@ -216,6 +216,13 @@
                 <label class="form-label" for="fullName">👤 Họ và tên</label>
                 <input type="text" id="fullName" class="form-control" name="fullName" th:value="*{fullName}"
                     placeholder="Nguyễn Văn A" required autofocus>
+            </div>
+
+            <div class="form-group" id="cccdGroup" style="display: none;">
+                <label class="form-label" for="cccd">🪪 Kiểm tra CCCD / CMND (Dành cho tài xế)</label>
+                <input type="text" id="cccd" class="form-control" name="cccd" th:value="*{cccd}"
+                    placeholder="Nhập 12 số CCCD">
+                <p class="form-hint">Vui lòng nhập chính xác 12 số trên thẻ CCCD của bạn.</p>
             </div>
 
             <div class="form-group">
@@ -250,6 +257,32 @@
             Đã có tài khoản? <a th:href="@{/auth/login}">Đăng nhập</a>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const roleCustomer = document.getElementById('role_customer');
+            const roleDriver = document.getElementById('role_driver');
+            const cccdGroup = document.getElementById('cccdGroup');
+            const cccdInput = document.getElementById('cccd');
+
+            function toggleCccd() {
+                if (roleDriver.checked) {
+                    cccdGroup.style.display = 'block';
+                    cccdInput.setAttribute('required', 'required');
+                } else {
+                    cccdGroup.style.display = 'none';
+                    cccdInput.removeAttribute('required');
+                    cccdInput.value = ''; // Xóa value nếu chọn lại thành khách hàng
+                }
+            }
+
+            roleCustomer.addEventListener('change', toggleCccd);
+            roleDriver.addEventListener('change', toggleCccd);
+
+            // Kiểm tra trạng thái ban đầu (trong trường hợp form bị lỗi submit lại)
+            toggleCccd();
+        });
+    </script>
 </body>
 
 </html>

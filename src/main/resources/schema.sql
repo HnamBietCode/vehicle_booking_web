@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS drivers (
     vehicle_types       SET('MOTORCYCLE', 'CAR_4', 'CAR_7') NOT NULL,
     verification_status ENUM('PENDING', 'APPROVED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
     rejection_reason    TEXT,
-    is_available        BOOLEAN NOT NULL DEFAULT FALSE,
+    is_available        BOOLEAN NOT NULL DEFAULT TRUE,
     approved_at         DATETIME,
     approved_by         BIGINT,
 
@@ -86,6 +86,7 @@ CREATE TABLE IF NOT EXISTS vehicles (
     color           VARCHAR(50),
     year            YEAR,
     image_url       VARCHAR(500),
+    current_address VARCHAR(300),
     price_per_km    DECIMAL(10, 2) NOT NULL,
     price_per_hour  DECIMAL(10, 2) NOT NULL,
     price_per_day   DECIMAL(10, 2) NOT NULL,
@@ -208,17 +209,20 @@ CREATE TABLE IF NOT EXISTS ratings (
     reviewer_id  BIGINT   NOT NULL,
     target_type  ENUM('DRIVER', 'VEHICLE') NOT NULL,
     target_id    BIGINT   NOT NULL,
-    ref_type     ENUM('RENTAL', 'BOOKING') NOT NULL,
-    ref_id       BIGINT   NOT NULL,
+    ref_type     ENUM('RENTAL', 'BOOKING', 'OTHER') NOT NULL,
+    ref_id       BIGINT,
     stars        TINYINT  NOT NULL,
     comment      TEXT,
     created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_ratings_reviewer FOREIGN KEY (reviewer_id) REFERENCES users (id) ON DELETE CASCADE,
     CONSTRAINT chk_ratings_stars   CHECK (stars BETWEEN 1 AND 5),
-    CONSTRAINT uq_ratings_ref      UNIQUE (reviewer_id, target_type, ref_type, ref_id),
+    CONSTRAINT uq_ratings_ref      UNIQUE (reviewer_id, target_type, target_id, ref_type, ref_id),
+    INDEX idx_ratings_reviewer     (reviewer_id),
     INDEX idx_ratings_target       (target_type, target_id)
 );
+
+
 
 CREATE TABLE IF NOT EXISTS daily_revenue (
     id               BIGINT PRIMARY KEY AUTO_INCREMENT,

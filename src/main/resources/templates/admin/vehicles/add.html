@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thêm xe – Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #3730A3;
+            --danger: #EF4444;
+            --border: #E2E8F0;
+            --bg: #F8FAFC;
+            --surface: #fff;
+            --muted: #64748B;
+            --text: #1E293B;
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .navbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .navbar-brand::before {
+            content: '🚗 ';
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: .25rem;
+            margin-left: auto;
+            list-style: none;
+        }
+
+        .nav-link {
+            padding: .5rem .85rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--muted);
+            font-size: .9rem;
+            font-weight: 500;
+            transition: all .2s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .main {
+            max-width: 700px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            font-size: .85rem;
+            color: var(--muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .breadcrumb a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .breadcrumb span::before {
+            content: ' / ';
+        }
+
+        .page-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.75rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0 1.2rem;
+        }
+
+        @media(max-width: 560px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 1.15rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: .85rem;
+            font-weight: 600;
+            margin-bottom: .45rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: .7rem 1rem;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: .95rem;
+            font-family: inherit;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, .15);
+        }
+
+        select.form-control {
+            cursor: pointer;
+        }
+
+        .form-hint {
+            font-size: .78rem;
+            color: var(--muted);
+            margin-top: .3rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .6rem 1.3rem;
+            border: none;
+            border-radius: 8px;
+            font-size: .9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all .2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--border);
+            color: var(--muted);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: .75rem;
+            margin-top: 1.5rem;
+        }
+
+        .alert-danger {
+            background: #FEF2F2;
+            color: #991B1B;
+            border-left: 4px solid var(--danger);
+            padding: .75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: .9rem;
+        }
+
+        .section-title {
+            font-size: .9rem;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin: 1.5rem 0 .75rem;
+            padding-bottom: .5rem;
+            border-bottom: 1px solid var(--border);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a class="navbar-brand" href="/">VehicleBook</a>
+        <ul class="navbar-nav">
+            <li><a class="nav-link" th:href="@{/vehicles/search}">🔍 Tìm xe</a></li>
+            <li><a class="nav-link" th:href="@{/admin/users}">👥 Users</a></li>
+            <li><a class="nav-link active" th:href="@{/admin/vehicles}">🚗 Xe</a></li>
+            <li><a class="nav-link" th:href="@{/auth/logout}" style="color:#EF4444;">Đăng xuất</a></li>
+        </ul>
+    </nav>
+
+    <main class="main">
+        <div class="breadcrumb">
+            <a th:href="@{/admin/vehicles}">Quản lý Xe</a>
+            <span>Thêm xe mới</span>
+        </div>
+        <h1 class="page-title">➕ Thêm xe mới</h1>
+        <div th:if="${error}" class="alert-danger" th:text="${error}"></div>
+
+        <div class="card">
+            <form th:action="@{/admin/vehicles/add}" method="post" th:object="${form}">
+
+                <div class="section-title">Thông tin cơ bản</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="category">Loại xe *</label>
+                        <select id="category" class="form-control" name="category" required>
+                            <option value="">-- Chọn loại xe --</option>
+                            <option value="MOTORCYCLE" th:selected="*{category == 'MOTORCYCLE'}">🏍️ Xe máy</option>
+                            <option value="CAR_4" th:selected="*{category == 'CAR_4'}">🚗 Ô tô 4 chỗ</option>
+                            <option value="CAR_7" th:selected="*{category == 'CAR_7'}">🚐 Ô tô 7 chỗ</option>
+                            <option value="CAR_16" th:selected="*{category == 'CAR_16'}">🚐 Ô tô 16 chỗ</option>
+                            <option value="CAR_29" th:selected="*{category == 'CAR_29'}">🚌 Ô tô 29 chỗ</option>
+                            <option value="CAR_45" th:selected="*{category == 'CAR_45'}">🚌 Ô tô 45 chỗ</option>
+                            <option value="TRUCK_SMALL" th:selected="*{category == 'TRUCK_SMALL'}">🚚 Xe tải nhỏ
+                            </option>
+                            <option value="TRUCK_MEDIUM" th:selected="*{category == 'TRUCK_MEDIUM'}">🚚 Xe tải trung
+                            </option>
+                            <option value="TRUCK_LARGE" th:selected="*{category == 'TRUCK_LARGE'}">🚛 Xe tải lớn
+                            </option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="status">Trạng thái *</label>
+                        <select id="status" class="form-control" name="status" required>
+                            <option value="AVAILABLE" th:selected="*{status == 'AVAILABLE'}">✅ Trống (chưa có khách)
+                            </option>
+                            <option value="ON_TRIP" th:selected="*{status == 'ON_TRIP'}">🚦 Đang hoạt động (có khách)
+                            </option>
+                            <option value="MAINTENANCE" th:selected="*{status == 'MAINTENANCE'}">🔧 Bảo trì</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="name">Tên xe *</label>
+                    <input type="text" id="name" class="form-control" name="name" th:value="*{name}"
+                        placeholder="Ví dụ: Honda Wave Alpha 2022" required>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="licensePlate">Biển số xe *</label>
+                        <input type="text" id="licensePlate" class="form-control" name="licensePlate"
+                            th:value="*{licensePlate}" placeholder="51A-123.45" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="color">Màu sắc</label>
+                        <input type="text" id="color" class="form-control" name="color" th:value="*{color}"
+                            placeholder="Đỏ, Trắng...">
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="year">Năm sản xuất</label>
+                        <input type="number" id="year" class="form-control" name="year" th:value="*{year}"
+                            placeholder="2022" min="1990" max="2030">
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label class="form-label" for="imageUrl">URL Hình ảnh</label>
+                        <input type="url" id="imageUrl" class="form-control" name="imageUrl" th:value="*{imageUrl}"
+                            placeholder="https://...">
+                    </div>
+
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label class="form-label" for="currentAddress">Khu vực / Địa chỉ hiện tại</label>
+                        <textarea id="currentAddress" class="form-control" name="currentAddress" rows="2"
+                            placeholder="Ví dụ: Quận 1, TP. HCM" th:text="*{currentAddress}"></textarea>
+                    </div>
+
+                    <h3 style="grid-column: 1 / -1; margin-top:1.5rem; margin-bottom:.5rem; font-size:1.1rem;">Bảng giá
+                    </h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label" for="pricePerKm">Giá / km (đồng) *</label>
+                            <input type="number" id="pricePerKm" class="form-control" name="pricePerKm"
+                                th:value="*{pricePerKm}" placeholder="5000" min="0" step="500" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="pricePerHour">Giá / giờ (đồng) *</label>
+                            <input type="number" id="pricePerHour" class="form-control" name="pricePerHour"
+                                th:value="*{pricePerHour}" placeholder="50000" min="0" step="1000" required>
+                        </div>
+                    </div>
+                    <div class="form-group" style="max-width: 320px;">
+                        <label class="form-label" for="pricePerDay">Giá / ngày (đồng) *</label>
+                        <input type="number" id="pricePerDay" class="form-control" name="pricePerDay"
+                            th:value="*{pricePerDay}" placeholder="300000" min="0" step="5000" required>
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary">💾 Lưu xe</button>
+                        <a class="btn btn-outline" th:href="@{/admin/vehicles}">← Huỷ</a>
+                    </div>
+            </form>
+        </div>
+    </main>
+</body>
+
+</html>
