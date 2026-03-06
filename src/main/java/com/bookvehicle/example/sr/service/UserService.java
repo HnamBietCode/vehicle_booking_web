@@ -124,6 +124,19 @@ public class UserService {
         try { role = Role.valueOf(form.getRole().toUpperCase()); }
         catch (Exception e) { return "Loại tài khoản không hợp lệ."; }
 
+        // Nếu là DRIVER, yêu cầu phải nhập CCCD hợp lệ (đúng 12 số)
+        if (role == Role.DRIVER) {
+            if (form.getCccd() == null || form.getCccd().isBlank()) {
+                return "Căn cước công dân (CCCD) không được để trống khi đăng ký tài xế.";
+            }
+            if (!form.getCccd().matches("^[0-9]{12}$")) {
+                return "Căn cước công dân (CCCD) phải bao gồm đúng 12 chữ số.";
+            }
+            if (driverRepository.existsByCccd(form.getCccd())) {
+                return "Căn cước công dân (CCCD) đã tồn tại.";
+            }
+        }
+
         User user = new User();
         user.setEmail(form.getEmail().trim().toLowerCase());
         user.setPhone(form.getPhone().trim());
@@ -142,8 +155,14 @@ public class UserService {
             Driver d = new Driver();
             d.setUserId(saved.getId());
             d.setFullName(form.getFullName().trim());
-            d.setCccd("000000000000");
-            d.setDriverLicense("000000000000");
+            
+            // Lấy CCCD từ form (đã qua vòng check ở trên)
+            d.setCccd(form.getCccd().trim());
+            
+            // Vẫn dùng ID để tạo placeholder cho Giấy Phép Lái Xe vì màn đăng ký ban đầu chưa yêu cầu
+            String uniquePlaceholder = String.format("%012d", saved.getId());
+            d.setDriverLicense(uniquePlaceholder);
+            
             d.setLicenseExpiry(java.time.LocalDate.now().plusYears(1));
             d.setVehicleTypes("CAR_4");
             d.setVerificationStatus(VerificationStatus.PENDING);
@@ -168,22 +187,55 @@ public class UserService {
             user.setAvatarUrl(form.getAvatarUrl().trim());
         if (isActive != null) user.setIsActive(isActive);
         if (role != null && !role.isBlank()) {
-            try { user.setRole(Role.valueOf(role.toUpperCase())); }
+            try { 
+                Role newRole = Role.valueOf(role.toUpperCase());
+                // Validate cccd if changing to driver
+                if (newRole == Role.DRIVER) {
+                    if (form.getCccd() == null || form.getCccd().isBlank()) {
+                        return "Căn cước công dân (CCCD) không được để trống khi chọn vai trò tài xế.";
+                    }
+                    if (!form.getCccd().matches("^[0-9]{12}$")) {
+                        return "Căn cước công dân (CCCD) phải bao gồm đúng 12 chữ số.";
+                    }
+                    // Prevent duplicate CCCD unless it belongs to the same driver
+                    Optional<Driver> existingDriver = driverRepository.findByUserId(userId);
+                    if (existingDriver.isEmpty() || !existingDriver.get().getCccd().equals(form.getCccd())) {
+                        if (driverRepository.existsByCccd(form.getCccd())) {
+                            return "Căn cước công dân (CCCD) đã tồn tại.";
+                        }
+                    }
+                }
+                user.setRole(newRole);
+            }
             catch (Exception ignored) {}
         }
         userRepository.save(user);
 
         if (user.getRole() == Role.CUSTOMER) {
-            customerRepository.findByUserId(userId).ifPresent(c -> {
-                c.setFullName(form.getFullName().trim());
-                if (form.getAddress() != null) c.setAddress(form.getAddress().trim());
-                customerRepository.save(c);
+            Customer c = customerRepository.findByUserId(userId).orElseGet(() -> {
+                Customer newC = new Customer();
+                newC.setUserId(userId);
+                newC.setMembership(MembershipType.STANDARD);
+                return newC;
             });
+            c.setFullName(form.getFullName().trim());
+            if (form.getAddress() != null) c.setAddress(form.getAddress().trim());
+            customerRepository.save(c);
         } else if (user.getRole() == Role.DRIVER) {
-            driverRepository.findByUserId(userId).ifPresent(d -> {
-                d.setFullName(form.getFullName().trim());
-                driverRepository.save(d);
+            Driver d = driverRepository.findByUserId(userId).orElseGet(() -> {
+                Driver newD = new Driver();
+                newD.setUserId(userId);
+                newD.setDriverLicense(String.format("%012d", userId));
+                newD.setLicenseExpiry(java.time.LocalDate.now().plusYears(1));
+                newD.setVehicleTypes("CAR_4");
+                newD.setVerificationStatus(VerificationStatus.PENDING);
+                return newD;
             });
+            d.setFullName(form.getFullName().trim());
+            if (form.getCccd() != null && !form.getCccd().isBlank()) {
+                d.setCccd(form.getCccd().trim());
+            }
+            driverRepository.save(d);
         }
         return null;
     }
@@ -203,5 +255,23 @@ public class UserService {
             u.setIsActive(!u.getIsActive());
             userRepository.save(u);
         });
+    }
+
+    /**
+     * Admin duyệt/từ chối hồ sơ tài xế.
+     */
+    public String verifyDriver(Long userId, String status) {
+        Optional<Driver> optDriver = driverRepository.findByUserId(userId);
+        if (optDriver.isEmpty()) return "Không tìm thấy hồ sơ tài xế.";
+        
+        try {
+            VerificationStatus vs = VerificationStatus.valueOf(status.toUpperCase());
+            Driver driver = optDriver.get();
+            driver.setVerificationStatus(vs);
+            driverRepository.save(driver);
+            return null;
+        } catch (Exception e) {
+            return "Trạng thái duyệt không hợp lệ.";
+        }
     }
 }

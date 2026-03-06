@@ -8,7 +8,8 @@ public class RegisterForm {
     private String password;
     private String confirmPassword;
     /** "CUSTOMER" hoặc "DRIVER" */
-    private String role;
+    private String role = "CUSTOMER";
+    private String cccd;
 
     // Getters & Setters
     public String getFullName() { return fullName; }
@@ -28,4 +29,7 @@ public class RegisterForm {
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+
+    public String getCccd() { return cccd; }
+    public void setCccd(String cccd) { this.cccd = cccd; }
 }

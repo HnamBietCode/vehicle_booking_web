@@ -56,6 +56,19 @@ public class AuthService {
             return "Loại tài khoản không hợp lệ.";
         }
 
+        // Nếu là DRIVER, yêu cầu phải nhập CCCD hợp lệ (đúng 12 số)
+        if (role == Role.DRIVER) {
+            if (form.getCccd() == null || form.getCccd().isBlank()) {
+                return "Căn cước công dân (CCCD) không được để trống khi đăng ký tài xế.";
+            }
+            if (!form.getCccd().matches("^[0-9]{12}$")) {
+                return "Căn cước công dân (CCCD) phải bao gồm đúng 12 chữ số.";
+            }
+            if (driverRepository.existsByCccd(form.getCccd())) {
+                return "Căn cước công dân (CCCD) đã tồn tại.";
+            }
+        }
+
         // Tạo User
         User user = new User();
         user.setEmail(form.getEmail().trim().toLowerCase());
@@ -76,8 +89,14 @@ public class AuthService {
             Driver d = new Driver();
             d.setUserId(savedUser.getId());
             d.setFullName(form.getFullName().trim());
-            d.setCccd("000000000000");      // Placeholder – cập nhật sau
-            d.setDriverLicense("000000000000"); // Placeholder
+            
+            // Lấy CCCD từ form (đã qua vòng check ở trên)
+            d.setCccd(form.getCccd().trim());
+            
+            // Vẫn dùng ID để tạo placeholder cho Giấy Phép Lái Xe vì màn đăng ký ban đầu chưa yêu cầu
+            String uniquePlaceholder = String.format("%012d", savedUser.getId());
+            d.setDriverLicense(uniquePlaceholder); 
+
             d.setLicenseExpiry(java.time.LocalDate.now().plusYears(1));
             d.setVehicleTypes("CAR_4");
             d.setVerificationStatus(VerificationStatus.PENDING);

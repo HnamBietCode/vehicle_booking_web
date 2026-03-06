@@ -265,6 +265,7 @@
     <nav class="navbar">
         <a class="navbar-brand" href="/">VehicleBook</a>
         <ul class="navbar-nav">
+            <li><a class="nav-link" th:href="@{/vehicles/search}">🔍 Tìm xe</a></li>
             <li th:if="${user?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/users}">Quản lý Users</a>
             </li>
             <li><a class="nav-link active" th:href="@{/profile}">👤 Hồ sơ</a></li>
@@ -367,6 +368,32 @@
                 <div class="detail-item"><label>Trạng thái xét duyệt</label>
                     <p th:text="${driver.verificationStatus}">—</p>
                 </div>
+                <div class="detail-item"><label>Đánh giá (Số sao trung bình)</label>
+                    <p><span th:text="${avgRating}">—</span> ⭐ (<span th:text="${totalRatings}">0</span> lượt)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assigned Vehicle Card (for Driver) -->
+        <div class="card" th:if="${driver != null and assignedVehicle != null}">
+            <div class="card-header"><span class="card-title">Xe Đang Chạy</span></div>
+            <div class="detail-grid">
+                <div class="detail-item"><label>Tên xe</label>
+                    <p th:text="${assignedVehicle.name}">—</p>
+                </div>
+                <div class="detail-item"><label>Biển số</label>
+                    <p th:text="${assignedVehicle.licensePlate}">—</p>
+                </div>
+            </div>
+
+            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
+                <label style="display:block; font-size:.875rem; font-weight:600; margin-bottom:.5rem;">Cập Nhật Khu Vực
+                    / Địa Chỉ Xe</label>
+                <form th:action="@{/profile/update-location}" method="post" style="display: flex; gap: .5rem;">
+                    <input type="text" name="location" class="form-control" th:value="${assignedVehicle.currentAddress}"
+                        placeholder="Nhập địa chỉ hiện tại..." required style="flex: 1;" />
+                    <button type="submit" class="btn btn-primary" style="white-space: nowrap;">Cập nhật</button>
+                </form>
             </div>
         </div>
 

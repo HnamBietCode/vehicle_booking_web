@@ -3,8 +3,11 @@ package com.bookvehicle.example.sr.controller.admin;
 import com.bookvehicle.example.sr.config.SecurityUtil;
 import com.bookvehicle.example.sr.dto.ProfileEditForm;
 import com.bookvehicle.example.sr.dto.RegisterForm;
-import com.bookvehicle.example.sr.model.User;
+import com.bookvehicle.example.sr.dto.VehicleForm;
+import com.bookvehicle.example.sr.model.*;
 import com.bookvehicle.example.sr.service.UserService;
+import com.bookvehicle.example.sr.service.VehicleService;
+import com.bookvehicle.example.sr.service.RatingService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,9 +22,13 @@ import java.util.Optional;
 public class UserManagementController {
 
     private final UserService userService;
+    private final VehicleService vehicleService;
+    private final RatingService ratingService;
 
-    public UserManagementController(UserService userService) {
+    public UserManagementController(UserService userService, VehicleService vehicleService, RatingService ratingService) {
         this.userService = userService;
+        this.vehicleService = vehicleService;
+        this.ratingService = ratingService;
     }
 
     // ── Index – Danh sách user ────────────────────────────────────
@@ -48,7 +55,14 @@ public class UserManagementController {
         if (target.getRole().name().equals("CUSTOMER")) {
             userService.findCustomerByUserId(id).ifPresent(c -> model.addAttribute("customer", c));
         } else if (target.getRole().name().equals("DRIVER")) {
-            userService.findDriverByUserId(id).ifPresent(d -> model.addAttribute("driver", d));
+            userService.findDriverByUserId(id).ifPresent(d -> {
+                model.addAttribute("driver", d);
+                
+                int totalRatings = ratingService.findDriverRatings(d.getId()).size();
+                Double avgRating = ratingService.getAvgRating(RatingTargetType.DRIVER, d.getId());
+                model.addAttribute("totalRatings", totalRatings);
+                model.addAttribute("avgRating", String.format("%.2f", avgRating));
+            });
         }
         return "admin/users/detail";
     }
@@ -155,6 +169,21 @@ public class UserManagementController {
         }
         userService.toggleActive(id);
         ra.addFlashAttribute("success", "Đã cập nhật trạng thái tài khoản.");
+        return "redirect:/admin/users/" + id;
+    }
+
+    // ── Verify Driver – Duyệt hồ sơ ──────────────────────────────
+
+    @PostMapping("/{id}/verify-driver")
+    public String verifyDriver(@PathVariable Long id,
+                               @RequestParam String status,
+                               RedirectAttributes ra) {
+        String error = userService.verifyDriver(id, status);
+        if (error != null) {
+            ra.addFlashAttribute("error", error);
+        } else {
+            ra.addFlashAttribute("success", "Đã cập nhật trạng thái duyệt hồ sơ tài xế.");
+        }
         return "redirect:/admin/users/" + id;
     }
 }

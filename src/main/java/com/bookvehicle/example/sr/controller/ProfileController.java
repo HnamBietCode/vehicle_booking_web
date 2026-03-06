@@ -7,7 +7,11 @@ import com.bookvehicle.example.sr.model.Customer;
 import com.bookvehicle.example.sr.model.Driver;
 import com.bookvehicle.example.sr.model.Role;
 import com.bookvehicle.example.sr.model.User;
+import com.bookvehicle.example.sr.model.Vehicle;
+import com.bookvehicle.example.sr.model.RatingTargetType;
 import com.bookvehicle.example.sr.service.UserService;
+import com.bookvehicle.example.sr.service.VehicleService;
+import com.bookvehicle.example.sr.service.RatingService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,9 +25,13 @@ import java.util.Optional;
 public class ProfileController {
 
     private final UserService userService;
+    private final VehicleService vehicleService;
+    private final RatingService ratingService;
 
-    public ProfileController(UserService userService) {
+    public ProfileController(UserService userService, VehicleService vehicleService, RatingService ratingService) {
         this.userService = userService;
+        this.vehicleService = vehicleService;
+        this.ratingService = ratingService;
     }
 
     // ── Detail ────────────────────────────────────────────────────
@@ -37,7 +45,19 @@ public class ProfileController {
                        .ifPresent(c -> model.addAttribute("customer", c));
         } else if (user.getRole() == Role.DRIVER) {
             userService.findDriverByUserId(user.getId())
-                       .ifPresent(d -> model.addAttribute("driver", d));
+                       .ifPresent(d -> {
+                           model.addAttribute("driver", d);
+                           
+                           // Add Rating Stats
+                           int totalRatings = ratingService.findDriverRatings(d.getId()).size();
+                           Double avgRating = ratingService.getAvgRating(RatingTargetType.DRIVER, d.getId());
+                           model.addAttribute("totalRatings", totalRatings);
+                           model.addAttribute("avgRating", String.format("%.2f", avgRating));
+                           
+                           // Add Assigned Vehicle
+                           vehicleService.findByAssignedDriver(d.getId())
+                                         .ifPresent(v -> model.addAttribute("assignedVehicle", v));
+                       });
         }
         return "profile/detail";
     }
@@ -84,6 +104,22 @@ public class ProfileController {
         userService.findById(user.getId())
                    .ifPresent(u -> SecurityUtil.setLoggedUser(session, u));
         ra.addFlashAttribute("success", "Hồ sơ đã được cập nhật thành công.");
+        return "redirect:/profile";
+    }
+
+    // ── Update Location ───────────────────────────────────────────
+
+    @PostMapping("/update-location")
+    public String updateLocation(@RequestParam String location, HttpSession session, RedirectAttributes ra) {
+        User user = SecurityUtil.getLoggedUser(session);
+        if (user != null && user.getRole() == Role.DRIVER) {
+            userService.findDriverByUserId(user.getId()).ifPresent(d -> {
+                vehicleService.findByAssignedDriver(d.getId()).ifPresent(v -> {
+                    vehicleService.updateLocation(v.getId(), location);
+                    ra.addFlashAttribute("success", "Vị trí xe đã được cập nhật thành công!");
+                });
+            });
+        }
         return "redirect:/profile";
     }
 

@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tìm xe khả dụng – VehicleBook</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #3730A3;
+            --accent: #F59E0B;
+            --success: #10B981;
+            --border: #E2E8F0;
+            --bg: #F8FAFC;
+            --surface: #fff;
+            --muted: #64748B;
+            --text: #1E293B;
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .navbar-brand::before {
+            content: '🚗 ';
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: .25rem;
+            margin-left: auto;
+            list-style: none;
+        }
+
+        .nav-link {
+            padding: .5rem .85rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--muted);
+            font-size: .9rem;
+            font-weight: 500;
+            transition: all .2s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        /* Hero */
+        .hero {
+            background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+            color: #fff;
+            padding: 3rem 1.5rem 2rem;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: .5rem;
+        }
+
+        .hero p {
+            opacity: .85;
+            font-size: 1rem;
+        }
+
+        /* Filter card */
+        .main {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 1.5rem 3rem;
+        }
+
+        .filter-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin: -1.5rem auto 2rem;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, .08);
+            max-width: 820px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .filter-label {
+            display: block;
+            font-size: .8rem;
+            font-weight: 600;
+            margin-bottom: .4rem;
+            color: var(--muted);
+        }
+
+        .filter-control {
+            width: 100%;
+            padding: .6rem .9rem;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: .875rem;
+            font-family: inherit;
+        }
+
+        .filter-control:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .filter-check {
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            font-size: .875rem;
+            font-weight: 500;
+            padding-bottom: .65rem;
+        }
+
+        .filter-check input[type=checkbox] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .6rem 1.3rem;
+            border: none;
+            border-radius: 8px;
+            font-size: .9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all .2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--border);
+            color: var(--muted);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-sm {
+            padding: .35rem .8rem;
+            font-size: .8rem;
+        }
+
+        /* Results */
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.2rem;
+        }
+
+        .results-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .results-count {
+            font-size: .875rem;
+            color: var(--muted);
+        }
+
+        .vehicles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.2rem;
+        }
+
+        .vehicle-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: box-shadow .2s, transform .2s;
+        }
+
+        .vehicle-card:hover {
+            box-shadow: 0 8px 30px rgba(79, 70, 229, .12);
+            transform: translateY(-2px);
+        }
+
+        .vehicle-card-img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            background: var(--bg);
+        }
+
+        .vehicle-card-img-placeholder {
+            width: 100%;
+            height: 160px;
+            background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+
+        .vehicle-card-body {
+            padding: 1.1rem;
+        }
+
+        .vehicle-card-name {
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: .25rem;
+        }
+
+        .vehicle-card-plate {
+            font-size: .8rem;
+            color: var(--muted);
+            margin-bottom: .75rem;
+        }
+
+        .vehicle-card-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .4rem;
+            margin-bottom: .85rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: .2rem .55rem;
+            border-radius: 999px;
+            font-size: .72rem;
+            font-weight: 600;
+        }
+
+        .badge-motorcycle {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .badge-car4,
+        .badge-car_4 {
+            background: #DBEAFE;
+            color: #1D4ED8;
+        }
+
+        .badge-car7,
+        .badge-car_7 {
+            background: #EDE9FE;
+            color: #5B21B6;
+        }
+
+        .badge-car_16,
+        .badge-car_29,
+        .badge-car_45 {
+            background: #FCE7F3;
+            color: #BE185D;
+        }
+
+        .badge-truck_small,
+        .badge-truck_medium,
+        .badge-truck_large {
+            background: #E0F2FE;
+            color: #0369A1;
+        }
+
+        .badge-free {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .price-row {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: .85rem;
+        }
+
+        .price-item .price-val {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .price-item .price-lbl {
+            font-size: .72rem;
+            color: var(--muted);
+        }
+
+        .stars {
+            color: var(--accent);
+            font-size: .9rem;
+        }
+
+        .driver-row {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            font-size: .82rem;
+            color: var(--muted);
+            background: var(--bg);
+            border-radius: 8px;
+            padding: .5rem .75rem;
+            margin-bottom: .75rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--muted);
+        }
+
+        .empty-state .big-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a class="navbar-brand" href="/">VehicleBook</a>
+        <ul class="navbar-nav">
+            <li><a class="nav-link active" th:href="@{/vehicles/search}">🔍 Tìm xe</a></li>
+            <th:block th:if="${loggedUser != null}">
+                <li th:if="${loggedUser.role.name() == 'ADMIN'}">
+                    <a class="nav-link" th:href="@{/admin/vehicles}">🚗 Quản lý xe</a>
+                </li>
+                <li><a class="nav-link" th:href="@{/profile}">👤 Hồ sơ</a></li>
+                <li><a class="nav-link" th:href="@{/auth/logout}" style="color:#EF4444;">Đăng xuất</a></li>
+            </th:block>
+            <th:block th:unless="${loggedUser != null}">
+                <li><a class="nav-link" th:href="@{/auth/login}">Đăng nhập</a></li>
+                <li><a class="nav-link btn btn-primary btn-sm" th:href="@{/auth/register}"
+                        style="margin-left:.3rem;">Đăng ký</a></li>
+            </th:block>
+        </ul>
+    </nav>
+
+    <!-- Hero -->
+    <div class="hero">
+        <h1>🔍 Tìm xe khả dụng</h1>
+        <p>Lọc theo loại xe, giá và tìm xe có tài xế sẵn sàng</p>
+    </div>
+
+    <div class="main">
+        <!-- Filter -->
+        <div class="filter-card">
+            <form th:action="@{/vehicles/search}" method="get">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label class="filter-label" for="category">Loại xe</label>
+                        <select id="category" name="category" class="filter-control">
+                            <option value="">Tất cả loại</option>
+                            <option value="MOTORCYCLE" th:selected="${selectedCategory == 'MOTORCYCLE'}">🏍️ Xe máy
+                            </option>
+                            <option value="CAR_4" th:selected="${selectedCategory == 'CAR_4'}">🚗 Ô tô 4 chỗ</option>
+                            <option value="CAR_7" th:selected="${selectedCategory == 'CAR_7'}">🚐 Ô tô 7 chỗ</option>
+                            <option value="CAR_16" th:selected="${selectedCategory == 'CAR_16'}">🚐 Ô tô 16 chỗ</option>
+                            <option value="CAR_29" th:selected="${selectedCategory == 'CAR_29'}">🚌 Ô tô 29 chỗ</option>
+                            <option value="CAR_45" th:selected="${selectedCategory == 'CAR_45'}">🚌 Ô tô 45 chỗ</option>
+                            <option value="TRUCK_SMALL" th:selected="${selectedCategory == 'TRUCK_SMALL'}">🚚 Xe tải nhỏ
+                            </option>
+                            <option value="TRUCK_MEDIUM" th:selected="${selectedCategory == 'TRUCK_MEDIUM'}">🚚 Xe tải
+                                trung</option>
+                            <option value="TRUCK_LARGE" th:selected="${selectedCategory == 'TRUCK_LARGE'}">🚛 Xe tải lớn
+                            </option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label" for="maxPrice">Giá tối đa / km (đ)</label>
+                        <input type="number" id="maxPrice" name="maxPrice" class="filter-control" th:value="${maxPrice}"
+                            placeholder="Không giới hạn" min="0" step="1000">
+                    </div>
+                    <div class="filter-group" style="flex:2;">
+                        <label class="filter-label" for="location">Khu vực / Địa chỉ</label>
+                        <input type="text" id="location" name="location" class="filter-control" th:value="${location}"
+                            placeholder="Nhập phường, quận, tỉnh thành...">
+                    </div>
+                    <div class="filter-group" style="flex:0 0 auto;">
+                        <label class="filter-label">Bộ lọc thêm</label>
+                        <div class="filter-check">
+                            <input type="checkbox" id="freeDriver" name="freeDriver" value="true"
+                                th:checked="${freeDriver}">
+                            <label for="freeDriver">Chỉ xe có tài xế rảnh</label>
+                        </div>
+                    </div>
+                    <div class="filter-group" style="flex:0 0 140px;">
+                        <label class="filter-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary">🔍 Tìm kiếm</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Results -->
+        <div th:if="${searched}">
+            <div class="results-header">
+                <div class="results-title" th:text="${hasFilter} ? 'Kết quả tìm kiếm' : 'Tất cả xe khả dụng'">Tất cả xe
+                    khả dụng</div>
+                <div class="results-count" th:if="${results != null}" th:text="${results.size() + ' xe phù hợp'}">—
+                </div>
+            </div>
+
+            <div class="vehicles-grid" th:if="${results != null and !#lists.isEmpty(results)}">
+                <div class="vehicle-card" th:each="v : ${results}">
+                    <img th:if="${v.imageUrl != null}" th:src="${v.imageUrl}" class="vehicle-card-img" alt="xe"
+                        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                    <div class="vehicle-card-img-placeholder"
+                        th:classappend="${v.imageUrl != null ? 'style=&quot;display:none&quot;' : ''}">
+                        <span th:text="${v.category.name() == 'MOTORCYCLE' ? '🏍️' : 
+                                (v.category.name().startsWith('CAR_') ? (v.category.name() == 'CAR_29' or v.category.name() == 'CAR_45' ? '🚌' : '🚗') : 
+                                (v.category.name() == 'TRUCK_LARGE' ? '🚛' : '🚚'))}">🚗</span>
+                    </div>
+                    <div class="vehicle-card-body">
+                        <div class="vehicle-card-name" th:text="${v.name}">—</div>
+                        <div class="vehicle-card-plate" th:text="${v.licensePlate}">—</div>
+                        <div class="vehicle-card-meta">
+                            <span class="badge" th:classappend="${'badge-' + #strings.toLowerCase(v.category.name())}"
+                                th:text="${v.category.name() == 'MOTORCYCLE' ? 'Xe máy' : 
+                                (v.category.name() == 'CAR_4' ? '4 chỗ' : 
+                                (v.category.name() == 'CAR_7' ? '7 chỗ' : 
+                                (v.category.name() == 'CAR_16' ? '16 chỗ' : 
+                                (v.category.name() == 'CAR_29' ? '29 chỗ' : 
+                                (v.category.name() == 'CAR_45' ? '45 chỗ' : 
+                                (v.category.name() == 'TRUCK_SMALL' ? 'Tải nhỏ' : 
+                                (v.category.name() == 'TRUCK_MEDIUM' ? 'Tải trung' : 'Tải lớn')))))))}">—</span>
+                            <span th:if="${v.currentAddress != null}" class="badge"
+                                style="background:#E0E7FF;color:#3730A3;" th:text="'📍 ' + ${v.currentAddress}">—</span>
+                            <span th:if="${v.color != null}" class="badge" style="background:#F1F5F9;color:#475569;"
+                                th:text="${v.color}">—</span>
+                            <span th:if="${v.year != null}" class="badge" style="background:#F1F5F9;color:#475569;"
+                                th:text="${v.year}">—</span>
+                        </div>
+                        <div class="price-row">
+                            <div class="price-item">
+                                <div class="price-val"
+                                    th:text="${#numbers.formatDecimal(v.pricePerKm, 0, 'COMMA', 0, 'POINT') + 'đ'}">—
+                                </div>
+                                <div class="price-lbl">/ km</div>
+                            </div>
+                            <div class="price-item">
+                                <div class="price-val"
+                                    th:text="${#numbers.formatDecimal(v.pricePerHour, 0, 'COMMA', 0, 'POINT') + 'đ'}">—
+                                </div>
+                                <div class="price-lbl">/ giờ</div>
+                            </div>
+                            <div class="price-item">
+                                <div class="price-val"
+                                    th:text="${#numbers.formatDecimal(v.pricePerDay, 0, 'COMMA', 0, 'POINT') + 'đ'}">—
+                                </div>
+                                <div class="price-lbl">/ ngày</div>
+                            </div>
+                        </div>
+
+                        <!-- Tài xế -->
+                        <div class="driver-row" th:if="${v.driver != null}">
+                            <a th:href="@{/ratings/driver/{id}(id=${v.driver.id})}"
+                                style="text-decoration:none; color:inherit; display:flex; align-items:center; gap: .5rem;"
+                                title="Xem đánh giá tài xế">
+                                <span>🧑‍✈️</span>
+                                <span th:text="${v.driver.fullName}">Tài xế</span>
+                            </a>
+                            <span th:if="${v.driver.isAvailable}" class="badge badge-free" style="margin-left:auto;">Tài
+                                xế rảnh</span>
+                            <span th:unless="${v.driver.isAvailable}" class="badge"
+                                style="background:#FEE2E2;color:#991B1B;margin-left:auto;">Tài xế bận</span>
+                        </div>
+                        <div class="driver-row" th:unless="${v.driver != null}">
+                            <span>⚠️</span><span>Chưa có tài xế</span>
+                        </div>
+
+                        <!-- Rating -->
+                        <div style="font-size:.82rem;color:var(--muted); margin-top:0.5rem;">
+                            <a th:href="@{/ratings/vehicle/{id}(id=${v.id})}"
+                                style="text-decoration:none; color:inherit;" title="Xem đánh giá xe">
+                                <span class="stars">⭐</span>
+                                <span th:text="${v.avgRating} + ' / 5.0  ·  ' + ${v.totalTrips} + ' chuyến'">—</span>
+                                <span style="color:var(--primary); font-weight:500; margin-left:8px;">Chi tiết đánh giá
+                                    &rarr;</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="empty-state" th:if="${results == null or #lists.isEmpty(results)}">
+                <div class="big-icon">🚗</div>
+                <p>Không tìm thấy xe phù hợp với bộ lọc của bạn.</p>
+                <p style="font-size:.85rem;margin-top:.5rem;">Hãy thử mở rộng bộ lọc hoặc thay đổi tiêu chí.</p>
+            </div>
+        </div>
+
+
+    </div>
+</body>
+
+</html>

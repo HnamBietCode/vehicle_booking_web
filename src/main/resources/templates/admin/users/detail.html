@@ -343,7 +343,9 @@
     <nav class="navbar">
         <a class="navbar-brand" href="/">VehicleBook</a>
         <ul class="navbar-nav">
+            <li><a class="nav-link" th:href="@{/vehicles/search}">🔍 Tìm xe</a></li>
             <li><a class="nav-link active" th:href="@{/admin/users}">👥 Quản lý Users</a></li>
+            <li><a class="nav-link" th:href="@{/admin/vehicles}">🚗 Quản lý Xe</a></li>
             <li><a class="nav-link" th:href="@{/auth/logout}" style="color:#EF4444;">Đăng xuất</a></li>
         </ul>
     </nav>
@@ -424,7 +426,21 @@
 
         <!-- Driver Profile -->
         <div class="card" th:if="${driver != null}">
-            <div class="card-title">Hồ sơ Tài xế</div>
+            <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+                <span>Hồ sơ Tài xế</span>
+                <div style="display:flex; gap:.5rem;">
+                    <form th:action="@{/admin/users/{id}/verify-driver(id=${target.id})}" method="post"
+                        th:if="${driver.verificationStatus.name() != 'APPROVED'}">
+                        <input type="hidden" name="status" value="APPROVED">
+                        <button type="submit" class="btn btn-success btn-sm">✔ Duyệt</button>
+                    </form>
+                    <form th:action="@{/admin/users/{id}/verify-driver(id=${target.id})}" method="post"
+                        th:if="${driver.verificationStatus.name() != 'REJECTED'}">
+                        <input type="hidden" name="status" value="REJECTED">
+                        <button type="submit" class="btn btn-danger btn-sm">✖ Từ chối</button>
+                    </form>
+                </div>
+            </div>
             <div class="detail-grid">
                 <div class="detail-item"><label>Họ tên</label>
                     <p th:text="${driver.fullName}">—</p>
@@ -445,6 +461,14 @@
                     <p><span class="badge"
                             th:classappend="${driver.verificationStatus.name() == 'APPROVED' ? 'badge-approved' : (driver.verificationStatus.name() == 'REJECTED' ? 'badge-rejected' : 'badge-pending')}"
                             th:text="${driver.verificationStatus}">—</span></p>
+                </div>
+                <div class="detail-item"><label>Đánh giá</label>
+                    <p>
+                        <span th:text="${avgRating}">0.0</span> ⭐
+                        (<a th:href="@{/ratings/driver/{id}(id=${driver.id})}" target="_blank"
+                            style="text-decoration: underline;" th:text="${totalRatings} + ' lượt đánh giá'">0 lượt đánh
+                            giá</a>)
+                    </p>
                 </div>
             </div>
         </div>

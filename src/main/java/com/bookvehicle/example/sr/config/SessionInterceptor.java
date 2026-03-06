@@ -23,7 +23,8 @@ public class SessionInterceptor implements HandlerInterceptor {
         // Các path công khai – không cần kiểm tra
         if (path.startsWith("/auth") || path.startsWith("/css") ||
                 path.startsWith("/js") || path.startsWith("/images") ||
-                path.equals("/") || path.startsWith("/favicon")) {
+                path.equals("/") || path.startsWith("/favicon") ||
+                path.startsWith("/vehicles")) {   // trang tìm xe là công khai
             return true;
         }
 
