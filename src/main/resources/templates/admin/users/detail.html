@@ -428,16 +428,15 @@
         <div class="card" th:if="${driver != null}">
             <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
                 <span>Hồ sơ Tài xế</span>
-                <div style="display:flex; gap:.5rem;">
-                    <form th:action="@{/admin/users/{id}/verify-driver(id=${target.id})}" method="post"
-                        th:if="${driver.verificationStatus.name() != 'APPROVED'}">
+                <div style="display:flex; gap:.5rem;" th:if="${driver.verificationStatus.name() == 'PENDING'}">
+                    <form th:action="@{/admin/users/{id}/verify-driver(id=${target.id})}" method="post">
                         <input type="hidden" name="status" value="APPROVED">
                         <button type="submit" class="btn btn-success btn-sm">✔ Duyệt</button>
                     </form>
-                    <form th:action="@{/admin/users/{id}/verify-driver(id=${target.id})}" method="post"
-                        th:if="${driver.verificationStatus.name() != 'REJECTED'}">
+                    <form th:action="@{/admin/users/{id}/verify-driver(id=${target.id})}" method="post" id="rejectForm">
                         <input type="hidden" name="status" value="REJECTED">
-                        <button type="submit" class="btn btn-danger btn-sm">✖ Từ chối</button>
+                        <input type="hidden" name="reason" id="rejectReasonInput" value="">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="promptReject()">✖ Từ chối</button>
                     </form>
                 </div>
             </div>
@@ -457,10 +456,21 @@
                 <div class="detail-item"><label>Loại xe</label>
                     <p th:text="${driver.vehicleTypes}">—</p>
                 </div>
-                <div class="detail-item"><label>Xét duyệt</label>
+                <div class="detail-item" th:if="${driver.verificationStatus.name() != 'APPROVED'}"><label>Xét
+                        duyệt</label>
                     <p><span class="badge"
-                            th:classappend="${driver.verificationStatus.name() == 'APPROVED' ? 'badge-approved' : (driver.verificationStatus.name() == 'REJECTED' ? 'badge-rejected' : 'badge-pending')}"
-                            th:text="${driver.verificationStatus}">—</span></p>
+                            th:classappend="${driver.verificationStatus.name() == 'REJECTED' ? 'badge-rejected' : 'badge-pending'}"
+                            th:text="${driver.verificationStatus.name() == 'REJECTED' ? 'Từ chối' : 'Chờ duyệt'}">—</span>
+                    </p>
+                </div>
+                <div class="detail-item" th:if="${driver.approvedAt != null}"><label>Thời gian duyệt</label>
+                    <p th:text="${#temporals.format(driver.approvedAt,'dd/MM/yyyy HH:mm')}">—</p>
+                </div>
+                <div class="detail-item" th:if="${driver.approvedBy != null}"><label>Người duyệt (Admin ID)</label>
+                    <p th:text="${driver.approvedBy}">—</p>
+                </div>
+                <div class="detail-item" th:if="${driver.rejectionReason != null}"><label>Lý do từ chối/khoá</label>
+                    <p th:text="${driver.rejectionReason}">—</p>
                 </div>
                 <div class="detail-item"><label>Đánh giá</label>
                     <p>
@@ -476,8 +486,13 @@
         <!-- Actions -->
         <div class="btn-group">
             <a class="btn btn-primary" th:href="@{/admin/users/{id}/edit(id=${target.id})}">✏️ Sửa</a>
-            <form th:action="@{/admin/users/{id}/toggle-active(id=${target.id})}" method="post">
-                <button type="submit" class="btn btn-warning"
+            <form th:action="@{/admin/users/{id}/toggle-active(id=${target.id})}" method="post" id="toggleActiveForm"
+                style="display:inline-block;">
+                <input type="hidden" name="reason" id="toggleReasonInput" value="">
+                <button th:if="${target.isActive && target.role.name() == 'DRIVER'}" type="button"
+                    class="btn btn-warning" onclick="promptLock()">🔒 Khoá tài khoản</button>
+                <button th:unless="${target.isActive && target.role.name() == 'DRIVER'}" type="submit"
+                    class="btn btn-warning"
                     th:text="${target.isActive ? '🔒 Khoá tài khoản' : '🔓 Mở khoá'}">Khoá</button>
             </form>
             <form th:action="@{/admin/users/{id}/delete(id=${target.id})}" method="post"
@@ -489,5 +504,27 @@
         </div>
     </main>
 </body>
+
+<script>
+    function promptReject() {
+        const reason = prompt("Vui lòng nhập lý do từ chối hồ sơ này:");
+        if (reason !== null && reason.trim() !== "") {
+            document.getElementById('rejectReasonInput').value = reason;
+            document.getElementById('rejectForm').submit();
+        } else if (reason !== null) {
+            alert("Lý do từ chối không được để trống!");
+        }
+    }
+
+    function promptLock() {
+        const reason = prompt("Vui lòng nhập lý do khóa tài khoản tài xế này:");
+        if (reason !== null && reason.trim() !== "") {
+            document.getElementById('toggleReasonInput').value = reason;
+            document.getElementById('toggleActiveForm').submit();
+        } else if (reason !== null) {
+            alert("Lý do khóa không được để trống!");
+        }
+    }
+</script>
 
 </html>

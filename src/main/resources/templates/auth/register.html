@@ -218,11 +218,44 @@
                     placeholder="Nguyễn Văn A" required autofocus>
             </div>
 
-            <div class="form-group" id="cccdGroup" style="display: none;">
-                <label class="form-label" for="cccd">🪪 Kiểm tra CCCD / CMND (Dành cho tài xế)</label>
-                <input type="text" id="cccd" class="form-control" name="cccd" th:value="*{cccd}"
-                    placeholder="Nhập 12 số CCCD">
-                <p class="form-hint">Vui lòng nhập chính xác 12 số trên thẻ CCCD của bạn.</p>
+            <div class="form-group" id="driverFields" style="display: none;">
+                <label class="form-label" for="cccd">🪪 Tóm tắt hồ sơ (Dành cho tài xế)</label>
+                <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                    <div>
+                        <input type="text" id="cccd" class="form-control" name="cccd" th:value="*{cccd}"
+                            placeholder="Nhập 12 số CCCD">
+                        <p class="form-hint">Vui lòng nhập chính xác 12 số trên thẻ CCCD của bạn.</p>
+                    </div>
+                    <div>
+                        <input type="text" id="driverLicense" class="form-control" name="driverLicense"
+                            th:value="*{driverLicense}" placeholder="Nhập số bằng lái xe">
+                    </div>
+                    <div>
+                        <label class="form-label" for="licenseExpiry" style="margin-bottom: 0.2rem;">Ngày hết hạn bằng
+                            lái</label>
+                        <input type="date" id="licenseExpiry" class="form-control" name="licenseExpiry"
+                            th:value="*{licenseExpiry}">
+                    </div>
+                    <div>
+                        <label class="form-label" for="vehicleTypes" style="margin-bottom: 0.2rem;">Loại xe</label>
+                        <select id="vehicleTypes" class="form-control" name="vehicleTypes">
+                            <option value="">-- Chọn loại xe --</option>
+                            <option value="A1" th:selected="*{vehicleTypes == 'A1'}">A1</option>
+                            <option value="A2" th:selected="*{vehicleTypes == 'A2'}">A2</option>
+                            <option value="A3" th:selected="*{vehicleTypes == 'A3'}">A3</option>
+                            <option value="A4" th:selected="*{vehicleTypes == 'A4'}">A4</option>
+                            <option value="B1" th:selected="*{vehicleTypes == 'B1'}">B1</option>
+                            <option value="B2" th:selected="*{vehicleTypes == 'B2'}">B2</option>
+                            <option value="C" th:selected="*{vehicleTypes == 'C'}">C</option>
+                            <option value="D" th:selected="*{vehicleTypes == 'D'}">D</option>
+                            <option value="E" th:selected="*{vehicleTypes == 'E'}">E</option>
+                            <option value="FB2" th:selected="*{vehicleTypes == 'FB2'}">FB2</option>
+                            <option value="FD" th:selected="*{vehicleTypes == 'FD'}">FD</option>
+                            <option value="FC" th:selected="*{vehicleTypes == 'FC'}">FC</option>
+                            <option value="FE" th:selected="*{vehicleTypes == 'FE'}">FE</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
             <div class="form-group">
@@ -262,17 +295,30 @@
         document.addEventListener('DOMContentLoaded', function () {
             const roleCustomer = document.getElementById('role_customer');
             const roleDriver = document.getElementById('role_driver');
-            const cccdGroup = document.getElementById('cccdGroup');
+            const cccdGroup = document.getElementById('driverFields');
             const cccdInput = document.getElementById('cccd');
+            const driverLicenseInput = document.getElementById('driverLicense');
+            const licenseExpiryInput = document.getElementById('licenseExpiry');
+            const vehicleTypesInput = document.getElementById('vehicleTypes');
 
             function toggleCccd() {
                 if (roleDriver.checked) {
                     cccdGroup.style.display = 'block';
                     cccdInput.setAttribute('required', 'required');
+                    driverLicenseInput.setAttribute('required', 'required');
+                    licenseExpiryInput.setAttribute('required', 'required');
+                    vehicleTypesInput.setAttribute('required', 'required');
                 } else {
                     cccdGroup.style.display = 'none';
                     cccdInput.removeAttribute('required');
-                    cccdInput.value = ''; // Xóa value nếu chọn lại thành khách hàng
+                    driverLicenseInput.removeAttribute('required');
+                    licenseExpiryInput.removeAttribute('required');
+                    vehicleTypesInput.removeAttribute('required');
+
+                    cccdInput.value = '';
+                    driverLicenseInput.value = '';
+                    licenseExpiryInput.value = '';
+                    vehicleTypesInput.value = '';
                 }
             }
 

@@ -271,6 +271,16 @@
             color: #991B1B;
         }
 
+        .badge-pending {
+            background: #FEF08A;
+            color: #854D0E;
+        }
+
+        .badge-rejected {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
         /* Action buttons */
         .action-group {
             display: flex;
@@ -378,8 +388,22 @@
                                     th:text="${u.role}">—</span>
                             </td>
                             <td>
-                                <span class="badge" th:classappend="${u.isActive ? 'badge-active' : 'badge-inactive'}"
+                                <!-- Cho Customer/Admin thì hiển thị trạng thái hoạt động -->
+                                <span th:if="${u.role.name() != 'DRIVER'}" class="badge"
+                                    th:classappend="${u.isActive ? 'badge-active' : 'badge-inactive'}"
                                     th:text="${u.isActive ? 'Hoạt động' : 'Khoá'}">—</span>
+
+                                <!-- Cho Driver: Nếu đang active -> Hoạt động (Đã duyệt) -->
+                                <span th:if="${u.role.name() == 'DRIVER' && u.isActive}" class="badge badge-active">Hoạt
+                                    động (Đã duyệt)</span>
+
+                                <!-- Cho Driver: Nếu không active: Kiểm tra status -->
+                                <span
+                                    th:if="${u.role.name() == 'DRIVER' && !u.isActive && driverStatuses != null && driverStatuses.get(u.id) == 'PENDING'}"
+                                    class="badge badge-pending">Chờ duyệt</span>
+                                <span
+                                    th:if="${u.role.name() == 'DRIVER' && !u.isActive && (driverStatuses == null || driverStatuses.get(u.id) != 'PENDING')}"
+                                    class="badge badge-inactive">Khoá</span>
                             </td>
                             <td th:text="${#temporals.format(u.createdAt,'dd/MM/yyyy')}">—</td>
                             <td>

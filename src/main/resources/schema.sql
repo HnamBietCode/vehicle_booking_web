@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS drivers (
     driver_license      VARCHAR(12)  NOT NULL,
     license_image_url   VARCHAR(500),
     license_expiry      DATE NOT NULL,
-    vehicle_types       SET('MOTORCYCLE', 'CAR_4', 'CAR_7') NOT NULL,
+    vehicle_types       VARCHAR(255) NOT NULL,
     verification_status ENUM('PENDING', 'APPROVED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
     rejection_reason    TEXT,
     is_available        BOOLEAN NOT NULL DEFAULT TRUE,
@@ -299,3 +299,6 @@ JOIN customers c   ON c.id   = db.customer_id
 JOIN users     u_c ON u_c.id = c.user_id
 LEFT JOIN drivers d    ON d.id   = db.driver_id
 LEFT JOIN users   u_d ON u_d.id = d.user_id;
+
+-- Ensure existing database is updated to the new VARCHAR type for drivers
+ALTER TABLE drivers MODIFY COLUMN vehicle_types VARCHAR(255) NOT NULL;
