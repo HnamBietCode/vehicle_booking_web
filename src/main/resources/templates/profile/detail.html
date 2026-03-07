@@ -269,6 +269,7 @@
             <li th:if="${user?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/users}">Quản lý Users</a>
             </li>
             <li><a class="nav-link active" th:href="@{/profile}">👤 Hồ sơ</a></li>
+            <li><a class="nav-link" th:href="@{/wallet}">💳 Ví Điện Tử</a></li>
             <li th:if="${user?.role?.name() == 'CUSTOMER'}"><a class="nav-link" th:href="@{/premium}">⭐ Premium</a></li>
             <li><a class="nav-link" th:href="@{/auth/logout}" style="color:#EF4444;">Đăng xuất</a></li>
         </ul>
