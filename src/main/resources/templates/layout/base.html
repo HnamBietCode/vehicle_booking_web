@@ -431,10 +431,16 @@
             <th:block th:with="u=${session?.loggedUser ?: #httpServletRequest.getAttribute('loggedUser')}">
                 <li><a class="nav-link" th:href="@{/vehicles/search}">🔍 Tìm xe</a></li>
                 <li th:if="${u?.role?.name() == 'ADMIN'}">
-                    <a class="nav-link" th:href="@{/admin/users}">Quản lý Users</a>
+                    <a class="nav-link" th:href="@{/admin/users}">👥 Quản lý Users</a>
+                </li>
+                <li th:if="${u?.role?.name() == 'DRIVER'}">
+                    <a class="nav-link" th:href="@{/driver/dashboard}">📈 Thống Kê</a>
                 </li>
                 <li th:if="${u?.role?.name() == 'ADMIN'}">
                     <a class="nav-link" th:href="@{/admin/vehicles}">🚗 Quản lý Xe</a>
+                </li>
+                <li th:if="${u?.role?.name() == 'ADMIN'}">
+                    <a class="nav-link" th:href="@{/admin/dashboard}">📊 Báo Cáo</a>
                 </li>
                 <li>
                     <a class="nav-link" th:href="@{/profile}">👤 Hồ sơ</a>
