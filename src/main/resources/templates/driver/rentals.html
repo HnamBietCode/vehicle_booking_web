@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Đơn thuê tài xế</title>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #3730A3;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --text: #1E293B;
+            --muted: #64748B;
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .navbar-brand::before { content: '🚗'; font-size: 1.4rem; }
+        .navbar-nav { display: flex; align-items: center; gap: .25rem; margin-left: auto; list-style: none; }
+        .nav-link {
+            padding: .5rem .85rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--muted);
+            font-size: .9rem;
+            font-weight: 500;
+            transition: all .2s;
+        }
+        .nav-link:hover, .nav-link.active { background: var(--primary); color: #fff; }
+
+        .main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .page-title { font-size: 1.5rem; font-weight: 700; }
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .card-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 1.2rem; color: var(--text); }
+        .alert {
+            padding: .85rem 1.2rem;
+            border-radius: 8px;
+            margin-bottom: 1.2rem;
+            font-size: .9rem;
+            font-weight: 500;
+        }
+        .alert-danger { background: #FEF2F2; color: #991B1B; border-left: 4px solid #EF4444; }
+        .alert-success { background: #F0FDF4; color: #166534; border-left: 4px solid #10B981; }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+        th {
+            background: var(--bg);
+            font-weight: 600;
+            color: var(--muted);
+            padding: .75rem 1rem;
+            text-align: left;
+            border-bottom: 2px solid var(--border);
+        }
+        td { padding: .75rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        .badge {
+            display: inline-block;
+            padding: .25rem .65rem;
+            border-radius: 999px;
+            font-size: .75rem;
+            font-weight: 600;
+        }
+        .badge-approved { background: #D1FAE5; color: #065F46; }
+        .badge-pending { background: #FEF3C7; color: #92400E; }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .6rem 1.3rem;
+            border: none;
+            border-radius: 8px;
+            font-size: .9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all .2s;
+        }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-sm { padding: .35rem .8rem; font-size: .8rem; }
+        .form-control {
+            width: 100%;
+            padding: .65rem 1rem;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: .95rem;
+            font-family: inherit;
+        }
+
+        .inline-form { display: grid; grid-template-columns: 130px 1fr auto; gap: .5rem; align-items: center; }
+        .inline-form .form-control { padding: .45rem .65rem; }
+        .inline-form textarea.form-control { min-height: 34px; }
+        @media (max-width: 900px) { .inline-form { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<nav th:replace="~{layout/base :: navbar}"></nav>
+
+<main class="main">
+    <div class="page-header">
+        <h1 class="page-title">🧾 Đơn thuê được giao</h1>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+    <div class="card" th:if="${#lists.isEmpty(rentals)}">
+        <div style="color:var(--muted);">Chưa có đơn thuê nào.</div>
+    </div>
+
+    <div class="card" th:if="${!#lists.isEmpty(rentals)}">
+        <h3 class="card-title">Danh sách đơn</h3>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>Mã đơn</th>
+                    <th>Khách</th>
+                    <th>Thời gian</th>
+                    <th>Giá cơ bản</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="r : ${rentals}">
+                    <td th:text="${'#' + r.id}"></td>
+                    <td th:text="${r.customer != null ? r.customer.fullName : r.customerId}"></td>
+                    <td th:text="${#temporals.format(r.plannedStart, 'dd/MM/yyyy HH:mm') + ' - ' + #temporals.format(r.plannedEnd, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td th:text="${#numbers.formatDecimal(r.basePrice, 0, 'COMMA', 0, 'POINT') + 'd'}"></td>
+                    <td>
+                        <span class="badge badge-approved" th:text="${r.status}"></span>
+                        <span class="badge badge-pending" th:text="${r.paymentStatus}" style="margin-left:6px;"></span>
+                    </td>
+                    <td>
+                        <form th:if="${r.status.name() != 'COMPLETED' and r.status.name() != 'CANCELLED'}"
+                              th:action="@{/driver/rentals/{id}/complete(id=${r.id})}" method="post"
+                              class="inline-form">
+                            <input class="form-control" type="number" name="extraFee" min="0" step="1000" value="0" placeholder="Phí phát sinh">
+                            <input class="form-control" type="text" name="notes" placeholder="Ghi chú">
+                            <button type="submit" class="btn btn-primary btn-sm">✅ Hoàn thành</button>
+                        </form>
+                        <span th:unless="${r.status.name() != 'COMPLETED' and r.status.name() != 'CANCELLED'}" style="color:var(--muted);">
+                            Đã hoàn thành
+                        </span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+</body>
+</html>
+
+
+
+

@@ -75,7 +75,8 @@ CREATE TABLE IF NOT EXISTS pickup_points (
     latitude    DECIMAL(10, 7),
     longitude   DECIMAL(10, 7),
     is_active   BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_pickup_points_name_address UNIQUE (name, address)
 );
 
 CREATE TABLE IF NOT EXISTS vehicles (

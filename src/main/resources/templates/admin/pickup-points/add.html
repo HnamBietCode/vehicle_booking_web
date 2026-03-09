@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thêm điểm đón - Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: #f8fafc; color: #1e293b; }
+        .main { max-width: 760px; margin: 2rem auto; padding: 0 1rem; }
+        .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; }
+        .breadcrumb { margin-bottom: 1rem; color: #64748b; font-size: .9rem; }
+        .breadcrumb a { color: #4f46e5; text-decoration: none; }
+        .page-title { font-size: 1.35rem; font-weight: 700; margin-bottom: 1rem; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; }
+        .form-group { margin-bottom: .9rem; }
+        .form-label { display:block; font-weight:600; margin-bottom:.4rem; font-size:.88rem; }
+        .form-control { width:100%; padding:.65rem .9rem; border:1.5px solid #e2e8f0; border-radius:8px; font-family:inherit; }
+        .btn { border:none; border-radius:8px; padding:.6rem 1rem; text-decoration:none; font-weight:600; cursor:pointer; }
+        .btn-primary { background:#4f46e5; color:#fff; }
+        .btn-outline { background:#fff; color:#475569; border:1px solid #dbe2ea; }
+        .btn-group { display:flex; gap:.6rem; margin-top:.8rem; }
+        .alert-danger { background:#fef2f2; color:#991b1b; border-left:4px solid #ef4444; padding:.75rem 1rem; border-radius:8px; margin-bottom:1rem; }
+        @media (max-width: 700px) { .form-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<main class="main">
+    <div class="breadcrumb"><a th:href="@{/admin/pickup-points}">Điểm đón</a> / Thêm mới</div>
+    <h1 class="page-title">➕ Thêm điểm đón</h1>
+    <div th:if="${error}" class="alert-danger" th:text="${error}"></div>
+
+    <div class="card">
+        <form th:action="@{/admin/pickup-points/add}" method="post" th:object="${form}">
+            <div class="form-group">
+                <label class="form-label" for="name">Tên điểm đón *</label>
+                <input class="form-control" id="name" type="text" th:field="*{name}" required placeholder="Ví dụ: Sân bay Tân Sơn Nhất">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="address">Địa chỉ *</label>
+                <input class="form-control" id="address" type="text" th:field="*{address}" required placeholder="60 Trường Sơn, Tân Bình, TP.HCM">
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" for="latitude">Latitude</label>
+                    <input class="form-control" id="latitude" type="number" step="0.0000001" th:field="*{latitude}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="longitude">Longitude</label>
+                    <input class="form-control" id="longitude" type="number" step="0.0000001" th:field="*{longitude}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label style="display:flex; gap:.4rem; align-items:center;">
+                    <input type="checkbox" th:field="*{isActive}"> Kích hoạt ngay
+                </label>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary" type="submit">Lưu điểm đón</button>
+                <a class="btn btn-outline" th:href="@{/admin/pickup-points}">Hủy</a>
+            </div>
+        </form>
+    </div>
+</main>
+</body>
+</html>

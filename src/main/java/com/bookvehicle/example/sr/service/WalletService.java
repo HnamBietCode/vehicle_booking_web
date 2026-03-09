@@ -23,9 +23,6 @@ public class WalletService {
     @Autowired
     private TransactionRepository transactionRepository;
 
-    /**
-     * Get user's wallet. Create one if it doesn't exist yet.
-     */
     @Transactional
     public Wallet getOrCreateWallet(Long userId) {
         Optional<Wallet> optWallet = walletRepository.findByUserId(userId);
@@ -39,43 +36,87 @@ public class WalletService {
         return walletRepository.save(newWallet);
     }
 
-    /**
-     * Deposit amount to user's wallet and log the transaction
-     */
     @Transactional
     public void deposit(Long userId, BigDecimal amount, String description, Long referenceId) {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Số tiền nạp phải lớn hơn 0");
+            throw new IllegalArgumentException("So tien nap phai lon hon 0");
         }
 
         Wallet wallet = getOrCreateWallet(userId);
-
-        BigDecimal balanceBefore = wallet.getBalance();
-        BigDecimal balanceAfter = balanceBefore.add(amount);
-
-        // Update Wallet Balance
-        wallet.setBalance(balanceAfter);
-        walletRepository.save(wallet);
-
-        // Update Transactions log
-        Transaction tx = new Transaction();
-        tx.setWallet(wallet);
-        tx.setType(TransactionType.DEPOSIT);
-        tx.setAmount(amount);
-        tx.setBalanceBefore(balanceBefore);
-        tx.setBalanceAfter(balanceAfter);
-        tx.setReferenceType(ReferenceType.MANUAL);
-        tx.setReferenceId(referenceId);
-        tx.setDescription(description);
-
-        transactionRepository.save(tx);
+        applyWalletMutation(
+                wallet,
+                amount,
+                true,
+                TransactionType.DEPOSIT,
+                ReferenceType.MANUAL,
+                referenceId,
+                description
+        );
     }
 
-    /**
-     * Get Transaction History for a wallet
-     */
+    @Transactional
+    public String debit(
+            Long userId,
+            BigDecimal amount,
+            TransactionType txType,
+            ReferenceType referenceType,
+            Long referenceId,
+            String description) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            return "So tien tru vi phai lon hon 0.";
+        }
+
+        Wallet wallet = getOrCreateWallet(userId);
+        if (wallet.getBalance().compareTo(amount) < 0) {
+            return "So du vi khong du de thanh toan.";
+        }
+        applyWalletMutation(wallet, amount, false, txType, referenceType, referenceId, description);
+        return null;
+    }
+
+    @Transactional
+    public void credit(
+            Long userId,
+            BigDecimal amount,
+            TransactionType txType,
+            ReferenceType referenceType,
+            Long referenceId,
+            String description) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            return;
+        }
+        Wallet wallet = getOrCreateWallet(userId);
+        applyWalletMutation(wallet, amount, true, txType, referenceType, referenceId, description);
+    }
+
     @Transactional(readOnly = true)
     public List<Transaction> getTransactionHistory(Long walletId) {
         return transactionRepository.findByWalletIdOrderByCreatedAtDesc(walletId);
+    }
+
+    private void applyWalletMutation(
+            Wallet wallet,
+            BigDecimal amount,
+            boolean credit,
+            TransactionType txType,
+            ReferenceType referenceType,
+            Long referenceId,
+            String description) {
+        BigDecimal balanceBefore = wallet.getBalance();
+        BigDecimal balanceAfter = credit ? balanceBefore.add(amount) : balanceBefore.subtract(amount);
+
+        wallet.setBalance(balanceAfter);
+        walletRepository.save(wallet);
+
+        Transaction tx = new Transaction();
+        tx.setWallet(wallet);
+        tx.setType(txType);
+        tx.setAmount(amount);
+        tx.setBalanceBefore(balanceBefore);
+        tx.setBalanceAfter(balanceAfter);
+        tx.setReferenceType(referenceType);
+        tx.setReferenceId(referenceId);
+        tx.setDescription(description);
+        transactionRepository.save(tx);
     }
 }

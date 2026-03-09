@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 
 <head>
@@ -196,16 +196,7 @@
 </head>
 
 <body>
-    <nav class="navbar">
-        <a class="navbar-brand" href="/">VehicleBook</a>
-        <ul class="navbar-nav">
-            <li><a class="nav-link" th:href="@{/vehicles/search}">🔍 Tìm xe</a></li>
-            <li th:if="${user?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/users}">👥 Users</a></li>
-            <li><a class="nav-link active" th:href="@{/profile}">👤 Hồ sơ</a></li>
-            <li><a class="nav-link" th:href="@{/wallet}">💳 Ví Điện Tử</a></li>
-            <li><a class="nav-link" th:href="@{/auth/logout}" style="color:#EF4444;">Đăng xuất</a></li>
-        </ul>
-    </nav>
+    <nav th:replace="~{layout/base :: navbar}"></nav>
 
     <main class="main">
         <div class="page-header">

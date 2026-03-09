@@ -1,0 +1,377 @@
+﻿<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Đặt thuê xe có tài xế</title>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #3730A3;
+            --danger: #EF4444;
+            --success: #10B981;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --text: #1E293B;
+            --muted: #64748B;
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .navbar-brand::before {
+            content: '🚗';
+            font-size: 1.4rem;
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: .25rem;
+            margin-left: auto;
+            list-style: none;
+        }
+
+        .nav-link {
+            padding: .5rem .85rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--muted);
+            font-size: .9rem;
+            font-weight: 500;
+            transition: all .2s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 1.2rem;
+            color: var(--text);
+        }
+
+        .form-group {
+            margin-bottom: 1.1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: .875rem;
+            font-weight: 600;
+            margin-bottom: .4rem;
+            color: var(--text);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: .65rem 1rem;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: .95rem;
+            font-family: inherit;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, .15);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .6rem 1.3rem;
+            border: none;
+            border-radius: 8px;
+            font-size: .9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all .2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--border);
+            color: var(--muted);
+        }
+
+        .alert {
+            padding: .85rem 1.2rem;
+            border-radius: 8px;
+            margin-bottom: 1.2rem;
+            font-size: .9rem;
+            font-weight: 500;
+        }
+
+        .alert-danger {
+            background: #FEF2F2;
+            color: #991B1B;
+            border-left: 4px solid var(--danger);
+        }
+
+        .alert-success {
+            background: #F0FDF4;
+            color: #166534;
+            border-left: 4px solid var(--success);
+        }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .form-grid .full { grid-column: 1 / -1; }
+        .estimate-box {
+            margin-top: .5rem;
+            padding: .9rem 1rem;
+            border: 1px dashed var(--border);
+            border-radius: 10px;
+            background: #f8fafc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .estimate-label { color: var(--muted); font-weight: 600; font-size: .9rem; }
+        .estimate-value { color: var(--primary); font-weight: 800; font-size: 1.1rem; }
+        @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<nav th:replace="~{layout/base :: navbar}"></nav>
+
+<main class="main">
+    <div class="page-header">
+        <h1 class="page-title">Đặt thuê xe có tài xế</h1>
+        <a class="btn btn-outline" th:href="@{/vehicles/search}">Quay lại</a>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+    <div class="card">
+        <h3 class="card-title">Thông tin đơn thuê</h3>
+        <form th:action="@{/rentals}" method="post" th:object="${form}">
+            <div class="form-grid">
+                <div class="form-group full">
+                    <label class="form-label" for="vehicleId">Xe</label>
+                    <select class="form-control" id="vehicleId" th:field="*{vehicleId}" required>
+                        <option value="">-- Chọn xe --</option>
+                        <option th:each="v : ${vehicles}"
+                                th:value="${v.id}"
+                                th:attr="data-price-hour=${v.pricePerHour},data-price-day=${v.pricePerDay}"
+                                th:text="${v.name + ' | ' + v.licensePlate}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="rentalType">Hình thức thuê</label>
+                    <select class="form-control" id="rentalType" th:field="*{rentalType}" required>
+                        <option th:each="t : ${rentalTypes}" th:value="${t}" th:text="${t}"></option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Điểm đón</label>
+                    <div style="display:flex; gap:1rem; margin-bottom:.5rem;">
+                        <label style="display:flex; gap:.4rem; align-items:center;">
+                            <input type="radio" name="pickupMode" value="POINT" checked> Chọn điểm có sẵn
+                        </label>
+                        <label style="display:flex; gap:.4rem; align-items:center;">
+                            <input type="radio" name="pickupMode" value="MANUAL"> Tự nhập địa chỉ
+                        </label>
+                    </div>
+
+                    <select class="form-control" id="pickupPointId" th:field="*{pickupPointId}">
+                        <option value="">-- Chọn điểm đón --</option>
+                        <option th:each="p : ${pickupPoints}"
+                                th:value="${p.id}"
+                                th:text="${p.name + ' - ' + p.address}">
+                        </option>
+                    </select>
+                    <input class="form-control" id="pickupAddress" th:field="*{pickupAddress}" type="text"
+                           placeholder="Nhập địa chỉ đón cụ thể"
+                           style="margin-top:.5rem; display:none;">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="plannedStart">Thời gian bắt đầu</label>
+                    <input class="form-control" id="plannedStart" th:field="*{plannedStart}" type="datetime-local" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="plannedEnd">Thời gian kết thúc</label>
+                    <input class="form-control" id="plannedEnd" th:field="*{plannedEnd}" type="datetime-local" required>
+                </div>
+
+                <div class="form-group full">
+                    <label class="form-label" for="notes">Ghi chú</label>
+                    <textarea class="form-control" id="notes" th:field="*{notes}" rows="3"></textarea>
+                </div>
+
+                <div class="form-group full">
+                    <div class="estimate-box">
+                        <div class="estimate-label">Tạm tính theo lựa chọn hiện tại</div>
+                        <div id="estimateValue" class="estimate-value">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:.6rem; margin-top:.5rem;">
+                <button class="btn btn-primary" type="submit">Đặt thuê</button>
+                <a class="btn btn-outline" th:href="@{/rentals/my}">Xem đơn của tôi</a>
+            </div>
+        </form>
+    </div>
+</main>
+<script>
+    (function () {
+        const pickupModeRadios = document.querySelectorAll('input[name="pickupMode"]');
+        const pickupPoint = document.getElementById('pickupPointId');
+        const pickupAddress = document.getElementById('pickupAddress');
+
+        const rentalType = document.getElementById('rentalType');
+        const vehicle = document.getElementById('vehicleId');
+        const start = document.getElementById('plannedStart');
+        const end = document.getElementById('plannedEnd');
+        const estimateValue = document.getElementById('estimateValue');
+
+        const fmtVnd = (n) => new Intl.NumberFormat('vi-VN').format(n) + 'đ';
+
+        function syncPickupMode() {
+            const mode = [...pickupModeRadios].find(r => r.checked)?.value || 'POINT';
+            const usePoint = mode === 'POINT';
+
+            pickupPoint.style.display = usePoint ? 'block' : 'none';
+            pickupAddress.style.display = usePoint ? 'none' : 'block';
+
+            pickupPoint.required = usePoint;
+            pickupAddress.required = !usePoint;
+            if (usePoint) pickupAddress.value = '';
+            else pickupPoint.value = '';
+        }
+
+        function updateEstimate() {
+            const selected = vehicle.options[vehicle.selectedIndex];
+            if (!selected || !selected.value || !start.value || !end.value) {
+                estimateValue.textContent = '--';
+                return;
+            }
+
+            const s = new Date(start.value);
+            const e = new Date(end.value);
+            const minutes = (e.getTime() - s.getTime()) / 60000;
+            if (!Number.isFinite(minutes) || minutes <= 0) {
+                estimateValue.textContent = '--';
+                return;
+            }
+
+            const priceHour = Number(selected.dataset.priceHour || 0);
+            const priceDay = Number(selected.dataset.priceDay || 0);
+            let estimate = 0;
+
+            if (rentalType.value === 'DAILY') {
+                const days = Math.max(1, Math.ceil(minutes / 1440));
+                estimate = days * priceDay;
+            } else {
+                const hours = Math.max(1, Math.ceil(minutes / 60));
+                estimate = hours * priceHour;
+            }
+            estimateValue.textContent = fmtVnd(estimate);
+        }
+
+        pickupModeRadios.forEach(r => r.addEventListener('change', syncPickupMode));
+        [rentalType, vehicle, start, end].forEach(el => el.addEventListener('change', updateEstimate));
+        [start, end].forEach(el => el.addEventListener('input', updateEstimate));
+
+        syncPickupMode();
+        updateEstimate();
+    })();
+</script>
+</body>
+</html>
+
+
+
+
