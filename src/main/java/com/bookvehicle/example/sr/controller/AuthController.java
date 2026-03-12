@@ -60,7 +60,7 @@ public class AuthController {
     @GetMapping("/login")
     public String showLoginForm(Model model,
             HttpSession session,
-            @RequestParam(required = false) String error) {
+            @RequestParam(name = "error", required = false) String error) {
         if (SecurityUtil.isLoggedIn(session))
             return "redirect:/";
         model.addAttribute("form", new LoginForm());
@@ -74,7 +74,7 @@ public class AuthController {
     public String handleLogin(@ModelAttribute("form") LoginForm form,
             Model model,
             HttpSession session,
-            @RequestParam(required = false) String redirect) {
+            @RequestParam(name = "redirect", required = false) String redirect) {
         User user = authService.login(form.getEmail(), form.getPassword());
         if (user == null) {
             model.addAttribute("form", form);

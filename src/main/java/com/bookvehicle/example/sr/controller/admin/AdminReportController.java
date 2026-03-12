@@ -21,14 +21,14 @@ public class AdminReportController {
 
     @GetMapping("/dashboard")
     public ResponseEntity<ReportDashboardDTO> getDashboardData(
-            @RequestParam(required = false, defaultValue = "monthly") String period) {
+            @RequestParam(name = "period", required = false, defaultValue = "monthly") String period) {
         // e.g., period = weekly | monthly | yearly
         return ResponseEntity.ok(reportService.getDashboardData(period));
     }
 
     @GetMapping("/charts")
     public ResponseEntity<List<ChartDataDTO>> getChartData(
-            @RequestParam(required = false, defaultValue = "monthly") String period) {
+            @RequestParam(name = "period", required = false, defaultValue = "monthly") String period) {
         return ResponseEntity.ok(reportService.getChartData(period));
     }
 }

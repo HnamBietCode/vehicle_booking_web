@@ -136,8 +136,8 @@ public class UserManagementController {
     @PostMapping("/{id}/edit")
     public String handleEdit(@PathVariable Long id,
             @ModelAttribute("form") ProfileEditForm form,
-            @RequestParam(required = false) String role,
-            @RequestParam(required = false) Boolean isActive,
+            @RequestParam(name = "role", required = false) String role,
+            @RequestParam(name = "isActive", required = false) Boolean isActive,
             Model model,
             HttpSession session,
             RedirectAttributes ra) {
@@ -173,7 +173,7 @@ public class UserManagementController {
 
     @PostMapping("/{id}/toggle-active")
     public String toggleActive(@PathVariable Long id,
-            @RequestParam(required = false) String reason,
+            @RequestParam(name = "reason", required = false) String reason,
             HttpSession session,
             RedirectAttributes ra) {
         User loggedUser = SecurityUtil.getLoggedUser(session);
@@ -190,8 +190,8 @@ public class UserManagementController {
 
     @PostMapping("/{id}/verify-driver")
     public String verifyDriver(@PathVariable Long id,
-            @RequestParam String status,
-            @RequestParam(required = false) String reason,
+            @RequestParam(name = "status") String status,
+            @RequestParam(name = "reason", required = false) String reason,
             HttpSession session,
             RedirectAttributes ra) {
         User loggedUser = SecurityUtil.getLoggedUser(session);

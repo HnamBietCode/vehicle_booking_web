@@ -208,12 +208,13 @@
             gap: .4rem;
         }
 
-        .reason-input {
-            min-width: 180px;
+        .reason-select {
+            min-width: 200px;
             padding: .45rem .6rem;
             border: 1px solid #e2e8f0;
             border-radius: 8px;
             font-size: .82rem;
+            background: #fff;
         }
 
         .reason-text {
@@ -281,8 +282,14 @@
                           th:action="@{/rentals/{id}/cancel(id=${r.id})}"
                           method="post"
                           class="cancel-form">
-                        <input class="reason-input" type="text" name="reason" maxlength="255"
-                               placeholder="Ly do huy (tuy chon)">
+                        <select class="reason-select" name="reason" required>
+                            <option value="" disabled selected>Chon ly do huy</option>
+                            <option value="Khach hang yeu cau huy don.">Khach hang yeu cau huy don</option>
+                            <option value="Thay doi lich trinh.">Thay doi lich trinh</option>
+                            <option value="Khong tim thay tai xe phu hop.">Khong tim thay tai xe phu hop</option>
+                            <option value="Gia cao.">Gia cao</option>
+                            <option value="Ly do khac.">Ly do khac</option>
+                        </select>
                         <button class="btn btn-danger" type="submit">Huy don</button>
                     </form>
                     <span th:if="${r.status.name() == 'CANCELLED'}">

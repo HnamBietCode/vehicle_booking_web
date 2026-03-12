@@ -33,10 +33,10 @@ public class RatingController {
     // ── Form đánh giá ───────────────────────────────────────────────
 
     @GetMapping("/rate")
-    public String showRateForm(@RequestParam String targetType,
-                                @RequestParam Long targetId,
-                                @RequestParam(required = false, defaultValue = "OTHER") String refType,
-                                @RequestParam(required = false, defaultValue = "0") Long refId,
+    public String showRateForm(@RequestParam(name = "targetType") String targetType,
+                                @RequestParam(name = "targetId") Long targetId,
+                                @RequestParam(name = "refType", required = false, defaultValue = "OTHER") String refType,
+                                @RequestParam(name = "refId", required = false, defaultValue = "0") Long refId,
                                 Model model, HttpSession session) {
         User loggedUser = SecurityUtil.getLoggedUser(session);
         if (loggedUser == null) return "redirect:/auth/login";
@@ -144,7 +144,7 @@ public class RatingController {
 
     @GetMapping("/driver/{driverId}")
     public String driverRatings(@PathVariable Long driverId,
-                                @RequestParam(required = false) String error,
+                                @RequestParam(name = "error", required = false) String error,
                                 Model model, HttpSession session) {
         List<Rating> ratings = ratingService.findDriverRatings(driverId);
         Double avg = ratingService.getAvgRating(RatingTargetType.DRIVER, driverId);
@@ -162,7 +162,7 @@ public class RatingController {
 
     @GetMapping("/vehicle/{vehicleId}")
     public String vehicleRatings(@PathVariable Long vehicleId, 
-                                 @RequestParam(required = false) String error, 
+                                 @RequestParam(name = "error", required = false) String error, 
                                  Model model, HttpSession session) {
         List<Rating> ratings = ratingService.findVehicleRatings(vehicleId);
         Double avg = ratingService.getAvgRating(RatingTargetType.VEHICLE, vehicleId);

@@ -27,7 +27,7 @@ public class VehicleManagementController {
     // ── Index ────────────────────────────────────────────────────────
 
     @GetMapping
-    public String index(@RequestParam(required = false) String category,
+    public String index(@RequestParam(name = "category", required = false) String category,
                         Model model, HttpSession session) {
         List<Vehicle> vehicles;
         if (category != null && !category.isBlank()) {

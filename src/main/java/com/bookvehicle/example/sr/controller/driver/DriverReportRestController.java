@@ -23,7 +23,7 @@ public class DriverReportRestController {
 
     @GetMapping("/dashboard")
     public ResponseEntity<ReportDashboardDTO> getDashboardData(
-            @RequestParam(defaultValue = "monthly") String period,
+            @RequestParam(name = "period", defaultValue = "monthly") String period,
             HttpSession session) {
 
         User loggedUser = (User) session.getAttribute("loggedUser");
@@ -37,7 +37,7 @@ public class DriverReportRestController {
 
     @GetMapping("/charts")
     public ResponseEntity<List<ChartDataDTO>> getChartData(
-            @RequestParam(defaultValue = "monthly") String period,
+            @RequestParam(name = "period", defaultValue = "monthly") String period,
             HttpSession session) {
 
         User loggedUser = (User) session.getAttribute("loggedUser");
