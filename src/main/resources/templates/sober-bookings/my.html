@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đơn thuê tài xế của tôi</title>
+    <style th:replace="~{layout/base :: head}"></style>
+</head>
+<body>
+<nav th:replace="~{layout/base :: navbar}"></nav>
+
+<main class="main">
+    <div class="page-header">
+        <h1 class="page-title">Đơn thuê tài xế của tôi</h1>
+        <a class="btn btn-primary" th:href="@{/sober-bookings/new}">+ Thuê tài xế mới</a>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <div class="card">
+        <div class="table-wrap">
+            <div th:if="${#lists.isEmpty(bookings)}" style="padding: 2rem; text-align: center; color: var(--muted);">
+                Bạn chưa có yêu cầu thuê tài xế nào.
+            </div>
+            <table th:if="${!#lists.isEmpty(bookings)}">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Thông tin xe</th>
+                        <th>Thời gian thuê</th>
+                        <th>Trạng thái</th>
+                        <th>Thanh toán</th>
+                        <th>Tổng tiền</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="b : ${bookings}">
+                        <td th:text="'#' + ${b.id}"></td>
+                        <td>
+                            <div style="font-weight: 600;" th:text="${b.customerVehicle}"></div>
+                            <small class="badge badge-standard">
+                                <span th:if="${b.vehicleCategory.name() == 'MOTORCYCLE'}">Xe máy</span>
+                                <span th:if="${b.vehicleCategory.name() == 'CAR_4'}">Xe hơi 4 chỗ</span>
+                                <span th:if="${b.vehicleCategory.name() == 'CAR_7'}">Xe hơi 7 chỗ</span>
+                                <span th:if="${!#lists.contains({'MOTORCYCLE', 'CAR_4', 'CAR_7'}, b.vehicleCategory.name())}" th:text="${b.vehicleCategory}"></span>
+                            </small>
+                        </td>
+                        <td>
+                            <div th:text="${#temporals.format(b.startTime, 'dd/MM HH:mm')}"></div>
+                            <small th:text="'(' + ${b.duration} + ' ' + (${b.durationUnit == 'HOURLY' ? 'giờ' : 'ngày'}) + ')'"></small>
+                        </td>
+                        <td>
+                            <span class="badge" 
+                                  th:classappend="${b.status.name() == 'PENDING' ? 'badge-pending' : 
+                                                   b.status.name() == 'ACCEPTED' ? 'badge-approved' : 
+                                                   b.status.name() == 'COMPLETED' ? 'badge-active' : 
+                                                   b.status.name() == 'CANCELLED' ? 'badge-inactive' : 'badge-inactive'}"
+                                  th:text="${b.status.name() == 'CANCELLED' ? 'ĐÃ HỦY' : b.status}"></span>
+                            <div th:if="${b.cancelReason}" style="font-size: .75rem; color: #dc2626; margin-top: .2rem; max-width: 150px;" th:text="'Lý do hủy: ' + ${b.cancelReason}"></div>
+                        </td>
+                        <td>
+                            <span class="badge" 
+                                  th:classappend="${b.paymentStatus.name() == 'PAID' ? 'badge-approved' : 'badge-pending'}"
+                                  th:text="${b.paymentStatus}"></span>
+                        </td>
+                        <td style="font-weight: 700; color: var(--primary);" th:text="${#numbers.formatDecimal(b.totalPrice, 0, 'COMMA', 0, 'POINT')} + 'đ'"></td>
+                        <td>
+                            <div th:if="${b.status.name() == 'COMPLETED' && b.paymentStatus.name() != 'PAID'}">
+                                <button type="button" class="btn btn-warning btn-sm" 
+                                        th:onclick="'confirmPayment(' + ${b.id} + ', ' + ${b.totalPrice} + ', ' + ${wallet.balance} + ')'">
+                                    Thanh toán
+                                </button>
+                                <form th:id="'payForm-' + ${b.id}" th:action="@{/sober-bookings/{id}/pay(id=${b.id})}" method="post" style="display:none;"></form>
+                            </div>
+                            <div th:if="${b.status.name() == 'PENDING'}">
+                                <form th:action="@{/sober-bookings/{id}/cancel(id=${b.id})}" method="post" 
+                                      onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn này không?')">
+                                    <button type="submit" class="btn btn-outline btn-sm" style="color: #dc2626; border-color: #fca5a5;">Hủy đơn</button>
+                                </form>
+                            </div>
+                            <span th:if="${b.status.name() != 'COMPLETED' && b.status.name() != 'PENDING' && b.status.name() != 'CANCELLED'}" 
+                                  style="color: var(--muted); font-size: .8rem;">Đang xử lý...</span>
+                            <span th:if="${b.status.name() == 'COMPLETED' && b.paymentStatus.name() == 'PAID'}" style="color: var(--success); font-weight: 600;">✓ Hoàn tất</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+<script th:inline="javascript">
+    function confirmPayment(id, amount, balance) {
+        const fmt = (n) => new Intl.NumberFormat('vi-VN').format(n) + 'đ';
+        const remaining = balance - amount;
+        
+        const msg = `Xác nhận thanh toán cho đơn #${id}:\n\n` +
+                    `• Số dư hiện tại: ${fmt(balance)}\n` +
+                    `• Số tiền cần trả: ${fmt(amount)}\n` +
+                    `---------------------------\n` +
+                    `• Số dư sau thanh toán: ${fmt(remaining)}\n\n` +
+                    `Bạn có muốn tiếp tục thanh toán không?`;
+        
+        if (remaining < 0) {
+            alert('Số dư ví không đủ để thanh toán. Vui lòng nạp thêm tiền!');
+            return;
+        }
+
+        if (confirm(msg)) {
+            document.getElementById('payForm-' + id).submit();
+        }
+    }
+</script>
+</body>
+</html>

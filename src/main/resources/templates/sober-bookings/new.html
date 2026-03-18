@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thuê tài xế lái xe hộ</title>
+    <style th:replace="~{layout/base :: head}"></style>
+    <style>
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .form-grid .full { grid-column: 1 / -1; }
+        .estimate-box {
+            margin-top: .5rem;
+            padding: .9rem 1rem;
+            border: 1px dashed var(--border);
+            border-radius: 10px;
+            background: #f8fafc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .estimate-label { color: var(--muted); font-weight: 600; font-size: .9rem; }
+        .estimate-value { color: var(--primary); font-weight: 800; font-size: 1.1rem; }
+        @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<nav th:replace="~{layout/base :: navbar}"></nav>
+
+<main class="main">
+    <div class="page-header">
+        <h1 class="page-title">Thuê tài xế lái xe hộ</h1>
+        <a class="btn btn-outline" th:href="@{/sober-bookings/my}">Lịch sử đặt</a>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+    <div class="card">
+        <h3 class="card-title">Thông tin yêu cầu</h3>
+        <form th:action="@{/sober-bookings/new}" method="post" th:object="${booking}">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Loại xe của bạn</label>
+                    <select class="form-control" th:field="*{vehicleCategory}" id="vehicleCategory" required>
+                        <option value="">-- Chọn loại xe --</option>
+                        <option value="MOTORCYCLE">Xe máy</option>
+                        <option value="CAR_4">Xe hơi 4 chỗ</option>
+                        <option value="CAR_7">Xe hơi 7 chỗ</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Tên xe / Biển số</label>
+                    <input type="text" class="form-control" th:field="*{customerVehicle}" placeholder="VD: Honda City - 51A-123.45" required>
+                </div>
+
+                <div class="form-group full">
+                    <label class="form-label">Địa điểm đón (Tỉnh/Thành phố)</label>
+                    <select id="province" class="form-control" required>
+                        <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Quận/Huyện</label>
+                    <select id="district" class="form-control" required disabled>
+                        <option value="">-- Chọn Quận/Huyện --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Phường/Xã</label>
+                    <select id="ward" class="form-control" required disabled>
+                        <option value="">-- Chọn Phường/Xã --</option>
+                    </select>
+                </div>
+
+                <div class="form-group full">
+                    <label class="form-label">Số nhà / Tên đường</label>
+                    <input type="text" id="streetAddress" class="form-control" placeholder="Ví dụ: 123 Nguyễn Huệ" required>
+                    <input type="hidden" th:field="*{pickupAddress}" id="pickupAddress">
+                    <input type="hidden" th:field="*{province}" id="provinceName">
+                    <input type="hidden" th:field="*{district}" id="districtName">
+                    <input type="hidden" th:field="*{ward}" id="wardName">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Thời gian bắt đầu</label>
+                    <input type="datetime-local" class="form-control" th:field="*{startTime}" required>
+                </div>
+
+                <div class="form-group" style="display:flex; gap:1rem; align-items: flex-end;">
+                    <div style="flex:1;">
+                        <label class="form-label">Thời lượng thuê</label>
+                        <input type="number" class="form-control" th:field="*{duration}" min="1" id="duration" required>
+                    </div>
+                    <div style="flex:1;">
+                        <label class="form-label">Đơn vị</label>
+                        <select class="form-control" th:field="*{durationUnit}" id="durationUnit" required>
+                            <option th:each="unit : ${durationUnits}" th:value="${unit}" th:text="${unit.name() == 'HOURLY' ? 'Giờ' : 'Ngày'}"></option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group full">
+                    <label class="form-label">Ghi chú (nếu có)</label>
+                    <textarea class="form-control" th:field="*{notes}" rows="3" placeholder="Yêu cầu thêm cho tài xế..."></textarea>
+                </div>
+
+                <div class="form-group full">
+                    <div class="estimate-box">
+                        <div class="estimate-label">Báo giá tạm tính</div>
+                        <div id="estimateValue" class="estimate-value">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; font-size: 1.1rem; padding: .8rem;">Tạo yêu cầu thuê tài xế</button>
+            </div>
+        </form>
+    </div>
+</main>
+
+<script th:inline="javascript">
+    (function() {
+        // --- Estimation Logic ---
+        const cat = document.getElementById('vehicleCategory');
+        const count = document.getElementById('duration');
+        const unit = document.getElementById('durationUnit');
+        const est = document.getElementById('estimateValue');
+
+        const rates = /*[[${ratesJson}]]*/ {};
+
+        function updateEst() {
+            const vCat = cat.value;
+            const vUnit = unit.value;
+            const vCount = parseInt(count.value);
+
+            if (vCat && vUnit && vCount > 0 && rates[vUnit] && rates[vUnit][vCat]) {
+                const rate = rates[vUnit][vCat];
+                est.textContent = new Intl.NumberFormat('vi-VN').format(rate * vCount) + 'đ';
+            } else {
+                est.textContent = '--';
+            }
+        }
+
+        [cat, count, unit].forEach(el => el.addEventListener('change', updateEst));
+        count.addEventListener('input', updateEst);
+
+        // --- Address API Logic ---
+        const provinceSel = document.getElementById('province');
+        const districtSel = document.getElementById('district');
+        const wardSel = document.getElementById('ward');
+        const streetInp = document.getElementById('streetAddress');
+        const finalAddr = document.getElementById('pickupAddress');
+
+        async function fetchProvinces() {
+            try {
+                const res = await fetch('https://provinces.open-api.vn/api/p/');
+                const data = await res.json();
+                data.forEach(p => {
+                    let opt = document.createElement('option');
+                    opt.value = p.code;
+                    opt.text = p.name;
+                    provinceSel.add(opt);
+                });
+            } catch (e) { console.error("Error fetching provinces", e); }
+        }
+
+        provinceSel.addEventListener('change', async () => {
+            districtSel.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
+            wardSel.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+            districtSel.disabled = true;
+            wardSel.disabled = true;
+
+            if (provinceSel.value) {
+                try {
+                    const res = await fetch(`https://provinces.open-api.vn/api/p/${provinceSel.value}?depth=2`);
+                    const data = await res.json();
+                    data.districts.forEach(d => {
+                        let opt = document.createElement('option');
+                        opt.value = d.code;
+                        opt.text = d.name;
+                        districtSel.add(opt);
+                    });
+                    districtSel.disabled = false;
+                } catch (e) { console.error("Error fetching districts", e); }
+            }
+            updateFinalAddress();
+        });
+
+        districtSel.addEventListener('change', async () => {
+            wardSel.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+            wardSel.disabled = true;
+
+            if (districtSel.value) {
+                try {
+                    const res = await fetch(`https://provinces.open-api.vn/api/d/${districtSel.value}?depth=2`);
+                    const data = await res.json();
+                    data.wards.forEach(w => {
+                        let opt = document.createElement('option');
+                        opt.value = w.code;
+                        opt.text = w.name;
+                        wardSel.add(opt);
+                    });
+                    wardSel.disabled = false;
+                } catch (e) { console.error("Error fetching wards", e); }
+            }
+            updateFinalAddress();
+        });
+
+        wardSel.addEventListener('change', updateFinalAddress);
+        streetInp.addEventListener('input', updateFinalAddress);
+
+        function updateFinalAddress() {
+            const p = provinceSel.options[provinceSel.selectedIndex]?.text || '';
+            const d = districtSel.options[districtSel.selectedIndex]?.text || '';
+            const w = wardSel.options[wardSel.selectedIndex]?.text || '';
+            const s = streetInp.value.trim();
+
+            document.getElementById('provinceName').value = p;
+            document.getElementById('districtName').value = d;
+            document.getElementById('wardName').value = w;
+
+            if (provinceSel.value && districtSel.value && wardSel.value && s) {
+                finalAddr.value = `${s}, ${w}, ${d}, ${p}`;
+            } else {
+                finalAddr.value = '';
+            }
+        }
+
+        fetchProvinces();
+    })();
+</script>
+</body>
+</html>

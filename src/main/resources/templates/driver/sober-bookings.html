@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xử lý lái xe hộ | Tài xế</title>
+    <style th:replace="~{layout/base :: head}"></style>
+</head>
+<body>
+<nav th:replace="~{layout/base :: navbar}"></nav>
+
+<main class="main">
+    <div class="page-header">
+        <h1 class="page-title">Xử lý lái xe hộ</h1>
+        <div style="display:flex; flex-direction: column; align-items: flex-end; gap:.5rem;">
+            <div style="display: flex; align-items: center; gap: .5rem;">
+                <div th:if="${driver.isAvailable}" class="badge badge-approved">Trạng thái: Đang rảnh (ONLINE)</div>
+                <div th:unless="${driver.isAvailable}" class="badge badge-pending">Trạng thái: Đang bận/Ngoại tuyến (BUSY/OFFLINE)</div>
+                
+                <form th:action="@{/driver/sober-bookings/toggle-status}" method="post" style="display:inline;">
+                    <button type="submit" class="btn btn-sm" th:classappend="${driver.isAvailable ? 'btn-outline' : 'btn-success'}" 
+                            th:text="${driver.isAvailable ? 'Ngoại tuyến' : 'Bật trực tuyến'}">
+                    </button>
+                </form>
+            </div>
+            <div style="font-size: .85rem; color: var(--muted);" th:if="${driver.province}" 
+                 th:text="'Khu vực: ' + ${driver.province} + ' - ' + ${driver.district} + ' - ' + ${driver.ward}"></div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 2rem;">
+        <h3 class="card-title">Cập nhật vị trí hiện tại</h3>
+        <p style="font-size: .85rem; color: var(--muted); margin-bottom: 1rem;">
+            Vui lòng cập nhật khu vực đứng chờ để hệ thống ưu tiên gán đơn gần nhất cho bạn.
+        </p>
+        <form th:action="@{/driver/sober-bookings/location}" method="post" id="locationForm">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 1rem; align-items: flex-end;">
+                <div>
+                    <label class="form-label">Tỉnh / Thành</label>
+                    <select id="province" class="form-control" name="province_id" required>
+                        <option value="">Chọn Tỉnh/Thành</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Quận / Huyện</label>
+                    <select id="district" class="form-control" name="district_id" required disabled>
+                        <option value="">Chọn Quận/Huyện</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Phường / Xã</label>
+                    <select id="ward" class="form-control" name="ward_id" required disabled>
+                        <option value="">Chọn Phường/Xã</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Lưu vị trí</button>
+            </div>
+            
+            <input type="hidden" name="province" id="provinceName">
+            <input type="hidden" name="district" id="districtName">
+            <input type="hidden" name="ward" id="wardName">
+        </form>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <div class="card">
+        <h3 class="card-title">Yêu cầu mới (Đang chờ)</h3>
+        <div class="table-wrap">
+            <div th:if="${#lists.isEmpty(pendingBookings)}" style="padding: 1.5rem; text-align: center; color: var(--muted);">
+                Không có yêu cầu nào mới lúc này.
+            </div>
+            <table th:if="${!#lists.isEmpty(pendingBookings)}">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Loại xe</th>
+                        <th>Thời gian</th>
+                        <th>Địa điểm</th>
+                        <th>Tổng tiền</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="b : ${pendingBookings}">
+                        <td th:text="'#' + ${b.id}"></td>
+                        <td th:text="${b.vehicleCategory}"></td>
+                        <td>
+                            <div th:text="${#temporals.format(b.startTime, 'dd/MM HH:mm')}"></div>
+                            <small th:text="${b.duration} + ' ' + (${b.durationUnit == 'HOURLY' ? 'giờ' : 'ngày'})"></small>
+                        </td>
+                        <td th:text="${b.pickupAddress}"></td>
+                        <td style="font-weight: 700; color: var(--primary);" th:text="${#numbers.formatDecimal(b.totalPrice, 0, 'COMMA', 0, 'POINT')} + 'đ'"></td>
+                        <td>
+                            <form th:action="@{/driver/sober-bookings/{id}/accept(id=${b.id})}" method="post">
+                                <button type="submit" class="btn btn-primary btn-sm" th:disabled="${!driver.isAvailable}">Nhận đơn</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3 class="card-title">Đơn của tôi</h3>
+        <div class="table-wrap">
+            <div th:if="${#lists.isEmpty(myBookings)}" style="padding: 1.5rem; text-align: center; color: var(--muted);">
+                Bạn chưa nhận đơn nào.
+            </div>
+            <table th:if="${!#lists.isEmpty(myBookings)}">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Khách hàng</th>
+                        <th>Trạng thái</th>
+                        <th>Thanh toán</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                        <tr th:each="b : ${myBookings}">
+                            <td th:text="'#' + ${b.id}"></td>
+                            <td>
+                                <div style="font-weight: 600;">
+                                    <span th:if="${b.vehicleCategory.name() == 'MOTORCYCLE'}">Xe máy</span>
+                                    <span th:if="${b.vehicleCategory.name() == 'CAR_4'}">Xe hơi 4 chỗ</span>
+                                    <span th:if="${b.vehicleCategory.name() == 'CAR_7'}">Xe hơi 7 chỗ</span>
+                                    <span th:if="${!#lists.contains({'MOTORCYCLE', 'CAR_4', 'CAR_7'}, b.vehicleCategory.name())}" th:text="${b.vehicleCategory}"></span>
+                                </div>
+                                <div th:text="${b.customerVehicle}"></div>
+                                <small th:text="${b.pickupAddress}"></small>
+                            </td>
+                            <td>
+                                <span class="badge" th:classappend="${b.status.name() == 'ACCEPTED' ? 'badge-approved' : b.status.name() == 'COMPLETED' ? 'badge-active' : b.status.name() == 'CANCELLED' ? 'badge-pending' : 'badge-pending'}" th:text="${b.status.name() == 'CANCELLED' ? 'ĐÃ HỦY' : b.status}"></span>
+                                <div th:if="${b.cancelReason}" style="font-size: .75rem; color: #dc2626; margin-top: .2rem;" th:text="'Lý do: ' + ${b.cancelReason}"></div>
+                            </td>
+                            <td>
+                                 <span class="badge" th:classappend="${b.paymentStatus.name() == 'PAID' ? 'badge-approved' : 'badge-pending'}" th:text="${b.paymentStatus}"></span>
+                            </td>
+                            <td>
+                                <div style="display:flex; gap:.4rem; flex-wrap: wrap;">
+                                    <form th:if="${b.status.name() == 'ACCEPTED'}" th:action="@{/driver/sober-bookings/{id}/arrive(id=${b.id})}" method="post">
+                                        <button type="submit" class="btn btn-warning btn-sm">Đã đến</button>
+                                    </form>
+                                    <form th:if="${b.status.name() == 'ARRIVED'}" th:action="@{/driver/sober-bookings/{id}/start(id=${b.id})}" method="post">
+                                        <button type="submit" class="btn btn-primary btn-sm">Bắt đầu</button>
+                                    </form>
+                                    <form th:if="${b.status.name() == 'IN_PROGRESS'}" th:action="@{/driver/sober-bookings/{id}/complete(id=${b.id})}" method="post">
+                                        <button type="submit" class="btn btn-success btn-sm">Hoàn thành</button>
+                                    </form>
+                                    <button th:if="${b.status.name() == 'ACCEPTED' || b.status.name() == 'ARRIVED'}" 
+                                            type="button" class="btn btn-outline btn-sm" style="color: #dc2626; border-color: #fca5a5;" 
+                                            th:onclick="'cancelBooking(' + ${b.id} + ')'">Hủy đơn</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script th:inline="javascript">
+        // Provinces API Integration
+        const provinceSel = document.getElementById('province');
+        const districtSel = document.getElementById('district');
+        const wardSel = document.getElementById('ward');
+
+        async function fetchProvinces() {
+            const res = await fetch('https://provinces.open-api.vn/api/p/');
+            const data = await res.json();
+            data.forEach(p => {
+                const opt = new Option(p.name, p.code);
+                provinceSel.add(opt);
+            });
+        }
+
+        provinceSel.addEventListener('change', async () => {
+            districtSel.innerHTML = '<option value="">Chọn Quận/Huyện</option>';
+            wardSel.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+            wardSel.disabled = true;
+            
+            const code = provinceSel.value;
+            if (code) {
+                const res = await fetch(`https://provinces.open-api.vn/api/p/${code}?depth=2`);
+                const data = await res.json();
+                data.districts.forEach(d => {
+                    const opt = new Option(d.name, d.code);
+                    districtSel.add(opt);
+                });
+                districtSel.disabled = false;
+            } else {
+                districtSel.disabled = true;
+            }
+            updateNames();
+        });
+
+        districtSel.addEventListener('change', async () => {
+            wardSel.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+            const code = districtSel.value;
+            if (code) {
+                const res = await fetch(`https://provinces.open-api.vn/api/d/${code}?depth=2`);
+                const data = await res.json();
+                data.wards.forEach(w => {
+                    const opt = new Option(w.name, w.code);
+                    wardSel.add(opt);
+                });
+                wardSel.disabled = false;
+            } else {
+                wardSel.disabled = true;
+            }
+            updateNames();
+        });
+
+        wardSel.addEventListener('change', updateNames);
+
+        function updateNames() {
+            document.getElementById('provinceName').value = provinceSel.options[provinceSel.selectedIndex]?.text || '';
+            document.getElementById('districtName').value = districtSel.options[districtSel.selectedIndex]?.text || '';
+            document.getElementById('wardName').value = wardSel.options[wardSel.selectedIndex]?.text || '';
+        }
+
+        fetchProvinces();
+
+        function cancelBooking(id) {
+            const reason = prompt("Vui lòng nhập lý do hủy đơn:");
+            if (reason === null) return;
+            if (reason.trim() === "") {
+                alert("Bạn phải nhập lý do để hủy đơn.");
+                return;
+            }
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/driver/sober-bookings/' + id + '/cancel';
+
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'reason';
+            input.value = reason;
+            form.appendChild(input);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+</body>
+</html>

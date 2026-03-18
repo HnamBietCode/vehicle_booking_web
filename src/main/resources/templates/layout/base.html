@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 
 <head>
@@ -435,9 +435,12 @@
                 <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/users}">👥 Quản lý Users</a></li>
                 <li th:if="${u?.role?.name() == 'DRIVER'}"><a class="nav-link" th:href="@{/driver/dashboard}">📈 Thống kê</a></li>
                 <li th:if="${u?.role?.name() == 'DRIVER'}"><a class="nav-link" th:href="@{/driver/rentals}">🧾 Đơn thuê</a></li>
+                <li th:if="${u?.role?.name() == 'DRIVER'}"><a class="nav-link" th:href="@{/driver/sober-bookings}">🚗 Xử lý lái hộ</a></li>
                 <li th:if="${u?.role?.name() == 'CUSTOMER'}"><a class="nav-link" th:href="@{/rentals/my}">🧾 Đơn thuê</a></li>
+                <li th:if="${u?.role?.name() == 'CUSTOMER'}"><a class="nav-link" th:href="@{/sober-bookings/new}">🚗 Thuê tài xế</a></li>
                 <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/vehicles}">🚗 Quản lý xe</a></li>
                 <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/pickup-points}">📍 Điểm đón</a></li>
+                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/sober-bookings}">🚗 Quản lý lái hộ</a></li>
                 <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/dashboard}">📊 Báo cáo</a></li>
                 <li><a class="nav-link" th:href="@{/profile}">👤 Hồ sơ</a></li>
                 <li th:if="${u?.role?.name() == 'CUSTOMER'}">
