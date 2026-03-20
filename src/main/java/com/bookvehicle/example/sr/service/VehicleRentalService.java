@@ -133,18 +133,99 @@ public class VehicleRentalService {
         rental.setExtraFee(BigDecimal.ZERO);
         rental.setDiscountAmount(BigDecimal.ZERO);
         rental.setTotalPrice(basePrice);
-        rental.setStatus(VehicleRental.RentalStatus.CONFIRMED);
+        rental.setStatus(VehicleRental.RentalStatus.PENDING);
         rental.setPaymentStatus(PaymentStatus.PENDING);
         rental.setNotes(form.getNotes());
 
         vehicleRentalRepository.save(rental);
+        return ServiceResult.success("Dat xe thanh cong. Cho tai xe xac nhan.", rental.getId());
+    }
 
-        vehicle.setStatus(VehicleStatus.ON_TRIP);
-        vehicleRepository.save(vehicle);
+    public ServiceResult acceptRental(Long rentalId, Long driverUserId) {
+        Optional<VehicleRental> rentalOpt = vehicleRentalRepository.findById(rentalId);
+        if (rentalOpt.isEmpty()) {
+            return ServiceResult.error("Khong tim thay don thue.");
+        }
+        VehicleRental rental = rentalOpt.get();
+        if (rental.getStatus() != VehicleRental.RentalStatus.PENDING) {
+            return ServiceResult.error("Don thue khong o trang thai cho xac nhan.");
+        }
+
+        Optional<Driver> actorDriver = driverRepository.findByUserId(driverUserId);
+        if (actorDriver.isEmpty() || !actorDriver.get().getId().equals(rental.getDriverId())) {
+            return ServiceResult.error("Ban khong co quyen nhan don nay.");
+        }
+
+        Driver driver = actorDriver.get();
+        if (!Boolean.TRUE.equals(driver.getIsAvailable())) {
+            return ServiceResult.error("Tai xe dang ban, khong the nhan don.");
+        }
+
+        rental.setStatus(VehicleRental.RentalStatus.CONFIRMED);
+        vehicleRentalRepository.save(rental);
+
         driver.setIsAvailable(false);
         driverRepository.save(driver);
+        return ServiceResult.success("Da nhan don thue.", rental.getId());
+    }
 
-        return ServiceResult.success("Dat xe thanh cong. He thong da gan tai xe tu dong.", rental.getId());
+    public ServiceResult rejectRental(Long rentalId, Long driverUserId, String reason) {
+        Optional<VehicleRental> rentalOpt = vehicleRentalRepository.findById(rentalId);
+        if (rentalOpt.isEmpty()) {
+            return ServiceResult.error("Khong tim thay don thue.");
+        }
+        VehicleRental rental = rentalOpt.get();
+        if (rental.getStatus() != VehicleRental.RentalStatus.PENDING) {
+            return ServiceResult.error("Don thue khong o trang thai cho xac nhan.");
+        }
+
+        Optional<Driver> actorDriver = driverRepository.findByUserId(driverUserId);
+        if (actorDriver.isEmpty() || !actorDriver.get().getId().equals(rental.getDriverId())) {
+            return ServiceResult.error("Ban khong co quyen tu choi don nay.");
+        }
+
+        rental.setStatus(VehicleRental.RentalStatus.CANCELLED);
+        rental.setCancelReason((reason == null || reason.isBlank()) ? "Tai xe tu choi nhan don." : reason.trim());
+        vehicleRentalRepository.save(rental);
+
+        driverRepository.findById(rental.getDriverId()).ifPresent(d -> {
+            d.setIsAvailable(true);
+            driverRepository.save(d);
+        });
+        vehicleRepository.findById(rental.getVehicleId()).ifPresent(v -> {
+            if (v.getStatus() != VehicleStatus.MAINTENANCE) {
+                v.setStatus(VehicleStatus.AVAILABLE);
+            }
+            vehicleRepository.save(v);
+        });
+
+        return ServiceResult.success("Da tu choi don thue.", rental.getId());
+    }
+
+    public ServiceResult startTrip(Long rentalId, Long driverUserId) {
+        Optional<VehicleRental> rentalOpt = vehicleRentalRepository.findById(rentalId);
+        if (rentalOpt.isEmpty()) {
+            return ServiceResult.error("Khong tim thay don thue.");
+        }
+        VehicleRental rental = rentalOpt.get();
+        if (rental.getStatus() != VehicleRental.RentalStatus.CONFIRMED) {
+            return ServiceResult.error("Don thue chua duoc xac nhan.");
+        }
+
+        Optional<Driver> actorDriver = driverRepository.findByUserId(driverUserId);
+        if (actorDriver.isEmpty() || !actorDriver.get().getId().equals(rental.getDriverId())) {
+            return ServiceResult.error("Ban khong co quyen bat dau chuyen.");
+        }
+
+        rental.setStatus(VehicleRental.RentalStatus.ACTIVE);
+        rental.setActualStart(LocalDateTime.now());
+        vehicleRentalRepository.save(rental);
+
+        vehicleRepository.findById(rental.getVehicleId()).ifPresent(v -> {
+            v.setStatus(VehicleStatus.ON_TRIP);
+            vehicleRepository.save(v);
+        });
+        return ServiceResult.success("Da bat dau chuyen.", rental.getId());
     }
 
     public ServiceResult completeTrip(Long rentalId, Long driverUserId, BigDecimal extraFee, String notes) {
@@ -154,11 +235,8 @@ public class VehicleRentalService {
         }
         VehicleRental rental = rentalOpt.get();
 
-        if (rental.getStatus() == VehicleRental.RentalStatus.COMPLETED) {
-            return ServiceResult.error("Don thue da hoan thanh truoc do.");
-        }
-        if (rental.getStatus() == VehicleRental.RentalStatus.CANCELLED) {
-            return ServiceResult.error("Don thue da bi huy.");
+        if (rental.getStatus() != VehicleRental.RentalStatus.ACTIVE) {
+            return ServiceResult.error("Don thue chua bat dau hoac da ket thuc.");
         }
         if (driverUserId != null) {
             Optional<Driver> actorDriver = driverRepository.findByUserId(driverUserId);
@@ -188,9 +266,6 @@ public class VehicleRentalService {
         rental.setExtraFee(safeExtraFee.setScale(2, RoundingMode.HALF_UP));
         rental.setTotalPrice(totalPrice);
         rental.setActualEnd(LocalDateTime.now());
-        if (rental.getActualStart() == null) {
-            rental.setActualStart(rental.getPlannedStart());
-        }
         if (notes != null && !notes.isBlank()) {
             rental.setNotes(notes.trim());
         }
@@ -225,6 +300,9 @@ public class VehicleRentalService {
         }
         if (rental.getStatus() == VehicleRental.RentalStatus.CANCELLED) {
             return ServiceResult.error("Don da huy, khong the thanh toan.");
+        }
+        if (rental.getStatus() != VehicleRental.RentalStatus.COMPLETED) {
+            return ServiceResult.error("Don chua hoan thanh, khong the thanh toan.");
         }
         if (rental.getPaymentStatus() == PaymentStatus.PAID) {
             return ServiceResult.error("Don nay da thanh toan truoc do.");
@@ -298,6 +376,9 @@ public class VehicleRentalService {
         }
         if (rental.getStatus() == VehicleRental.RentalStatus.COMPLETED) {
             return ServiceResult.error("Don da hoan thanh, khong the huy.");
+        }
+        if (rental.getStatus() == VehicleRental.RentalStatus.ACTIVE) {
+            return ServiceResult.error("Don dang chay, khong the huy.");
         }
         if (rental.getPaymentStatus() == PaymentStatus.PAID) {
             return ServiceResult.error("Don da thanh toan, khong the huy.");

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
@@ -67,6 +68,76 @@ public class DriverRentalController {
                 form.getExtraFee(),
                 form.getNotes()
         );
+        if (result.ok()) {
+            ra.addFlashAttribute("success", result.message());
+        } else {
+            ra.addFlashAttribute("error", result.message());
+        }
+        return "redirect:/driver/rentals";
+    }
+
+    @PostMapping("/{id}/accept")
+    public String accept(
+            @PathVariable("id") Long rentalId,
+            HttpSession session,
+            RedirectAttributes ra) {
+        User loggedUser = SecurityUtil.getLoggedUser(session);
+        if (loggedUser == null) {
+            return "redirect:/auth/login";
+        }
+        if (loggedUser.getRole() != Role.DRIVER) {
+            ra.addFlashAttribute("error", "Ban khong co quyen thuc hien.");
+            return "redirect:/";
+        }
+
+        VehicleRentalService.ServiceResult result = vehicleRentalService.acceptRental(rentalId, loggedUser.getId());
+        if (result.ok()) {
+            ra.addFlashAttribute("success", result.message());
+        } else {
+            ra.addFlashAttribute("error", result.message());
+        }
+        return "redirect:/driver/rentals";
+    }
+
+    @PostMapping("/{id}/reject")
+    public String reject(
+            @PathVariable("id") Long rentalId,
+            @RequestParam(name = "reason", required = false) String reason,
+            HttpSession session,
+            RedirectAttributes ra) {
+        User loggedUser = SecurityUtil.getLoggedUser(session);
+        if (loggedUser == null) {
+            return "redirect:/auth/login";
+        }
+        if (loggedUser.getRole() != Role.DRIVER) {
+            ra.addFlashAttribute("error", "Ban khong co quyen thuc hien.");
+            return "redirect:/";
+        }
+
+        VehicleRentalService.ServiceResult result = vehicleRentalService.rejectRental(rentalId, loggedUser.getId(), reason);
+        if (result.ok()) {
+            ra.addFlashAttribute("success", result.message());
+        } else {
+            ra.addFlashAttribute("error", result.message());
+        }
+        return "redirect:/driver/rentals";
+    }
+
+    @PostMapping("/{id}/start")
+    public String start(
+            @PathVariable("id") Long rentalId,
+            HttpSession session,
+            RedirectAttributes ra) {
+        User loggedUser = SecurityUtil.getLoggedUser(session);
+        if (loggedUser == null) {
+            return "redirect:/auth/login";
+        }
+        if (loggedUser.getRole() != Role.DRIVER) {
+            ra.addFlashAttribute("error", "Ban khong co quyen thuc hien.");
+            return "redirect:/";
+        }
+
+        VehicleRentalService.ServiceResult result = vehicleRentalService.startTrip(rentalId, loggedUser.getId());
         if (result.ok()) {
             ra.addFlashAttribute("success", result.message());
         } else {

@@ -267,7 +267,7 @@
                 <td th:text="${r.status}"></td>
                 <td style="white-space:nowrap;">
                     <span th:if="${r.paymentStatus.name() == 'PAID'}" class="badge badge-paid">PAID</span>
-                    <div th:if="${r.paymentStatus.name() == 'PENDING'}">
+                    <div th:if="${r.paymentStatus.name() == 'PENDING' and r.status.name() == 'COMPLETED'}">
                         <span class="badge badge-pending">PENDING</span>
                         <form th:if="${r.status.name() != 'CANCELLED'}"
                               th:action="@{/rentals/{id}/pay(id=${r.id})}"
@@ -278,7 +278,7 @@
                     </div>
                 </td>
                 <td style="white-space:nowrap;">
-                    <form th:if="${r.status.name() != 'CANCELLED' and r.status.name() != 'COMPLETED' and r.paymentStatus.name() != 'PAID'}"
+                    <form th:if="${r.status.name() == 'PENDING' or r.status.name() == 'CONFIRMED'}"
                           th:action="@{/rentals/{id}/cancel(id=${r.id})}"
                           method="post"
                           class="cancel-form">
