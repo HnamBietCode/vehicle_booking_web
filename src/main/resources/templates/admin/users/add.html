@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 
 <head>
@@ -270,43 +270,20 @@
                         placeholder="Nguyễn Văn A" required>
                 </div>
 
-                <div class="form-group" id="driverFields" style="display: none;">
-                    <label class="form-label" for="cccd">🪪 Hồ sơ Tài xế</label>
-                    <div style="display: flex; flex-direction: column; gap: 0.8rem;">
-                        <div>
-                            <input type="text" id="cccd" class="form-control" name="cccd" th:value="*{cccd}"
-                                placeholder="Nhập 12 số CCCD">
-                            <p class="form-hint">Bắt buộc nhập 12 số đối với tài khoản Driver.</p>
-                        </div>
-                        <div>
-                            <input type="text" id="driverLicense" class="form-control" name="driverLicense"
-                                th:value="*{driverLicense}" placeholder="Nhập số bằng lái xe">
-                        </div>
-                        <div>
-                            <label class="form-label" for="licenseExpiry" style="margin-bottom: 0.2rem;">Ngày hết hạn
-                                bằng lái</label>
-                            <input type="date" id="licenseExpiry" class="form-control" name="licenseExpiry"
-                                th:value="*{licenseExpiry}">
-                        </div>
-                        <div>
-                            <label class="form-label" for="vehicleTypes" style="margin-bottom: 0.2rem;">Loại xe</label>
-                            <select id="vehicleTypes" class="form-control" name="vehicleTypes">
-                                <option value="">-- Chọn loại xe --</option>
-                                <option value="MOTORCYCLE" th:selected="*{vehicleTypes == 'MOTORCYCLE'}">Xe máy</option>
-                                <option value="CAR_4" th:selected="*{vehicleTypes == 'CAR_4'}">Xe 4 chỗ</option>
-                                <option value="CAR_7" th:selected="*{vehicleTypes == 'CAR_7'}">Xe 7 chỗ</option>
-                                <option value="CAR_16" th:selected="*{vehicleTypes == 'CAR_16'}">Xe 16 chỗ</option>
-                                <option value="CAR_29" th:selected="*{vehicleTypes == 'CAR_29'}">Xe 29 chỗ</option>
-                                <option value="CAR_45" th:selected="*{vehicleTypes == 'CAR_45'}">Xe 45 chỗ</option>
-                                <option value="TRUCK_SMALL" th:selected="*{vehicleTypes == 'TRUCK_SMALL'}">Xe tải nhỏ
-                                </option>
-                                <option value="TRUCK_MEDIUM" th:selected="*{vehicleTypes == 'TRUCK_MEDIUM'}">Xe tải
-                                    trung</option>
-                                <option value="TRUCK_LARGE" th:selected="*{vehicleTypes == 'TRUCK_LARGE'}">Xe tải lớn
-                                </option>
-                            </select>
-                        </div>
+                <div id="driverFields" style="display: none;">
+                    <div class="section-title">Hồ sơ Tài xế</div>
+                    <div class="form-group">
+                        <label class="form-label" for="cccd">🪪 Căn cước công dân</label>
+                        <input type="text" id="cccd" class="form-control" name="cccd" th:value="*{cccd}"
+                            placeholder="Nhập 12 số CCCD" pattern="[0-9]{12}" maxlength="12">
+                        <p class="form-hint">Bắt buộc nhập 12 số đối với tài khoản Driver.</p>
                     </div>
+
+                    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+                        <span>🪪 Danh sách Bằng lái</span>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="addLicense()">+ Thêm bằng lái</button>
+                    </div>
+                    <div id="licensesContainer"></div>
                 </div>
 
                 <div class="section-title">Bảo mật</div>
@@ -332,42 +309,111 @@
         </div>
     </main>
 
+    <style>
+        .vehicle-types-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:.4rem; }
+        .vt-checkbox { display:flex; align-items:center; gap:.4rem; padding:.4rem .6rem;
+            border:1.5px solid var(--border); border-radius:8px; font-size:.82rem; cursor:pointer; transition:all .2s; }
+        .vt-checkbox:hover { border-color:var(--primary); background:#F5F3FF; }
+        .vt-checkbox:has(input:checked) { border-color:var(--primary); background:#EEF2FF; }
+        .license-row { border:1.5px solid var(--border); }
+        .btn-danger { background:var(--danger); color:#fff; }
+        .btn-sm { padding:.35rem .8rem; font-size:.8rem; }
+        input[type=checkbox] { width:1.1rem; height:1.1rem; accent-color:var(--primary); cursor:pointer; }
+    </style>
+
     <script>
+        const CLASS_MAP = {
+            'A1': ['MOTORCYCLE'],
+            'B1': ['CAR_4','CAR_7'],
+            'B2': ['CAR_4','CAR_7'],
+            'C':  ['CAR_16','CAR_29','CAR_45'],
+            'D':  ['CAR_16','CAR_29','CAR_45'],
+            'E':  ['CAR_29','CAR_45'],
+            'FC': ['TRUCK_SMALL','TRUCK_MEDIUM','TRUCK_LARGE']
+        };
+        let licenseCount = 0;
+
+        function addLicense() {
+            licenseCount++;
+            const html = `
+            <div class="license-row card" style="margin-bottom:1rem;padding:1rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;">
+                    <strong>Bằng lái #${licenseCount}</strong>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.license-row').remove()">✕ Xoá</button>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.7rem;">
+                    <div class="form-group" style="margin:0;"><label class="form-label">Số bằng lái</label>
+                        <input type="text" class="form-control" name="licenseNumbers" required></div>
+                    <div class="form-group" style="margin:0;"><label class="form-label">Hạng bằng</label>
+                        <select class="form-control license-class-select" name="licenseClasses" onchange="onClassChange(this)">
+                            <option value="A1">A1 – Xe máy</option>
+                            <option value="B1">B1 – Xe ô tô (AT)</option>
+                            <option value="B2" selected>B2 – Xe ô tô</option>
+                            <option value="C">C – Xe tải/khách</option>
+                            <option value="D">D – Xe khách lớn</option>
+                            <option value="E">E – Xe đầu kéo</option>
+                            <option value="FC">FC – Xe tải nặng</option>
+                        </select></div>
+                    <div class="form-group" style="margin:0;"><label class="form-label">Hạn bằng lái</label>
+                        <input type="date" class="form-control" name="licenseExpiries" required></div>
+                </div>
+                <div class="form-group" style="margin-top:.7rem;margin-bottom:0;">
+                    <label class="form-label">Loại xe</label>
+                    <div class="vehicle-types-grid vt-grid-row">
+                        <label class="vt-checkbox"><input type="checkbox" value="MOTORCYCLE" class="vt-cb"> Xe máy</label>
+                        <label class="vt-checkbox"><input type="checkbox" value="CAR_4" class="vt-cb" checked> Xe 4 chỗ</label>
+                        <label class="vt-checkbox"><input type="checkbox" value="CAR_7" class="vt-cb" checked> Xe 7 chỗ</label>
+                        <label class="vt-checkbox"><input type="checkbox" value="CAR_16" class="vt-cb"> Xe 16 chỗ</label>
+                        <label class="vt-checkbox"><input type="checkbox" value="CAR_29" class="vt-cb"> Xe 29 chỗ</label>
+                        <label class="vt-checkbox"><input type="checkbox" value="CAR_45" class="vt-cb"> Xe 45 chỗ</label>
+                        <label class="vt-checkbox"><input type="checkbox" value="TRUCK_SMALL" class="vt-cb"> Xe tải nhỏ</label>
+                        <label class="vt-checkbox"><input type="checkbox" value="TRUCK_MEDIUM" class="vt-cb"> Xe tải trung</label>
+                        <label class="vt-checkbox"><input type="checkbox" value="TRUCK_LARGE" class="vt-cb"> Xe tải lớn</label>
+                    </div>
+                    <input type="hidden" name="licenseVehicleTypes" class="vt-hidden">
+                </div>
+            </div>`;
+            document.getElementById('licensesContainer').insertAdjacentHTML('beforeend', html);
+            const newRow = document.getElementById('licensesContainer').lastElementChild;
+            onClassChange(newRow.querySelector('.license-class-select'));
+        }
+
+        function onClassChange(selectEl) {
+            const cls = selectEl.value;
+            const row = selectEl.closest('.license-row');
+            const cbs = row.querySelectorAll('.vt-cb');
+            const allowed = CLASS_MAP[cls] || [];
+            cbs.forEach(cb => { cb.checked = allowed.includes(cb.value); });
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
             const roleSelect = document.getElementById('role');
-            const cccdGroup = document.getElementById('driverFields');
+            const driverFields = document.getElementById('driverFields');
             const cccdInput = document.getElementById('cccd');
-            const driverLicenseInput = document.getElementById('driverLicense');
-            const licenseExpiryInput = document.getElementById('licenseExpiry');
-            const vehicleTypesInput = document.getElementById('vehicleTypes');
 
-            function toggleCccd() {
+            function toggleDriver() {
                 if (roleSelect.value === 'DRIVER') {
-                    cccdGroup.style.display = 'block';
+                    driverFields.style.display = 'block';
                     cccdInput.setAttribute('required', 'required');
-                    driverLicenseInput.setAttribute('required', 'required');
-                    licenseExpiryInput.setAttribute('required', 'required');
-                    vehicleTypesInput.setAttribute('required', 'required');
                 } else {
-                    cccdGroup.style.display = 'none';
+                    driverFields.style.display = 'none';
                     cccdInput.removeAttribute('required');
-                    driverLicenseInput.removeAttribute('required');
-                    licenseExpiryInput.removeAttribute('required');
-                    vehicleTypesInput.removeAttribute('required');
-
                     cccdInput.value = '';
-                    driverLicenseInput.value = '';
-                    licenseExpiryInput.value = '';
-                    vehicleTypesInput.value = '';
                 }
             }
 
-            roleSelect.addEventListener('change', toggleCccd);
+            // On submit: collect checkboxes into hidden fields
+            document.querySelector('form').addEventListener('submit', function () {
+                document.querySelectorAll('.license-row').forEach(row => {
+                    const sel = [];
+                    row.querySelectorAll('.vt-cb').forEach(cb => { if (cb.checked) sel.push(cb.value); });
+                    row.querySelector('.vt-hidden').value = sel.join(',');
+                });
+            });
 
-            // Chạy hàm toggleCccd ngay khi tải trang để xử lý trường hợp user chọn form lỗi và được load lại
-            toggleCccd();
+            roleSelect.addEventListener('change', toggleDriver);
+            toggleDriver();
         });
     </script>
 </body>
-
 </html>

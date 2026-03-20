@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 
 <head>
@@ -245,8 +245,10 @@
         <div th:if="${error}" class="alert-danger" th:text="${error}"></div>
 
         <div class="card">
-            <form th:action="@{/admin/users/{id}/edit(id=${target.id})}" method="post" th:object="${form}">
+            <form th:action="@{/admin/users/{id}/edit(id=${target.id})}" method="post" th:object="${form}"
+                  id="editForm">
 
+                <!-- ════ THÔNG TIN CHUNG ════ -->
                 <div class="section-title">Thông tin cá nhân</div>
 
                 <div class="form-group">
@@ -261,46 +263,107 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="address">📍 Địa chỉ (Customer)</label>
-                    <input type="text" id="address" class="form-control" name="address" th:value="*{address}"
-                        placeholder="Chỉ áp dụng cho Khách hàng">
-                </div>
-
-                <div class="form-group">
                     <label class="form-label" for="avatarUrl">🖼️ URL Ảnh đại diện</label>
                     <input type="url" id="avatarUrl" class="form-control" name="avatarUrl" th:value="*{avatarUrl}">
                 </div>
 
-                <div class="form-group" id="cccdGroup" style="display: none;">
-                    <label class="form-label" for="cccd">🪪 Căn cước công dân (Chỉ dành cho Tài xế)</label>
-                    <input type="text" id="cccd" class="form-control" name="cccd" th:value="*{cccd}"
-                        placeholder="Nhập 12 số CCCD nếu đổi sang Tài xế">
+                <!-- ════ KHÁCH HÀNG ════ -->
+                <div id="customerSection" style="display:none;">
+                    <div class="section-title">Thông tin Khách hàng</div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="address">📍 Địa chỉ</label>
+                        <input type="text" id="address" class="form-control" name="address" th:value="*{address}"
+                            placeholder="Nhập địa chỉ khách hàng">
+                    </div>
                 </div>
 
-                <div class="section-title">Phân quyền & Trạng thái</div>
+                <!-- ════ TÀI XẾ ════ -->
+                <div id="driverSection" style="display:none;">
+                    <div class="section-title">Thông tin Tài xế</div>
 
+                    <div class="form-group">
+                        <label class="form-label" for="cccd">🪪 Căn cước công dân</label>
+                        <input type="text" id="cccd" class="form-control" name="cccd" th:value="*{cccd}"
+                            placeholder="Nhập 12 số CCCD" pattern="[0-9]{12}" maxlength="12">
+                    </div>
+
+                    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+                        <span>🪪 Danh sách Bằng lái</span>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="addLicense()">+ Thêm bằng lái</button>
+                    </div>
+
+                    <div id="licensesContainer">
+                        <th:block th:if="${licenses != null}" th:each="lic, iter : ${licenses}">
+                            <div class="license-row card" style="margin-bottom:1rem;padding:1rem;" th:attr="data-vt=${lic.vehicleTypes}">
+                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;">
+                                    <strong th:text="'Bằng lái #' + ${iter.count}">Bằng lái</strong>
+                                    <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.license-row').remove()">✕ Xoá</button>
+                                </div>
+                                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.7rem;">
+                                    <div class="form-group" style="margin:0;"><label class="form-label">Số bằng lái</label>
+                                        <input type="text" class="form-control" name="licenseNumbers" th:value="${lic.licenseNumber}" required></div>
+                                    <div class="form-group" style="margin:0;"><label class="form-label">Hạng bằng</label>
+                                        <select class="form-control license-class-select" name="licenseClasses" onchange="onClassChange(this)">
+                                            <option value="A1" th:selected="${lic.licenseClass == 'A1'}">A1 – Xe máy</option>
+                                            <option value="B1" th:selected="${lic.licenseClass == 'B1'}">B1 – Xe ô tô (AT)</option>
+                                            <option value="B2" th:selected="${lic.licenseClass == 'B2'}">B2 – Xe ô tô</option>
+                                            <option value="C" th:selected="${lic.licenseClass == 'C'}">C – Xe tải/khách</option>
+                                            <option value="D" th:selected="${lic.licenseClass == 'D'}">D – Xe khách lớn</option>
+                                            <option value="E" th:selected="${lic.licenseClass == 'E'}">E – Xe đầu kéo</option>
+                                            <option value="FC" th:selected="${lic.licenseClass == 'FC'}">FC – Xe tải nặng</option>
+                                        </select></div>
+                                    <div class="form-group" style="margin:0;"><label class="form-label">Hạn bằng lái</label>
+                                        <input type="date" class="form-control" name="licenseExpiries" th:value="${lic.licenseExpiry}" required></div>
+                                </div>
+                                <div class="form-group" style="margin-top:.7rem;margin-bottom:0;">
+                                    <label class="form-label">Loại xe</label>
+                                    <div class="vehicle-types-grid vt-grid-row">
+                                        <label class="vt-checkbox"><input type="checkbox" value="MOTORCYCLE" class="vt-cb"> Xe máy</label>
+                                        <label class="vt-checkbox"><input type="checkbox" value="CAR_4" class="vt-cb"> Xe 4 chỗ</label>
+                                        <label class="vt-checkbox"><input type="checkbox" value="CAR_7" class="vt-cb"> Xe 7 chỗ</label>
+                                        <label class="vt-checkbox"><input type="checkbox" value="CAR_16" class="vt-cb"> Xe 16 chỗ</label>
+                                        <label class="vt-checkbox"><input type="checkbox" value="CAR_29" class="vt-cb"> Xe 29 chỗ</label>
+                                        <label class="vt-checkbox"><input type="checkbox" value="CAR_45" class="vt-cb"> Xe 45 chỗ</label>
+                                        <label class="vt-checkbox"><input type="checkbox" value="TRUCK_SMALL" class="vt-cb"> Xe tải nhỏ</label>
+                                        <label class="vt-checkbox"><input type="checkbox" value="TRUCK_MEDIUM" class="vt-cb"> Xe tải trung</label>
+                                        <label class="vt-checkbox"><input type="checkbox" value="TRUCK_LARGE" class="vt-cb"> Xe tải lớn</label>
+                                    </div>
+                                    <input type="hidden" name="licenseVehicleTypes" class="vt-hidden">
+                                </div>
+                            </div>
+                        </th:block>
+                    </div>
+                </div>
+
+                <!-- ════ ĐỔI MẬT KHẨU ════ -->
+                <div class="section-title">Đổi mật khẩu</div>
+                <div class="form-group">
+                    <label class="form-label" for="newPassword">🔑 Mật khẩu mới</label>
+                    <input type="password" id="newPassword" class="form-control" name="newPassword"
+                        placeholder="Để trống nếu không đổi" minlength="6">
+                    <small style="color:var(--muted);font-size:.78rem;">Tối thiểu 6 ký tự. Để trống nếu không muốn đổi.</small>
+                </div>
+
+                <!-- ════ PHÂN QUYỀN ════ -->
+                <div class="section-title">Phân quyền &amp; Trạng thái</div>
                 <div class="form-group">
                     <label class="form-label" for="role">Vai trò</label>
                     <select id="role" class="form-control" name="role">
                         <option value="ADMIN" th:selected="${target.role.name() == 'ADMIN'}">🛡️ Admin</option>
-                        <option value="CUSTOMER" th:selected="${target.role.name() == 'CUSTOMER'}">🧑‍💼 Khách hàng
-                        </option>
+                        <option value="CUSTOMER" th:selected="${target.role.name() == 'CUSTOMER'}">🧑‍💼 Khách hàng</option>
                         <option value="DRIVER" th:selected="${target.role.name() == 'DRIVER'}">🚕 Tài xế</option>
                     </select>
                 </div>
-
                 <div class="form-group">
                     <label class="form-label">Trạng thái tài khoản</label>
                     <div class="toggle-group">
-                        <input type="checkbox" id="isActive" name="isActive" th:checked="${target.isActive}"
-                            value="true">
+                        <input type="checkbox" id="isActive" name="isActive" th:checked="${target.isActive}" value="true">
                         <label for="isActive" style="font-size:.9rem;cursor:pointer;">
-                            Tài khoản đang <strong th:text="${target.isActive ? 'hoạt động' : 'bị khoá'}">hoạt
-                                động</strong>
+                            Tài khoản đang <strong th:text="${target.isActive ? 'hoạt động' : 'bị khoá'}">hoạt động</strong>
                         </label>
                     </div>
                 </div>
-
                 <div class="btn-group">
                     <button type="submit" class="btn btn-primary">💾 Lưu thay đổi</button>
                     <a class="btn btn-outline" th:href="@{/admin/users/{id}(id=${target.id})}">← Huỷ</a>
@@ -308,26 +371,113 @@
             </form>
         </div>
     </main>
+
+    <style>
+        .vehicle-types-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:.4rem; }
+        .vt-checkbox { display:flex; align-items:center; gap:.4rem; padding:.4rem .6rem;
+            border:1.5px solid var(--border); border-radius:8px; font-size:.82rem; cursor:pointer; transition:all .2s; }
+        .vt-checkbox:hover { border-color:var(--primary); background:#F5F3FF; }
+        .vt-checkbox:has(input:checked) { border-color:var(--primary); background:#EEF2FF; }
+        .license-row { border:1.5px solid var(--border); }
+        .btn-danger { background:var(--danger); color:#fff; }
+        .btn-sm { padding:.35rem .8rem; font-size:.8rem; }
+    </style>
+
     <script>
+        const CLASS_MAP = {
+            'A1': ['MOTORCYCLE'],
+            'B1': ['CAR_4','CAR_7'],
+            'B2': ['CAR_4','CAR_7'],
+            'C':  ['CAR_16','CAR_29','CAR_45'],
+            'D':  ['CAR_16','CAR_29','CAR_45'],
+            'E':  ['CAR_29','CAR_45'],
+            'FC': ['TRUCK_SMALL','TRUCK_MEDIUM','TRUCK_LARGE']
+        };
+        let licenseCount = document.querySelectorAll('.license-row').length;
+
+        function addLicense() {
+            licenseCount++;
+            const html = `
+            <div class="license-row card" style="margin-bottom:1rem;padding:1rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;">
+                    <strong>Bằng lái #${licenseCount}</strong>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.license-row').remove()">✕ Xoá</button>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.7rem;">
+                    <div class="form-group" style="margin:0;"><label class="form-label">Số bằng lái</label>
+                        <input type="text" class="form-control" name="licenseNumbers" required></div>
+                    <div class="form-group" style="margin:0;"><label class="form-label">Hạng bằng</label>
+                        <select class="form-control license-class-select" name="licenseClasses" onchange="onClassChange(this)">
+                            <option value="A1">A1 – Xe máy</option>
+                            <option value="B1">B1 – Xe ô tô (AT)</option>
+                            <option value="B2" selected>B2 – Xe ô tô</option>
+                            <option value="C">C – Xe tải/khách</option>
+                            <option value="D">D – Xe khách lớn</option>
+                            <option value="E">E – Xe đầu kéo</option>
+                            <option value="FC">FC – Xe tải nặng</option>
+                        </select></div>
+                    <div class="form-group" style="margin:0;"><label class="form-label">Hạn bằng lái</label>
+                        <input type="date" class="form-control" name="licenseExpiries" required></div>
+                </div>
+                <div class="form-group" style="margin-top:.7rem;margin-bottom:0;">
+                    <label class="form-label">Loại xe</label>
+                    <div class="vehicle-types-grid vt-grid-row">
+                        <label class="vt-checkbox"><input type="checkbox" value="MOTORCYCLE" class="vt-cb"> Xe máy</label>
+                        <label class="vt-checkbox"><input type="checkbox" value="CAR_4" class="vt-cb" checked> Xe 4 chỗ</label>
+                        <label class="vt-checkbox"><input type="checkbox" value="CAR_7" class="vt-cb" checked> Xe 7 chỗ</label>
+                        <label class="vt-checkbox"><input type="checkbox" value="CAR_16" class="vt-cb"> Xe 16 chỗ</label>
+                        <label class="vt-checkbox"><input type="checkbox" value="CAR_29" class="vt-cb"> Xe 29 chỗ</label>
+                        <label class="vt-checkbox"><input type="checkbox" value="CAR_45" class="vt-cb"> Xe 45 chỗ</label>
+                        <label class="vt-checkbox"><input type="checkbox" value="TRUCK_SMALL" class="vt-cb"> Xe tải nhỏ</label>
+                        <label class="vt-checkbox"><input type="checkbox" value="TRUCK_MEDIUM" class="vt-cb"> Xe tải trung</label>
+                        <label class="vt-checkbox"><input type="checkbox" value="TRUCK_LARGE" class="vt-cb"> Xe tải lớn</label>
+                    </div>
+                    <input type="hidden" name="licenseVehicleTypes" class="vt-hidden">
+                </div>
+            </div>`;
+            document.getElementById('licensesContainer').insertAdjacentHTML('beforeend', html);
+            // Auto-check default B2 vehicle types
+            const newRow = document.getElementById('licensesContainer').lastElementChild;
+            onClassChange(newRow.querySelector('.license-class-select'));
+        }
+
+        function onClassChange(selectEl) {
+            const cls = selectEl.value;
+            const row = selectEl.closest('.license-row');
+            const cbs = row.querySelectorAll('.vt-cb');
+            const allowed = CLASS_MAP[cls] || [];
+            cbs.forEach(cb => { cb.checked = allowed.includes(cb.value); });
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
             const roleSelect = document.getElementById('role');
-            const cccdGroup = document.getElementById('cccdGroup');
-            const cccdInput = document.getElementById('cccd');
+            const customerSection = document.getElementById('customerSection');
+            const driverSection = document.getElementById('driverSection');
 
-            function toggleCccd() {
-                if (roleSelect.value === 'DRIVER') {
-                    cccdGroup.style.display = 'block';
-                    cccdInput.setAttribute('required', 'required');
-                } else {
-                    cccdGroup.style.display = 'none';
-                    cccdInput.removeAttribute('required');
-                }
+            function toggleSections() {
+                customerSection.style.display = (roleSelect.value === 'CUSTOMER') ? 'block' : 'none';
+                driverSection.style.display = (roleSelect.value === 'DRIVER') ? 'block' : 'none';
             }
 
-            roleSelect.addEventListener('change', toggleCccd);
-            toggleCccd();
+            // Init checkboxes from server data
+            document.querySelectorAll('.license-row').forEach(row => {
+                const vt = row.getAttribute('data-vt') || '';
+                const types = vt.split(',').map(s => s.trim());
+                row.querySelectorAll('.vt-cb').forEach(cb => { cb.checked = types.includes(cb.value); });
+            });
+
+            // On submit: collect checkboxes into hidden fields
+            document.getElementById('editForm').addEventListener('submit', function () {
+                document.querySelectorAll('.license-row').forEach(row => {
+                    const sel = [];
+                    row.querySelectorAll('.vt-cb').forEach(cb => { if (cb.checked) sel.push(cb.value); });
+                    row.querySelector('.vt-hidden').value = sel.join(',');
+                });
+            });
+
+            roleSelect.addEventListener('change', toggleSections);
+            toggleSections();
         });
     </script>
 </body>
-
-</html>
+</html>

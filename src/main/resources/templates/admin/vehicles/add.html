@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 
 <head>
@@ -7,6 +7,8 @@
     <title>Thêm xe – Admin</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         *,
         *::before,
@@ -232,6 +234,143 @@
             padding-bottom: .5rem;
             border-bottom: 1px solid var(--border);
         }
+
+        /* ── Upload Zone ── */
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all .3s ease;
+            background: var(--bg);
+            position: relative;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.dragover {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, .04);
+        }
+
+        .upload-zone input[type="file"] {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 2.5rem;
+            margin-bottom: .5rem;
+        }
+
+        .upload-text {
+            font-size: .9rem;
+            color: var(--muted);
+        }
+
+        .upload-text strong {
+            color: var(--primary);
+        }
+
+        .upload-hint {
+            font-size: .75rem;
+            color: var(--muted);
+            margin-top: .3rem;
+        }
+
+        .image-preview {
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            object-fit: cover;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, .1);
+        }
+
+        .image-preview .remove-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            margin-top: .5rem;
+            padding: .3rem .8rem;
+            font-size: .8rem;
+            color: var(--danger);
+            background: #FEF2F2;
+            border: 1px solid #FECACA;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .image-preview .remove-btn:hover {
+            background: #FEE2E2;
+        }
+
+        /* ── Address Autocomplete ── */
+        .address-wrapper {
+            position: relative;
+            z-index: 1000;
+        }
+
+        .address-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 220px;
+            overflow-y: auto;
+            z-index: 50;
+            display: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .1);
+        }
+
+        .address-suggestions.show {
+            display: block;
+        }
+
+        .address-suggestion-item {
+            padding: .65rem 1rem;
+            cursor: pointer;
+            font-size: .88rem;
+            border-bottom: 1px solid var(--border);
+            transition: background .15s;
+            display: flex;
+            align-items: flex-start;
+            gap: .5rem;
+        }
+
+        .address-suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .address-suggestion-item:hover {
+            background: rgba(79, 70, 229, .06);
+        }
+
+        .address-suggestion-item .pin {
+            flex-shrink: 0;
+            color: var(--primary);
+            margin-top: 2px;
+        }
+
+        #map-preview {
+            height: 220px;
+            border-radius: 8px;
+            margin-top: .75rem;
+            display: none;
+            border: 1.5px solid var(--border);
+        }
+
+        #map-preview.show {
+            display: block;
+        }
     </style>
 </head>
 
@@ -247,7 +386,8 @@
         <div th:if="${error}" class="alert-danger" th:text="${error}"></div>
 
         <div class="card">
-            <form th:action="@{/admin/vehicles/add}" method="post" th:object="${form}">
+            <form th:action="@{/admin/vehicles/add}" method="post" th:object="${form}"
+                  enctype="multipart/form-data">
 
                 <div class="section-title">Thông tin cơ bản</div>
                 <div class="form-grid">
@@ -306,45 +446,215 @@
                         <input type="number" id="year" class="form-control" name="year" th:value="*{year}"
                             placeholder="2022" min="1990" max="2030">
                     </div>
-                    <div class="form-group" style="grid-column: 1 / -1;">
-                        <label class="form-label" for="imageUrl">URL Hình ảnh</label>
-                        <input type="url" id="imageUrl" class="form-control" name="imageUrl" th:value="*{imageUrl}"
-                            placeholder="https://...">
-                    </div>
+                </div>
 
-                    <div class="form-group" style="grid-column: 1 / -1;">
-                        <label class="form-label" for="currentAddress">Khu vực / Địa chỉ hiện tại</label>
-                        <textarea id="currentAddress" class="form-control" name="currentAddress" rows="2"
-                            placeholder="Ví dụ: Quận 1, TP. HCM" th:text="*{currentAddress}"></textarea>
-                    </div>
-
-                    <h3 style="grid-column: 1 / -1; margin-top:1.5rem; margin-bottom:.5rem; font-size:1.1rem;">Bảng giá
-                    </h3>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label class="form-label" for="pricePerKm">Giá / km (đồng) *</label>
-                            <input type="number" id="pricePerKm" class="form-control" name="pricePerKm"
-                                th:value="*{pricePerKm}" placeholder="5000" min="0" step="500" required>
+                <!-- ── Image Upload ── -->
+                <div class="form-group">
+                    <label class="form-label">📷 Hình ảnh xe</label>
+                    <div class="upload-zone" id="uploadZone">
+                        <input type="file" id="imageFile" name="imageFile" accept="image/*" />
+                        <div class="upload-icon">📁</div>
+                        <div class="upload-text">
+                            <strong>Nhấn để chọn ảnh</strong> hoặc kéo thả file vào đây
                         </div>
-                        <div class="form-group">
-                            <label class="form-label" for="pricePerHour">Giá / giờ (đồng) *</label>
-                            <input type="number" id="pricePerHour" class="form-control" name="pricePerHour"
-                                th:value="*{pricePerHour}" placeholder="50000" min="0" step="1000" required>
-                        </div>
+                        <div class="upload-hint">Hỗ trợ: JPG, PNG, WebP, GIF — Tối đa 5MB</div>
                     </div>
-                    <div class="form-group" style="max-width: 320px;">
-                        <label class="form-label" for="pricePerDay">Giá / ngày (đồng) *</label>
-                        <input type="number" id="pricePerDay" class="form-control" name="pricePerDay"
-                            th:value="*{pricePerDay}" placeholder="300000" min="0" step="5000" required>
+                    <div class="image-preview" id="imagePreview">
+                        <img id="previewImg" src="" alt="Preview" />
+                        <button type="button" class="remove-btn" id="removeBtn">❌ Xoá ảnh</button>
                     </div>
+                </div>
 
-                    <div class="btn-group">
-                        <button type="submit" class="btn btn-primary">💾 Lưu xe</button>
-                        <a class="btn btn-outline" th:href="@{/admin/vehicles}">← Huỷ</a>
+                <!-- ── Address Autocomplete + Map ── -->
+                <div class="form-group">
+                    <label class="form-label" for="currentAddress">📍 Khu vực / Địa chỉ hiện tại</label>
+                    <div class="address-wrapper">
+                        <input type="text" id="currentAddress" class="form-control" name="currentAddress"
+                            th:value="*{currentAddress}"
+                            placeholder="Gõ để tìm địa chỉ tại Việt Nam..."
+                            autocomplete="off" />
+                        <div class="address-suggestions" id="addressSuggestions"></div>
                     </div>
+                    <div id="map-preview"></div>
+                </div>
+
+                <h3 style="grid-column: 1 / -1; margin-top:1.5rem; margin-bottom:.5rem; font-size:1.1rem;">Bảng giá
+                </h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="pricePerKm">Giá / km (đồng) *</label>
+                        <input type="number" id="pricePerKm" class="form-control" name="pricePerKm"
+                            th:value="*{pricePerKm}" placeholder="5000" min="0" step="500" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="pricePerHour">Giá / giờ (đồng) *</label>
+                        <input type="number" id="pricePerHour" class="form-control" name="pricePerHour"
+                            th:value="*{pricePerHour}" placeholder="50000" min="0" step="1000" required>
+                    </div>
+                </div>
+                <div class="form-group" style="max-width: 320px;">
+                    <label class="form-label" for="pricePerDay">Giá / ngày (đồng) *</label>
+                    <input type="number" id="pricePerDay" class="form-control" name="pricePerDay"
+                        th:value="*{pricePerDay}" placeholder="300000" min="0" step="5000" required>
+                </div>
+
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">💾 Lưu xe</button>
+                    <a class="btn btn-outline" th:href="@{/admin/vehicles}">← Huỷ</a>
+                </div>
             </form>
         </div>
     </main>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ════════════════════════════════════════════════════
+        //  IMAGE UPLOAD
+        // ════════════════════════════════════════════════════
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('imageFile');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('previewImg');
+        const removeBtn = document.getElementById('removeBtn');
+
+        uploadZone.addEventListener('click', () => fileInput.click());
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                showPreview(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                showPreview(fileInput.files[0]);
+            }
+        });
+
+        function showPreview(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImg.src = e.target.result;
+                imagePreview.style.display = 'block';
+                uploadZone.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        removeBtn.addEventListener('click', () => {
+            fileInput.value = '';
+            previewImg.src = '';
+            imagePreview.style.display = 'none';
+            uploadZone.style.display = 'block';
+        });
+
+        // ════════════════════════════════════════════════════
+        //  ADDRESS AUTOCOMPLETE (Nominatim – Vietnam)
+        // ════════════════════════════════════════════════════
+        const addressInput = document.getElementById('currentAddress');
+        const suggestionsBox = document.getElementById('addressSuggestions');
+        const mapDiv = document.getElementById('map-preview');
+        let debounceTimer = null;
+        let map = null;
+        let marker = null;
+
+        // Khi user gõ vào ô địa chỉ → tìm gợi ý
+        addressInput.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            const query = addressInput.value.trim();
+            if (query.length < 2) {
+                suggestionsBox.innerHTML = '';
+                suggestionsBox.classList.remove('show');
+                return;
+            }
+            debounceTimer = setTimeout(() => searchAddress(query), 400);
+        });
+
+        // Khi focus lại ô input mà đã có text >= 2 ký tự → tìm lại
+        addressInput.addEventListener('focus', () => {
+            const query = addressInput.value.trim();
+            if (query.length >= 2 && suggestionsBox.children.length === 0) {
+                searchAddress(query);
+            } else if (suggestionsBox.children.length > 0) {
+                suggestionsBox.classList.add('show');
+            }
+        });
+
+        async function searchAddress(query) {
+            try {
+                const url = 'https://nominatim.openstreetmap.org/search?format=json'
+                    + '&q=' + encodeURIComponent(query)
+                    + '&countrycodes=vn&limit=6&accept-language=vi';
+                const res = await fetch(url);
+                const data = await res.json();
+
+                suggestionsBox.innerHTML = '';
+                if (!data || data.length === 0) {
+                    suggestionsBox.classList.remove('show');
+                    return;
+                }
+
+                data.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'address-suggestion-item';
+                    div.innerHTML = '<span class="pin">📍</span><span>' + item.display_name + '</span>';
+                    div.addEventListener('click', () => selectAddress(item));
+                    suggestionsBox.appendChild(div);
+                });
+                suggestionsBox.classList.add('show');
+            } catch (e) {
+                console.error('Address search error:', e);
+            }
+        }
+
+        function selectAddress(item) {
+            addressInput.value = item.display_name;
+            suggestionsBox.innerHTML = '';
+            suggestionsBox.classList.remove('show');
+            showMap(parseFloat(item.lat), parseFloat(item.lon), item.display_name);
+        }
+
+        function showMap(lat, lng, label) {
+            mapDiv.style.display = 'block';
+            mapDiv.classList.add('show');
+
+            // Nếu map đã tồn tại → xoá rồi tạo lại
+            if (map) {
+                map.remove();
+                map = null;
+                marker = null;
+            }
+
+            map = L.map('map-preview').setView([lat, lng], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
+            marker = L.marker([lat, lng]).addTo(map).bindPopup(label).openPopup();
+
+            // Fix Leaflet map rendering khi container thay đổi kích thước
+            setTimeout(() => map.invalidateSize(), 300);
+        }
+
+        // Ẩn dropdown khi click ra ngoài
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.address-wrapper')) {
+                suggestionsBox.classList.remove('show');
+            }
+        });
+    </script>
 </body>
 
 </html>

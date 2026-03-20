@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 
 <head>
@@ -377,6 +377,13 @@
                 <div class="detail-item"><label>Email</label>
                     <p th:text="${target.email}">—</p>
                 </div>
+                <div class="detail-item"><label>Mật khẩu (đã mã hoá)</label>
+                    <p style="display:flex;align-items:center;gap:.5rem;">
+                        <code id="pwdDisplay" style="font-size:.8rem;word-break:break-all;">••••••••••••</code>
+                        <button type="button" onclick="togglePwd()" style="background:none;border:none;cursor:pointer;font-size:1rem;" title="Hiện/ẩn">👁️</button>
+                    </p>
+                    <input type="hidden" id="pwdHash" th:value="${target.password}" />
+                </div>
                 <div class="detail-item"><label>Số điện thoại</label>
                     <p th:text="${target.phone}">—</p>
                 </div>
@@ -439,15 +446,53 @@
                 <div class="detail-item"><label>CCCD</label>
                     <p th:text="${driver.cccd}">—</p>
                 </div>
-                <div class="detail-item"><label>Bằng lái</label>
-                    <p th:text="${driver.driverLicense}">—</p>
+                <div class="detail-item" style="grid-column:1/-1;" th:if="${licenses != null && !licenses.isEmpty()}">
+                    <label>🪪 Danh sách Bằng lái</label>
+                    <table style="width:100%;border-collapse:collapse;margin-top:.5rem;font-size:.88rem;">
+                        <thead>
+                            <tr style="background:#F1F5F9;text-align:left;">
+                                <th style="padding:.5rem .7rem;border:1px solid var(--border);">#</th>
+                                <th style="padding:.5rem .7rem;border:1px solid var(--border);">Số bằng lái</th>
+                                <th style="padding:.5rem .7rem;border:1px solid var(--border);">Hạng</th>
+                                <th style="padding:.5rem .7rem;border:1px solid var(--border);">Hạn</th>
+                                <th style="padding:.5rem .7rem;border:1px solid var(--border);">Loại xe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="lic, iter : ${licenses}">
+                                <td style="padding:.5rem .7rem;border:1px solid var(--border);" th:text="${iter.count}">1</td>
+                                <td style="padding:.5rem .7rem;border:1px solid var(--border);" th:text="${lic.licenseNumber}">—</td>
+                                <td style="padding:.5rem .7rem;border:1px solid var(--border);" th:text="${lic.licenseClass}">—</td>
+                                <td style="padding:.5rem .7rem;border:1px solid var(--border);" th:text="${#temporals.format(lic.licenseExpiry,'dd/MM/yyyy')}">—</td>
+                                <td style="padding:.5rem .7rem;border:1px solid var(--border);">
+                                    <th:block th:each="vt, stat : ${#strings.arraySplit(lic.vehicleTypes, ',')}">
+                                        <span th:if="${stat.index > 0}">, </span>
+                                        <span th:switch="${#strings.trim(vt)}">
+                                            <span th:case="'MOTORCYCLE'">Xe máy</span>
+                                            <span th:case="'CAR_4'">Xe 4 chỗ</span>
+                                            <span th:case="'CAR_7'">Xe 7 chỗ</span>
+                                            <span th:case="'CAR_16'">Xe 16 chỗ</span>
+                                            <span th:case="'CAR_29'">Xe 29 chỗ</span>
+                                            <span th:case="'CAR_45'">Xe 45 chỗ</span>
+                                            <span th:case="'TRUCK_SMALL'">Xe tải nhỏ</span>
+                                            <span th:case="'TRUCK_MEDIUM'">Xe tải trung</span>
+                                            <span th:case="'TRUCK_LARGE'">Xe tải lớn</span>
+                                            <span th:case="*" th:text="${#strings.trim(vt)}">—</span>
+                                        </span>
+                                    </th:block>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-                <div class="detail-item"><label>Hết hạn bằng</label>
-                    <p th:text="${#temporals.format(driver.licenseExpiry,'dd/MM/yyyy')}">—</p>
-                </div>
-                <div class="detail-item"><label>Loại xe</label>
-                    <p th:text="${driver.vehicleTypes}">—</p>
-                </div>
+                <th:block th:if="${licenses == null || licenses.isEmpty()}">
+                    <div class="detail-item"><label>Bằng lái</label>
+                        <p th:text="${driver.driverLicense}">—</p></div>
+                    <div class="detail-item"><label>Hết hạn bằng</label>
+                        <p th:text="${#temporals.format(driver.licenseExpiry,'dd/MM/yyyy')}">—</p></div>
+                    <div class="detail-item"><label>Loại xe</label>
+                        <p th:text="${driver.vehicleTypes}">—</p></div>
+                </th:block>
                 <div class="detail-item" th:if="${driver.verificationStatus.name() != 'APPROVED'}"><label>Xét
                         duyệt</label>
                     <p><span class="badge"
@@ -458,10 +503,10 @@
                 <div class="detail-item" th:if="${driver.approvedAt != null}"><label>Thời gian duyệt</label>
                     <p th:text="${#temporals.format(driver.approvedAt,'dd/MM/yyyy HH:mm')}">—</p>
                 </div>
-                <div class="detail-item" th:if="${driver.approvedBy != null}"><label>Người duyệt (Admin ID)</label>
-                    <p th:text="${driver.approvedBy}">—</p>
+                <div class="detail-item" th:if="${driver.approvedBy != null}"><label>Người duyệt</label>
+                    <p th:text="${approverName != null ? approverName : ('ID: ' + driver.approvedBy)}">—</p>
                 </div>
-                <div class="detail-item" th:if="${driver.rejectionReason != null}"><label>Lý do từ chối/khoá</label>
+                <div class="detail-item" th:if="${!target.isActive && driver.rejectionReason != null}"><label>Lý do bị khoá</label>
                     <p th:text="${driver.rejectionReason}">—</p>
                 </div>
                 <div class="detail-item"><label>Đánh giá</label>
@@ -498,6 +543,14 @@
 </body>
 
 <script>
+    let pwdVisible = false;
+    function togglePwd() {
+        const display = document.getElementById('pwdDisplay');
+        const hash = document.getElementById('pwdHash').value;
+        pwdVisible = !pwdVisible;
+        display.textContent = pwdVisible ? hash : '••••••••••••';
+    }
+
     function promptReject() {
         const reason = prompt("Vui lòng nhập lý do từ chối hồ sơ này:");
         if (reason !== null && reason.trim() !== "") {

@@ -57,6 +57,37 @@ public class VehicleService {
                 .toList();
     }
 
+    /**
+     * Tìm tài xế đã duyệt VÀ có bằng lái phù hợp với loại xe.
+     */
+    @Transactional(readOnly = true)
+    public List<Driver> findEligibleDrivers(VehicleCategory category) {
+        return driverRepository.findAll().stream()
+                .filter(d -> d.getVerificationStatus() == VerificationStatus.APPROVED)
+                .filter(d -> supportsCategory(d.getVehicleTypes(), category))
+                .toList();
+    }
+
+    private boolean supportsCategory(String vehicleTypes, VehicleCategory category) {
+        if (vehicleTypes == null || vehicleTypes.isBlank()) return false;
+        String normalized = "," + vehicleTypes.replace(" ", "") + ",";
+        return normalized.contains("," + category.name() + ",");
+    }
+
+    private String getCategoryLabel(VehicleCategory cat) {
+        return switch (cat) {
+            case MOTORCYCLE -> "Xe máy";
+            case CAR_4 -> "Xe 4 chỗ";
+            case CAR_7 -> "Xe 7 chỗ";
+            case CAR_16 -> "Xe 16 chỗ";
+            case CAR_29 -> "Xe 29 chỗ";
+            case CAR_45 -> "Xe 45 chỗ";
+            case TRUCK_SMALL -> "Xe tải nhỏ";
+            case TRUCK_MEDIUM -> "Xe tải trung";
+            case TRUCK_LARGE -> "Xe tải lớn";
+        };
+    }
+
     // ── Search (public) ─────────────────────────────────────────────
 
     @Transactional(readOnly = true)
@@ -121,13 +152,19 @@ public class VehicleService {
         if (dOpt.get().getVerificationStatus() != VerificationStatus.APPROVED)
             return "Chỉ tài xế đã được duyệt mới có thể gán xe.";
 
+        // Kiểm tra tài xế có bằng lái phù hợp với loại xe
+        Vehicle v = vOpt.get();
+        Driver d = dOpt.get();
+        if (!supportsCategory(d.getVehicleTypes(), v.getCategory())) {
+            return "Tài xế này không có bằng lái phù hợp với loại xe " + getCategoryLabel(v.getCategory()) + ".";
+        }
+
         // Bỏ gán xe cũ của tài xế này nếu có
         vehicleRepository.findByAssignedDriver(driverId).ifPresent(old -> {
             old.setAssignedDriver(null);
             vehicleRepository.save(old);
         });
 
-        Vehicle v = vOpt.get();
         v.setAssignedDriver(driverId);
         vehicleRepository.save(v);
         return null;
