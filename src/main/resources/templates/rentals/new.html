@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <title>Đặt thuê xe có tài xế</title>
+    <title>Dat thue xe co tai xe</title>
     <style>
         *,
         *::before,
@@ -56,11 +56,6 @@
             display: flex;
             align-items: center;
             gap: .5rem;
-        }
-
-        .navbar-brand::before {
-            content: '🚗';
-            font-size: 1.4rem;
         }
 
         .navbar-nav {
@@ -222,21 +217,21 @@
 
 <main class="main">
     <div class="page-header">
-        <h1 class="page-title">Đặt thuê xe có tài xế</h1>
-        <a class="btn btn-outline" th:href="@{/vehicles/search}">Quay lại</a>
+        <h1 class="page-title">Dat thue xe co tai xe</h1>
+        <a class="btn btn-outline" th:href="@{/vehicles/search}">Quay lai</a>
     </div>
 
     <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
     <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
 
     <div class="card">
-        <h3 class="card-title">Thông tin đơn thuê</h3>
+        <h3 class="card-title">Thong tin don thue</h3>
         <form th:action="@{/rentals}" method="post" th:object="${form}">
             <div class="form-grid">
                 <div class="form-group full">
                     <label class="form-label" for="vehicleId">Xe</label>
                     <select class="form-control" id="vehicleId" th:field="*{vehicleId}" required>
-                        <option value="">-- Chọn xe --</option>
+                        <option value="">-- Chon xe --</option>
                         <option th:each="v : ${vehicles}"
                                 th:value="${v.id}"
                                 th:attr="data-price-hour=${v.pricePerHour},data-price-day=${v.pricePerDay}"
@@ -246,70 +241,103 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="rentalType">Hình thức thuê</label>
+                    <label class="form-label" for="rentalType">Hinh thuc thue</label>
                     <select class="form-control" id="rentalType" th:field="*{rentalType}" required>
                         <option th:each="t : ${rentalTypes}" th:value="${t}" th:text="${t}"></option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Điểm đón</label>
+                    <label class="form-label">Diem don</label>
                     <div style="display:flex; gap:1rem; margin-bottom:.5rem;">
                         <label style="display:flex; gap:.4rem; align-items:center;">
-                            <input type="radio" name="pickupMode" value="POINT" checked> Chọn điểm có sẵn
+                            <input type="radio" name="pickupMode" value="POINT" checked> Chon diem co san
                         </label>
                         <label style="display:flex; gap:.4rem; align-items:center;">
-                            <input type="radio" name="pickupMode" value="MANUAL"> Tự nhập địa chỉ
+                            <input type="radio" name="pickupMode" value="MANUAL"> Tu nhap dia chi
                         </label>
                     </div>
 
                     <select class="form-control" id="pickupPointId" th:field="*{pickupPointId}">
-                        <option value="">-- Chọn điểm đón --</option>
+                        <option value="">-- Chon diem don --</option>
                         <option th:each="p : ${pickupPoints}"
                                 th:value="${p.id}"
                                 th:text="${p.name + ' - ' + p.address}">
                         </option>
                     </select>
-                    <input class="form-control" id="pickupAddress" th:field="*{pickupAddress}" type="text"
-                           placeholder="Nhập địa chỉ đón cụ thể"
-                           style="margin-top:.5rem; display:none;">
+
+                    <div id="manualAddressFields" style="margin-top:.5rem; display:none;">
+                        <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap:1rem;">
+                            <div class="form-group full">
+                                <label class="form-label">Dia diem don (Tinh/Thanh pho)</label>
+                                <select id="province" class="form-control">
+                                    <option value="">-- Chon Tinh/Thanh pho --</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Quan/Huyen</label>
+                                <select id="district" class="form-control" disabled>
+                                    <option value="">-- Chon Quan/Huyen --</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Phuong/Xa</label>
+                                <select id="ward" class="form-control" disabled>
+                                    <option value="">-- Chon Phuong/Xa --</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group full">
+                                <label class="form-label">So nha / Ten duong</label>
+                                <input type="text" id="streetAddress" class="form-control" placeholder="Vi du: 123 Nguyen Hue">
+                            </div>
+                        </div>
+                        <input type="hidden" id="pickupAddress" th:field="*{pickupAddress}">
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="plannedStart">Thời gian bắt đầu</label>
+                    <label class="form-label" for="plannedStart">Thoi gian bat dau</label>
                     <input class="form-control" id="plannedStart" th:field="*{plannedStart}" type="datetime-local" required>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="plannedEnd">Thời gian kết thúc</label>
+                    <label class="form-label" for="plannedEnd">Thoi gian ket thuc</label>
                     <input class="form-control" id="plannedEnd" th:field="*{plannedEnd}" type="datetime-local" required>
                 </div>
 
                 <div class="form-group full">
-                    <label class="form-label" for="notes">Ghi chú</label>
+                    <label class="form-label" for="notes">Ghi chu</label>
                     <textarea class="form-control" id="notes" th:field="*{notes}" rows="3"></textarea>
                 </div>
 
                 <div class="form-group full">
                     <div class="estimate-box">
-                        <div class="estimate-label">Tạm tính theo lựa chọn hiện tại</div>
+                        <div class="estimate-label">Tam tinh theo lua chon hien tai</div>
                         <div id="estimateValue" class="estimate-value">--</div>
                     </div>
                 </div>
             </div>
 
             <div style="display:flex; gap:.6rem; margin-top:.5rem;">
-                <button class="btn btn-primary" type="submit">Đặt thuê</button>
-                <a class="btn btn-outline" th:href="@{/rentals/my}">Xem đơn của tôi</a>
+                <button class="btn btn-primary" type="submit">Dat thue</button>
+                <a class="btn btn-outline" th:href="@{/rentals/my}">Xem don cua toi</a>
             </div>
         </form>
     </div>
 </main>
 <script>
     (function () {
-        const pickupModeRadios = document.querySelectorAll('input[name="pickupMode"]');
+        const pickupModeRadios = document.querySelectorAll('input[name=\"pickupMode\"]');
         const pickupPoint = document.getElementById('pickupPointId');
         const pickupAddress = document.getElementById('pickupAddress');
+        const manualAddressFields = document.getElementById('manualAddressFields');
+        const provinceSel = document.getElementById('province');
+        const districtSel = document.getElementById('district');
+        const wardSel = document.getElementById('ward');
+        const streetInp = document.getElementById('streetAddress');
 
         const rentalType = document.getElementById('rentalType');
         const vehicle = document.getElementById('vehicleId');
@@ -317,19 +345,58 @@
         const end = document.getElementById('plannedEnd');
         const estimateValue = document.getElementById('estimateValue');
 
-        const fmtVnd = (n) => new Intl.NumberFormat('vi-VN').format(n) + 'đ';
+        const fmtVnd = (n) => new Intl.NumberFormat('vi-VN').format(n) + 'd';
+
+        function updateFinalAddress() {
+            if (!pickupAddress) return;
+            const parts = [];
+            const street = (streetInp && streetInp.value || '').trim();
+            const ward = wardSel && wardSel.selectedOptions.length ? wardSel.selectedOptions[0].text : '';
+            const district = districtSel && districtSel.selectedOptions.length ? districtSel.selectedOptions[0].text : '';
+            const province = provinceSel && provinceSel.selectedOptions.length ? provinceSel.selectedOptions[0].text : '';
+
+            if (street) parts.push(street);
+            if (ward && ward.indexOf('Chon') !== 0) parts.push(ward);
+            if (district && district.indexOf('Chon') !== 0) parts.push(district);
+            if (province && province.indexOf('Chon') !== 0) parts.push(province);
+
+            pickupAddress.value = parts.join(', ');
+        }
+
+        async function fetchProvinces() {
+            if (!provinceSel) return;
+            try {
+                const res = await fetch('https://provinces.open-api.vn/api/p/');
+                const data = await res.json();
+                data.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.code;
+                    opt.text = p.name;
+                    provinceSel.add(opt);
+                });
+            } catch (e) {
+                console.error('Error fetching provinces', e);
+            }
+        }
 
         function syncPickupMode() {
             const mode = [...pickupModeRadios].find(r => r.checked)?.value || 'POINT';
             const usePoint = mode === 'POINT';
 
             pickupPoint.style.display = usePoint ? 'block' : 'none';
-            pickupAddress.style.display = usePoint ? 'none' : 'block';
+            if (manualAddressFields) manualAddressFields.style.display = usePoint ? 'none' : 'block';
 
             pickupPoint.required = usePoint;
-            pickupAddress.required = !usePoint;
-            if (usePoint) pickupAddress.value = '';
-            else pickupPoint.value = '';
+            if (provinceSel) provinceSel.required = !usePoint;
+            if (districtSel) districtSel.required = !usePoint;
+            if (wardSel) wardSel.required = !usePoint;
+            if (streetInp) streetInp.required = !usePoint;
+
+            if (usePoint) {
+                pickupAddress.value = '';
+            } else {
+                pickupPoint.value = '';
+            }
         }
 
         function updateEstimate() {
@@ -361,17 +428,67 @@
             estimateValue.textContent = fmtVnd(estimate);
         }
 
+        if (provinceSel) {
+            provinceSel.addEventListener('change', async () => {
+                districtSel.innerHTML = '<option value=\"\">-- Chon Quan/Huyen --</option>';
+                wardSel.innerHTML = '<option value=\"\">-- Chon Phuong/Xa --</option>';
+                districtSel.disabled = true;
+                wardSel.disabled = true;
+
+                if (provinceSel.value) {
+                    try {
+                        const res = await fetch(`https://provinces.open-api.vn/api/p/${provinceSel.value}?depth=2`);
+                        const data = await res.json();
+                        data.districts.forEach(d => {
+                            const opt = document.createElement('option');
+                            opt.value = d.code;
+                            opt.text = d.name;
+                            districtSel.add(opt);
+                        });
+                        districtSel.disabled = false;
+                    } catch (e) {
+                        console.error('Error fetching districts', e);
+                    }
+                }
+                updateFinalAddress();
+            });
+        }
+
+        if (districtSel) {
+            districtSel.addEventListener('change', async () => {
+                wardSel.innerHTML = '<option value=\"\">-- Chon Phuong/Xa --</option>';
+                wardSel.disabled = true;
+
+                if (districtSel.value) {
+                    try {
+                        const res = await fetch(`https://provinces.open-api.vn/api/d/${districtSel.value}?depth=2`);
+                        const data = await res.json();
+                        data.wards.forEach(w => {
+                            const opt = document.createElement('option');
+                            opt.value = w.code;
+                            opt.text = w.name;
+                            wardSel.add(opt);
+                        });
+                        wardSel.disabled = false;
+                    } catch (e) {
+                        console.error('Error fetching wards', e);
+                    }
+                }
+                updateFinalAddress();
+            });
+        }
+
+        if (wardSel) wardSel.addEventListener('change', updateFinalAddress);
+        if (streetInp) streetInp.addEventListener('input', updateFinalAddress);
+
         pickupModeRadios.forEach(r => r.addEventListener('change', syncPickupMode));
         [rentalType, vehicle, start, end].forEach(el => el.addEventListener('change', updateEstimate));
         [start, end].forEach(el => el.addEventListener('input', updateEstimate));
 
+        fetchProvinces();
         syncPickupMode();
         updateEstimate();
     })();
 </script>
 </body>
 </html>
-
-
-
-
