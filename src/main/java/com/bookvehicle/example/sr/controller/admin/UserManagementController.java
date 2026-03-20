@@ -3,7 +3,7 @@ package com.bookvehicle.example.sr.controller.admin;
 import com.bookvehicle.example.sr.config.SecurityUtil;
 import com.bookvehicle.example.sr.dto.ProfileEditForm;
 import com.bookvehicle.example.sr.dto.RegisterForm;
-import com.bookvehicle.example.sr.dto.VehicleForm;
+
 import com.bookvehicle.example.sr.model.*;
 import com.bookvehicle.example.sr.service.UserService;
 import com.bookvehicle.example.sr.service.VehicleService;
@@ -69,6 +69,14 @@ public class UserManagementController {
         } else if (target.getRole().name().equals("DRIVER")) {
             userService.findDriverByUserId(id).ifPresent(d -> {
                 model.addAttribute("driver", d);
+                model.addAttribute("licenses", userService.findDriverLicenses(d.getId()));
+
+                // Tìm tên người duyệt từ approvedBy (admin user ID)
+                if (d.getApprovedBy() != null) {
+                    userService.findById(d.getApprovedBy()).ifPresent(admin -> {
+                        model.addAttribute("approverName", admin.getEmail());
+                    });
+                }
 
                 int totalRatings = ratingService.findDriverRatings(d.getId()).size();
                 Double avgRating = ratingService.getAvgRating(RatingTargetType.DRIVER, d.getId());
@@ -90,10 +98,14 @@ public class UserManagementController {
 
     @PostMapping("/add")
     public String handleAdd(@ModelAttribute("form") RegisterForm form,
+            @RequestParam(name = "licenseNumbers", required = false) String[] licenseNumbers,
+            @RequestParam(name = "licenseClasses", required = false) String[] licenseClasses,
+            @RequestParam(name = "licenseExpiries", required = false) String[] licenseExpiries,
+            @RequestParam(name = "licenseVehicleTypes", required = false) String[] licenseVehicleTypes,
             Model model,
             HttpSession session,
             RedirectAttributes ra) {
-        String error = userService.adminCreateUser(form);
+        String error = userService.adminCreateUser(form, licenseNumbers, licenseClasses, licenseExpiries, licenseVehicleTypes);
         if (error != null) {
             model.addAttribute("error", error);
             model.addAttribute("loggedUser", SecurityUtil.getLoggedUser(session));
@@ -122,7 +134,14 @@ public class UserManagementController {
                 form.setAddress(c.getAddress());
             });
         } else if (target.getRole().name().equals("DRIVER")) {
-            userService.findDriverByUserId(id).ifPresent(d -> form.setFullName(d.getFullName()));
+            userService.findDriverByUserId(id).ifPresent(d -> {
+                form.setFullName(d.getFullName());
+                form.setCccd(d.getCccd());
+                form.setDriverLicense(d.getDriverLicense());
+                form.setVehicleTypes(d.getVehicleTypes());
+                form.setLicenseExpiry(d.getLicenseExpiry());
+                model.addAttribute("licenses", userService.findDriverLicenses(d.getId()));
+            });
         } else {
             form.setFullName(target.getEmail());
         }
@@ -138,10 +157,16 @@ public class UserManagementController {
             @ModelAttribute("form") ProfileEditForm form,
             @RequestParam(name = "role", required = false) String role,
             @RequestParam(name = "isActive", required = false) Boolean isActive,
+            @RequestParam(name = "newPassword", required = false) String newPassword,
+            @RequestParam(name = "licenseNumbers", required = false) String[] licenseNumbers,
+            @RequestParam(name = "licenseClasses", required = false) String[] licenseClasses,
+            @RequestParam(name = "licenseExpiries", required = false) String[] licenseExpiries,
+            @RequestParam(name = "licenseVehicleTypes", required = false) String[] licenseVehicleTypes,
             Model model,
             HttpSession session,
             RedirectAttributes ra) {
-        String error = userService.adminUpdateUser(id, form, role, isActive);
+        String error = userService.adminUpdateUser(id, form, role, isActive, newPassword,
+                licenseNumbers, licenseClasses, licenseExpiries, licenseVehicleTypes);
         if (error != null) {
             model.addAttribute("error", error);
             model.addAttribute("loggedUser", SecurityUtil.getLoggedUser(session));

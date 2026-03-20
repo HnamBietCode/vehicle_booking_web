@@ -54,8 +54,19 @@ CREATE TABLE IF NOT EXISTS drivers (
     CONSTRAINT fk_drivers_user      FOREIGN KEY (user_id)     REFERENCES users (id) ON DELETE CASCADE,
     CONSTRAINT fk_drivers_approver  FOREIGN KEY (approved_by) REFERENCES users (id) ON DELETE SET NULL,
     CONSTRAINT uq_drivers_user_id   UNIQUE (user_id),
-    CONSTRAINT uq_drivers_cccd      UNIQUE (cccd),
-    CONSTRAINT uq_drivers_license   UNIQUE (driver_license)
+    CONSTRAINT uq_drivers_cccd      UNIQUE (cccd)
+);
+
+CREATE TABLE IF NOT EXISTS driver_licenses (
+    id              BIGINT PRIMARY KEY AUTO_INCREMENT,
+    driver_id       BIGINT NOT NULL,
+    license_number  VARCHAR(20) NOT NULL,
+    license_class   VARCHAR(10) NOT NULL,
+    license_expiry  DATE NOT NULL,
+    vehicle_types   VARCHAR(255) NOT NULL,
+
+    CONSTRAINT fk_dl_driver FOREIGN KEY (driver_id) REFERENCES drivers (id) ON DELETE CASCADE,
+    INDEX idx_dl_driver (driver_id)
 );
 
 CREATE TABLE IF NOT EXISTS user_sessions (
@@ -388,3 +399,10 @@ PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 SET @s = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'sober_bookings' AND COLUMN_NAME = 'province' AND TABLE_SCHEMA = DATABASE()) = 0, 'ALTER TABLE sober_bookings ADD COLUMN province VARCHAR(100), ADD COLUMN district VARCHAR(100), ADD COLUMN ward VARCHAR(100)', 'SELECT 1'));
 PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- Drop old unique constraint on driver_license (now using driver_licenses table)
+SET @s = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_NAME = 'drivers' AND INDEX_NAME = 'uq_drivers_license' AND TABLE_SCHEMA = DATABASE()) > 0, 'ALTER TABLE drivers DROP INDEX uq_drivers_license', 'SELECT 1'));
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- Expand vehicles.category ENUM to include all vehicle types
+ALTER TABLE vehicles MODIFY COLUMN category ENUM('MOTORCYCLE','CAR_4','CAR_7','CAR_16','CAR_29','CAR_45','TRUCK_SMALL','TRUCK_MEDIUM','TRUCK_LARGE') NOT NULL;

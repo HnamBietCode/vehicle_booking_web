@@ -3,6 +3,8 @@ package com.bookvehicle.example.sr.model;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "drivers")
@@ -73,6 +75,10 @@ public class Driver {
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
     private User user;
 
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "driver_id", insertable = false, updatable = false)
+    private List<DriverLicense> licenses = new ArrayList<>();
+
     // ─── Getters & Setters ───────────────────────────────────────
 
     public Long getId() { return id; }
@@ -136,4 +142,7 @@ public class Driver {
 
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
+
+    public List<DriverLicense> getLicenses() { return licenses; }
+    public void setLicenses(List<DriverLicense> licenses) { this.licenses = licenses; }
 }

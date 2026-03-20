@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 
 <head>
@@ -7,6 +7,8 @@
     <title>Sửa xe – Admin</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         *,
         *::before,
@@ -226,6 +228,160 @@
             padding-bottom: .5rem;
             border-bottom: 1px solid var(--border);
         }
+
+        /* ── Upload Zone ── */
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all .3s ease;
+            background: var(--bg);
+            position: relative;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.dragover {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, .04);
+        }
+
+        .upload-zone input[type="file"] {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 2.5rem;
+            margin-bottom: .5rem;
+        }
+
+        .upload-text {
+            font-size: .9rem;
+            color: var(--muted);
+        }
+
+        .upload-text strong {
+            color: var(--primary);
+        }
+
+        .upload-hint {
+            font-size: .75rem;
+            color: var(--muted);
+            margin-top: .3rem;
+        }
+
+        .image-preview {
+            margin-top: 1rem;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            object-fit: cover;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, .1);
+        }
+
+        .image-preview .remove-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            margin-top: .5rem;
+            padding: .3rem .8rem;
+            font-size: .8rem;
+            color: var(--danger);
+            background: #FEF2F2;
+            border: 1px solid #FECACA;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .image-preview .remove-btn:hover {
+            background: #FEE2E2;
+        }
+
+        .current-image {
+            margin-bottom: .75rem;
+        }
+
+        .current-image-label {
+            font-size: .8rem;
+            color: var(--muted);
+            margin-bottom: .4rem;
+        }
+
+        .current-image img {
+            max-width: 100%;
+            max-height: 180px;
+            border-radius: 8px;
+            object-fit: cover;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, .1);
+        }
+
+        /* ── Address Autocomplete ── */
+        .address-wrapper {
+            position: relative;
+            z-index: 1000;
+        }
+
+        .address-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 220px;
+            overflow-y: auto;
+            z-index: 50;
+            display: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .1);
+        }
+
+        .address-suggestions.show {
+            display: block;
+        }
+
+        .address-suggestion-item {
+            padding: .65rem 1rem;
+            cursor: pointer;
+            font-size: .88rem;
+            border-bottom: 1px solid var(--border);
+            transition: background .15s;
+            display: flex;
+            align-items: flex-start;
+            gap: .5rem;
+        }
+
+        .address-suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .address-suggestion-item:hover {
+            background: rgba(79, 70, 229, .06);
+        }
+
+        .address-suggestion-item .pin {
+            flex-shrink: 0;
+            color: var(--primary);
+            margin-top: 2px;
+        }
+
+        #map-preview {
+            height: 220px;
+            border-radius: 8px;
+            margin-top: .75rem;
+            display: none;
+            border: 1.5px solid var(--border);
+        }
+
+        #map-preview.show {
+            display: block;
+        }
     </style>
 </head>
 
@@ -242,7 +398,11 @@
         <div th:if="${error}" class="alert-danger" th:text="${error}"></div>
 
         <div class="card">
-            <form th:action="@{/admin/vehicles/{id}/edit(id=${vehicle.id})}" method="post" th:object="${form}">
+            <form th:action="@{/admin/vehicles/{id}/edit(id=${vehicle.id})}" method="post" th:object="${form}"
+                  enctype="multipart/form-data">
+
+                <!-- Hidden field giữ URL ảnh cũ -->
+                <input type="hidden" name="imageUrl" th:value="*{imageUrl}" id="hiddenImageUrl" />
 
                 <div class="section-title">Thông tin cơ bản</div>
                 <div class="form-grid">
@@ -298,16 +458,44 @@
                         <input type="number" id="year" class="form-control" name="year" th:value="*{year}" min="1990"
                             max="2030">
                     </div>
-                    <div class="form-group" style="grid-column: 1 / -1;">
-                        <label class="form-label" for="imageUrl">URL ảnh xe</label>
-                        <input type="url" id="imageUrl" class="form-control" name="imageUrl" th:value="*{imageUrl}">
+                </div>
+
+                <!-- ── Image Upload ── -->
+                <div class="form-group">
+                    <label class="form-label">📷 Hình ảnh xe</label>
+
+                    <!-- Hiển thị ảnh hiện tại nếu có -->
+                    <div class="current-image" id="currentImage"
+                         th:if="${form.imageUrl != null and !form.imageUrl.isEmpty()}">
+                        <div class="current-image-label">Ảnh hiện tại:</div>
+                        <img th:src="${form.imageUrl}" alt="Ảnh xe hiện tại" />
+                    </div>
+
+                    <div class="upload-zone" id="uploadZone">
+                        <input type="file" id="imageFile" name="imageFile" accept="image/*" />
+                        <div class="upload-icon">📁</div>
+                        <div class="upload-text">
+                            <strong>Nhấn để chọn ảnh mới</strong> hoặc kéo thả file vào đây
+                        </div>
+                        <div class="upload-hint">Nếu không chọn ảnh mới, ảnh cũ sẽ được giữ nguyên — Tối đa 5MB</div>
+                    </div>
+                    <div class="image-preview" id="imagePreview" style="display: none;">
+                        <img id="previewImg" src="" alt="Preview" />
+                        <button type="button" class="remove-btn" id="removeBtn">❌ Huỷ ảnh mới</button>
                     </div>
                 </div>
 
-                <div class="form-group" style="grid-column: 1 / -1;">
-                    <label class="form-label" for="currentAddress">Khu vực / Địa chỉ hiện tại</label>
-                    <textarea id="currentAddress" class="form-control" name="currentAddress" rows="2"
-                        placeholder="Ví dụ: Quận 1, TP. HCM" th:text="*{currentAddress}"></textarea>
+                <!-- ── Address Autocomplete + Map ── -->
+                <div class="form-group">
+                    <label class="form-label" for="currentAddress">📍 Khu vực / Địa chỉ hiện tại</label>
+                    <div class="address-wrapper">
+                        <input type="text" id="currentAddress" class="form-control" name="currentAddress"
+                            th:value="*{currentAddress}"
+                            placeholder="Gõ để tìm địa chỉ tại Việt Nam..."
+                            autocomplete="off" />
+                        <div class="address-suggestions" id="addressSuggestions"></div>
+                    </div>
+                    <div id="map-preview"></div>
                 </div>
 
                 <div class="section-title">Bảng giá</div>
@@ -336,6 +524,211 @@
             </form>
         </div>
     </main>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ════════════════════════════════════════════════════
+        //  IMAGE UPLOAD
+        // ════════════════════════════════════════════════════
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('imageFile');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('previewImg');
+        const removeBtn = document.getElementById('removeBtn');
+        const currentImage = document.getElementById('currentImage');
+
+        uploadZone.addEventListener('click', () => fileInput.click());
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                showPreview(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                showPreview(fileInput.files[0]);
+            }
+        });
+
+        function showPreview(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImg.src = e.target.result;
+                imagePreview.style.display = 'block';
+                uploadZone.style.display = 'none';
+                if (currentImage) currentImage.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        removeBtn.addEventListener('click', () => {
+            fileInput.value = '';
+            previewImg.src = '';
+            imagePreview.style.display = 'none';
+            uploadZone.style.display = 'block';
+            if (currentImage) currentImage.style.display = 'block';
+        });
+
+        // ════════════════════════════════════════════════════
+        //  ADDRESS AUTOCOMPLETE (Nominatim – Vietnam)
+        //  Nominatim cho phép tối đa 1 request/giây.
+        //  Code này đảm bảo tuân thủ rate-limit.
+        // ════════════════════════════════════════════════════
+        const addressInput = document.getElementById('currentAddress');
+        const suggestionsBox = document.getElementById('addressSuggestions');
+        const mapDiv = document.getElementById('map-preview');
+        let debounceTimer = null;
+        let map = null;
+        let marker = null;
+        let lastRequestTime = 0;           // Timestamp lần gọi API gần nhất
+        let initAbortController = null;    // Để huỷ request ban đầu nếu user gõ
+
+        // ── Hàm gọi Nominatim API (có rate-limit protection) ──
+        async function nominatimSearch(query, limit) {
+            // Đảm bảo ít nhất 1.1 giây giữa 2 request
+            const now = Date.now();
+            const elapsed = now - lastRequestTime;
+            if (elapsed < 1100) {
+                await new Promise(r => setTimeout(r, 1100 - elapsed));
+            }
+            lastRequestTime = Date.now();
+
+            const url = 'https://nominatim.openstreetmap.org/search?format=json'
+                + '&q=' + encodeURIComponent(query)
+                + '&countrycodes=vn&limit=' + (limit || 6)
+                + '&accept-language=vi';
+            const res = await fetch(url);
+            if (!res.ok) {
+                console.warn('Nominatim returned status:', res.status);
+                return [];
+            }
+            return await res.json();
+        }
+
+        // ── Khi user gõ vào ô địa chỉ → tìm gợi ý ──
+        addressInput.addEventListener('input', () => {
+            // Huỷ request ban đầu (load trang) nếu còn đang chạy
+            if (initAbortController) {
+                initAbortController.abort();
+                initAbortController = null;
+            }
+
+            clearTimeout(debounceTimer);
+            const query = addressInput.value.trim();
+            if (query.length < 2) {
+                suggestionsBox.innerHTML = '';
+                suggestionsBox.classList.remove('show');
+                return;
+            }
+            debounceTimer = setTimeout(() => searchAddress(query), 500);
+        });
+
+        // ── Khi focus lại ô input → hiện lại suggestions nếu có ──
+        addressInput.addEventListener('focus', () => {
+            if (suggestionsBox.children.length > 0) {
+                suggestionsBox.classList.add('show');
+            }
+        });
+
+        // ── Tìm kiếm và hiển thị gợi ý ──
+        async function searchAddress(query) {
+            try {
+                const data = await nominatimSearch(query, 6);
+
+                suggestionsBox.innerHTML = '';
+                if (!data || data.length === 0) {
+                    suggestionsBox.classList.remove('show');
+                    return;
+                }
+
+                data.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'address-suggestion-item';
+                    div.innerHTML = '<span class="pin">📍</span><span>' + item.display_name + '</span>';
+                    div.addEventListener('click', () => selectAddress(item));
+                    suggestionsBox.appendChild(div);
+                });
+                suggestionsBox.classList.add('show');
+            } catch (e) {
+                if (e.name !== 'AbortError') {
+                    console.error('Address search error:', e);
+                }
+            }
+        }
+
+        // ── Chọn 1 gợi ý ──
+        function selectAddress(item) {
+            addressInput.value = item.display_name;
+            suggestionsBox.innerHTML = '';
+            suggestionsBox.classList.remove('show');
+            showMap(parseFloat(item.lat), parseFloat(item.lon), item.display_name);
+        }
+
+        // ── Hiển thị bản đồ ──
+        function showMap(lat, lng, label) {
+            mapDiv.style.display = 'block';
+            mapDiv.classList.add('show');
+
+            // Xoá map cũ rồi tạo lại
+            if (map) {
+                map.remove();
+                map = null;
+                marker = null;
+            }
+
+            map = L.map('map-preview').setView([lat, lng], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
+            marker = L.marker([lat, lng]).addTo(map).bindPopup(label).openPopup();
+
+            setTimeout(() => map.invalidateSize(), 300);
+        }
+
+        // ── Ẩn dropdown khi click ra ngoài ──
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.address-wrapper')) {
+                suggestionsBox.classList.remove('show');
+            }
+        });
+
+        // ── Load map cho địa chỉ đã có khi mở trang ──
+        window.addEventListener('DOMContentLoaded', () => {
+            const addr = addressInput.value.trim();
+            if (addr.length > 3) {
+                initAbortController = new AbortController();
+                const signal = initAbortController.signal;
+
+                lastRequestTime = Date.now();
+                fetch('https://nominatim.openstreetmap.org/search?format=json'
+                    + '&q=' + encodeURIComponent(addr)
+                    + '&countrycodes=vn&limit=1&accept-language=vi',
+                    { signal: signal })
+                .then(r => { if (r.ok) return r.json(); return []; })
+                .then(data => {
+                    if (data && data.length > 0) {
+                        showMap(parseFloat(data[0].lat), parseFloat(data[0].lon), data[0].display_name);
+                    }
+                })
+                .catch(() => {})
+                .finally(() => { initAbortController = null; });
+            }
+        });
+    </script>
 </body>
 
 </html>

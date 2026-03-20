@@ -19,14 +19,17 @@ public class UserService {
     private final UserRepository userRepository;
     private final CustomerRepository customerRepository;
     private final DriverRepository driverRepository;
+    private final DriverLicenseRepository driverLicenseRepository;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public UserService(UserRepository userRepository,
             CustomerRepository customerRepository,
-            DriverRepository driverRepository) {
+            DriverRepository driverRepository,
+            DriverLicenseRepository driverLicenseRepository) {
         this.userRepository = userRepository;
         this.customerRepository = customerRepository;
         this.driverRepository = driverRepository;
+        this.driverLicenseRepository = driverLicenseRepository;
     }
 
     // ── Read ────────────────────────────────────────────────────────
@@ -48,6 +51,11 @@ public class UserService {
     @Transactional(readOnly = true)
     public Optional<Driver> findDriverByUserId(Long userId) {
         return driverRepository.findByUserId(userId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DriverLicense> findDriverLicenses(Long driverId) {
+        return driverLicenseRepository.findByDriverId(driverId);
     }
 
     // ── Update Profile ──────────────────────────────────────────────
@@ -118,7 +126,8 @@ public class UserService {
     /**
      * Admin tạo user mới (có thể tạo ADMIN).
      */
-    public String adminCreateUser(RegisterForm form) {
+    public String adminCreateUser(RegisterForm form,
+            String[] licenseNumbers, String[] licenseClasses, String[] licenseExpiries, String[] licenseVehicleTypes) {
         if (userRepository.existsByEmail(form.getEmail()))
             return "Email đã được sử dụng.";
         if (userRepository.existsByPhone(form.getPhone()))
@@ -131,7 +140,7 @@ public class UserService {
             return "Loại tài khoản không hợp lệ.";
         }
 
-        // Nếu là DRIVER, yêu cầu phải nhập đủ thông tin chuyên ngành
+        // Nếu là DRIVER, chỉ yêu cầu CCCD
         if (role == Role.DRIVER) {
             if (form.getCccd() == null || form.getCccd().isBlank()) {
                 return "Căn cước công dân (CCCD) không được để trống khi đăng ký tài xế.";
@@ -142,19 +151,6 @@ public class UserService {
             if (driverRepository.existsByCccd(form.getCccd())) {
                 return "Căn cước công dân (CCCD) đã tồn tại.";
             }
-
-            if (form.getDriverLicense() == null || form.getDriverLicense().isBlank()) {
-                return "Bằng lái xe không được để trống.";
-            }
-            if (form.getLicenseExpiry() == null) {
-                return "Ngày hết hạn bằng lái không được để trống.";
-            }
-            if (form.getLicenseExpiry().isBefore(java.time.LocalDate.now())) {
-                return "Bằng lái xe đã hết hạn.";
-            }
-            if (form.getVehicleTypes() == null || form.getVehicleTypes().isBlank()) {
-                return "Loại xe không được để trống.";
-            }
         }
 
         User user = new User();
@@ -162,7 +158,6 @@ public class UserService {
         user.setPhone(form.getPhone().trim());
         user.setPassword(passwordEncoder.encode(form.getPassword()));
         user.setRole(role);
-        // Tài xế thì mặc định isActive = false để chờ duyệt
         user.setIsActive(role != Role.DRIVER);
         User saved = userRepository.save(user);
 
@@ -176,19 +171,46 @@ public class UserService {
             Driver d = new Driver();
             d.setUserId(saved.getId());
             d.setFullName(form.getFullName().trim());
-
-            // Lấy CCCD từ form (đã qua vòng check ở trên)
             d.setCccd(form.getCccd().trim());
-
-            // Vẫn dùng ID để tạo placeholder cho Giấy Phép Lái Xe vì màn đăng ký ban đầu
-            // chưa yêu cầu
-            String uniquePlaceholder = String.format("%012d", saved.getId());
-            d.setDriverLicense(uniquePlaceholder);
-
+            d.setDriverLicense("PENDING");
             d.setLicenseExpiry(java.time.LocalDate.now().plusYears(1));
             d.setVehicleTypes("CAR_4");
             d.setVerificationStatus(VerificationStatus.PENDING);
             driverRepository.save(d);
+
+            // ── Lưu danh sách bằng lái ──
+            if (licenseNumbers != null && licenseNumbers.length > 0) {
+                java.util.Set<String> allVehicleTypes = new java.util.LinkedHashSet<>();
+                java.time.LocalDate latestExpiry = null;
+                String firstLicenseNumber = null;
+
+                for (int i = 0; i < licenseNumbers.length; i++) {
+                    if (licenseNumbers[i] == null || licenseNumbers[i].isBlank()) continue;
+
+                    DriverLicense dl = new DriverLicense();
+                    dl.setDriverId(d.getId());
+                    dl.setLicenseNumber(licenseNumbers[i].trim());
+                    dl.setLicenseClass(licenseClasses != null && i < licenseClasses.length ? licenseClasses[i] : "B2");
+                    dl.setLicenseExpiry(licenseExpiries != null && i < licenseExpiries.length && !licenseExpiries[i].isBlank()
+                            ? java.time.LocalDate.parse(licenseExpiries[i]) : java.time.LocalDate.now().plusYears(1));
+                    dl.setVehicleTypes(licenseVehicleTypes != null && i < licenseVehicleTypes.length && licenseVehicleTypes[i] != null
+                            ? licenseVehicleTypes[i] : "CAR_4");
+                    driverLicenseRepository.save(dl);
+
+                    for (String vt : dl.getVehicleTypes().split(",")) {
+                        if (!vt.isBlank()) allVehicleTypes.add(vt.trim());
+                    }
+                    if (firstLicenseNumber == null) firstLicenseNumber = dl.getLicenseNumber();
+                    if (latestExpiry == null || dl.getLicenseExpiry().isAfter(latestExpiry)) {
+                        latestExpiry = dl.getLicenseExpiry();
+                    }
+                }
+
+                if (!allVehicleTypes.isEmpty()) d.setVehicleTypes(String.join(",", allVehicleTypes));
+                if (firstLicenseNumber != null) d.setDriverLicense(firstLicenseNumber);
+                if (latestExpiry != null) d.setLicenseExpiry(latestExpiry);
+                driverRepository.save(d);
+            }
         }
         return null;
     }
@@ -196,7 +218,8 @@ public class UserService {
     /**
      * Admin sửa thông tin user.
      */
-    public String adminUpdateUser(Long userId, ProfileEditForm form, String role, Boolean isActive) {
+    public String adminUpdateUser(Long userId, ProfileEditForm form, String role, Boolean isActive, String newPassword,
+            String[] licenseNumbers, String[] licenseClasses, String[] licenseExpiries, String[] licenseVehicleTypes) {
         Optional<User> optUser = userRepository.findById(userId);
         if (optUser.isEmpty())
             return "Không tìm thấy tài khoản.";
@@ -204,6 +227,13 @@ public class UserService {
 
         if (!user.getPhone().equals(form.getPhone()) && userRepository.existsByPhone(form.getPhone()))
             return "Số điện thoại đã được sử dụng.";
+
+        // Đổi mật khẩu nếu admin nhập
+        if (newPassword != null && !newPassword.isBlank()) {
+            if (newPassword.length() < 6)
+                return "Mật khẩu mới phải từ 6 ký tự trở lên.";
+            user.setPassword(passwordEncoder.encode(newPassword));
+        }
 
         user.setPhone(form.getPhone().trim());
         if (form.getAvatarUrl() != null && !form.getAvatarUrl().isBlank())
@@ -213,7 +243,6 @@ public class UserService {
         if (role != null && !role.isBlank()) {
             try {
                 Role newRole = Role.valueOf(role.toUpperCase());
-                // Validate cccd if changing to driver
                 if (newRole == Role.DRIVER) {
                     if (form.getCccd() == null || form.getCccd().isBlank()) {
                         return "Căn cước công dân (CCCD) không được để trống khi chọn vai trò tài xế.";
@@ -221,7 +250,6 @@ public class UserService {
                     if (!form.getCccd().matches("^[0-9]{12}$")) {
                         return "Căn cước công dân (CCCD) phải bao gồm đúng 12 chữ số.";
                     }
-                    // Prevent duplicate CCCD unless it belongs to the same driver
                     Optional<Driver> existingDriver = driverRepository.findByUserId(userId);
                     if (existingDriver.isEmpty() || !existingDriver.get().getCccd().equals(form.getCccd())) {
                         if (driverRepository.existsByCccd(form.getCccd())) {
@@ -250,7 +278,7 @@ public class UserService {
             Driver d = driverRepository.findByUserId(userId).orElseGet(() -> {
                 Driver newD = new Driver();
                 newD.setUserId(userId);
-                newD.setDriverLicense(String.format("%012d", userId));
+                newD.setDriverLicense("PENDING");
                 newD.setLicenseExpiry(java.time.LocalDate.now().plusYears(1));
                 newD.setVehicleTypes("CAR_4");
                 newD.setVerificationStatus(VerificationStatus.PENDING);
@@ -261,6 +289,45 @@ public class UserService {
                 d.setCccd(form.getCccd().trim());
             }
             driverRepository.save(d);
+
+            // ── Xử lý danh sách bằng lái ──
+            if (licenseNumbers != null && licenseNumbers.length > 0) {
+                driverLicenseRepository.deleteByDriverId(d.getId());
+                java.util.Set<String> allVehicleTypes = new java.util.LinkedHashSet<>();
+                java.time.LocalDate latestExpiry = null;
+                String firstLicenseNumber = null;
+
+                for (int i = 0; i < licenseNumbers.length; i++) {
+                    if (licenseNumbers[i] == null || licenseNumbers[i].isBlank()) continue;
+
+                    DriverLicense dl = new DriverLicense();
+                    dl.setDriverId(d.getId());
+                    dl.setLicenseNumber(licenseNumbers[i].trim());
+                    dl.setLicenseClass(licenseClasses != null && i < licenseClasses.length ? licenseClasses[i] : "B2");
+                    dl.setLicenseExpiry(licenseExpiries != null && i < licenseExpiries.length && !licenseExpiries[i].isBlank()
+                            ? java.time.LocalDate.parse(licenseExpiries[i]) : java.time.LocalDate.now().plusYears(1));
+                    dl.setVehicleTypes(licenseVehicleTypes != null && i < licenseVehicleTypes.length && licenseVehicleTypes[i] != null
+                            ? licenseVehicleTypes[i] : "CAR_4");
+                    driverLicenseRepository.save(dl);
+
+                    // Gom vehicle types
+                    for (String vt : dl.getVehicleTypes().split(",")) {
+                        if (!vt.isBlank()) allVehicleTypes.add(vt.trim());
+                    }
+                    if (firstLicenseNumber == null) firstLicenseNumber = dl.getLicenseNumber();
+                    if (latestExpiry == null || dl.getLicenseExpiry().isAfter(latestExpiry)) {
+                        latestExpiry = dl.getLicenseExpiry();
+                    }
+                }
+
+                // Cập nhật tổng hợp vào driver
+                if (!allVehicleTypes.isEmpty()) {
+                    d.setVehicleTypes(String.join(",", allVehicleTypes));
+                }
+                if (firstLicenseNumber != null) d.setDriverLicense(firstLicenseNumber);
+                if (latestExpiry != null) d.setLicenseExpiry(latestExpiry);
+                driverRepository.save(d);
+            }
         }
         return null;
     }

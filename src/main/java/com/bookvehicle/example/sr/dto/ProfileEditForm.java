@@ -1,5 +1,7 @@
 package com.bookvehicle.example.sr.dto;
 
+import java.time.LocalDate;
+
 public class ProfileEditForm {
 
     private String fullName;
@@ -7,6 +9,9 @@ public class ProfileEditForm {
     private String address;
     private String avatarUrl;
     private String cccd;
+    private String driverLicense;
+    private String vehicleTypes;
+    private LocalDate licenseExpiry;
 
     // Getters & Setters
     public String getFullName() { return fullName; }
@@ -23,4 +28,13 @@ public class ProfileEditForm {
 
     public String getCccd() { return cccd; }
     public void setCccd(String cccd) { this.cccd = cccd; }
+
+    public String getDriverLicense() { return driverLicense; }
+    public void setDriverLicense(String driverLicense) { this.driverLicense = driverLicense; }
+
+    public String getVehicleTypes() { return vehicleTypes; }
+    public void setVehicleTypes(String vehicleTypes) { this.vehicleTypes = vehicleTypes; }
+
+    public LocalDate getLicenseExpiry() { return licenseExpiry; }
+    public void setLicenseExpiry(LocalDate licenseExpiry) { this.licenseExpiry = licenseExpiry; }
 }
