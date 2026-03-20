@@ -441,6 +441,7 @@
                 <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/vehicles}">🚗 Quản lý xe</a></li>
                 <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/pickup-points}">📍 Điểm đón</a></li>
                 <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/sober-bookings}">🚗 Quản lý lái hộ</a></li>
+                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/withdrawals}">💸 Rút tiền</a></li>
                 <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/dashboard}">📊 Báo cáo</a></li>
                 <li th:if="${u?.role?.name() != 'ADMIN'}"><a class="nav-link" th:href="@{/profile}">👤 Hồ sơ</a></li>
                 <li th:if="${u?.role?.name() == 'CUSTOMER'}">
