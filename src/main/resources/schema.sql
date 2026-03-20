@@ -406,3 +406,23 @@ PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 -- Expand vehicles.category ENUM to include all vehicle types
 ALTER TABLE vehicles MODIFY COLUMN category ENUM('MOTORCYCLE','CAR_4','CAR_7','CAR_16','CAR_29','CAR_45','TRUCK_SMALL','TRUCK_MEDIUM','TRUCK_LARGE') NOT NULL;
+
+-- Withdrawal requests table
+CREATE TABLE IF NOT EXISTS withdrawal_requests (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    amount DECIMAL(15,2) NOT NULL,
+    bank_name VARCHAR(100),
+    account_number VARCHAR(50),
+    account_holder VARCHAR(100),
+    note VARCHAR(500),
+    status ENUM('PENDING','APPROVED','REJECTED') NOT NULL DEFAULT 'PENDING',
+    admin_note VARCHAR(500),
+    processed_at DATETIME,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Expand transactions.reference_type ENUM to include WITHDRAWAL
+ALTER TABLE transactions MODIFY COLUMN reference_type ENUM('RENTAL','BOOKING','MANUAL','WITHDRAWAL') NOT NULL;

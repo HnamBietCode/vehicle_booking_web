@@ -3,8 +3,10 @@ package com.bookvehicle.example.sr.controller;
 import com.bookvehicle.example.sr.model.Transaction;
 import com.bookvehicle.example.sr.model.User;
 import com.bookvehicle.example.sr.model.Wallet;
+import com.bookvehicle.example.sr.model.WithdrawalRequest;
 import com.bookvehicle.example.sr.service.MomoService;
 import com.bookvehicle.example.sr.service.WalletService;
+import com.bookvehicle.example.sr.service.WithdrawalService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -26,6 +28,9 @@ public class WalletController {
     @Autowired
     private MomoService momoService;
 
+    @Autowired
+    private WithdrawalService withdrawalService;
+
     @GetMapping("/wallet")
     public String showWallet(HttpSession session, Model model) {
         User loggedUser = (User) session.getAttribute("loggedUser");
@@ -35,8 +40,11 @@ public class WalletController {
 
         Wallet wallet = walletService.getOrCreateWallet(loggedUser.getId());
         List<Transaction> transactions = walletService.getTransactionHistory(wallet.getId());
+        List<WithdrawalRequest> withdrawals = withdrawalService.findByUser(loggedUser.getId());
         model.addAttribute("wallet", wallet);
         model.addAttribute("transactions", transactions);
+        model.addAttribute("withdrawals", withdrawals);
+        model.addAttribute("loggedUser", loggedUser);
         return "wallets/index";
     }
 
@@ -89,6 +97,29 @@ public class WalletController {
         return "redirect:/wallet?error=momo_payment_failed";
     }
 
+    // ── Rút tiền ────────────────────────────────────────────────────
+
+    @PostMapping("/wallet/withdraw")
+    public String withdraw(@RequestParam("amount") BigDecimal amount,
+                            @RequestParam("bankName") String bankName,
+                            @RequestParam("accountNumber") String accountNumber,
+                            @RequestParam("accountHolder") String accountHolder,
+                            @RequestParam(name = "note", required = false) String note,
+                            HttpSession session,
+                            RedirectAttributes ra) {
+        User loggedUser = (User) session.getAttribute("loggedUser");
+        if (loggedUser == null) return "redirect:/auth/login";
+
+        String error = withdrawalService.createRequest(
+                loggedUser.getId(), amount, bankName, accountNumber, accountHolder, note);
+        if (error != null) {
+            ra.addFlashAttribute("error", error);
+        } else {
+            ra.addFlashAttribute("success", "Yêu cầu rút tiền đã được tạo. Vui lòng chờ Admin xử lý.");
+        }
+        return "redirect:/wallet";
+    }
+
     private boolean processPayment(Long userId, String amountStr, Integer resultCode, String orderIdMoMo) {
         if (resultCode == 0) {
             BigDecimal amount = new BigDecimal(amountStr);
@@ -99,3 +130,4 @@ public class WalletController {
         return false;
     }
 }
+
