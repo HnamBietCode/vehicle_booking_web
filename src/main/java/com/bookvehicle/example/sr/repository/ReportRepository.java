@@ -27,11 +27,18 @@ public interface ReportRepository extends JpaRepository<Driver, Long> {
     @Query(value = "SELECT " +
             "d.id, " +
             "d.full_name, " +
-            "COALESCE(v.total_trips, 0) as totalTrips, " +
+            "COALESCE(trips.total_trips, 0) as totalTrips, " +
             "COALESCE(v.avg_rating, 0.0) as rating " +
             "FROM drivers d " +
             "LEFT JOIN vehicles v ON d.id = v.assigned_driver " +
-            "ORDER BY v.total_trips DESC " +
+            "LEFT JOIN ( " +
+            "  SELECT driver_id, SUM(cnt) as total_trips FROM ( " +
+            "    SELECT driver_id, COUNT(*) as cnt FROM vehicle_rentals WHERE status = 'COMPLETED' GROUP BY driver_id " +
+            "    UNION ALL " +
+            "    SELECT driver_id, COUNT(*) as cnt FROM driver_bookings WHERE status = 'COMPLETED' GROUP BY driver_id " +
+            "  ) combined GROUP BY driver_id " +
+            ") trips ON d.id = trips.driver_id " +
+            "ORDER BY totalTrips DESC " +
             "LIMIT :limit", nativeQuery = true)
     List<Object[]> findTopDriversNative(@Param("limit") int limit);
 

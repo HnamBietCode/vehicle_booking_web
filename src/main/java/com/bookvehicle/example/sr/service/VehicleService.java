@@ -187,15 +187,23 @@ public class VehicleService {
 
     // ── Internal helpers ────────────────────────────────────────────
 
+    // Regex biển số VN: 2 số + 1-2 chữ cái + (tùy chọn 1 số) + dấu gạch/trống + 3-5 số + (tùy chọn dấu chấm + 0-2 số)
+    private static final String LICENSE_PLATE_VN_REGEX =
+            "^\\d{2}[A-Z]{1,2}\\d?[-\\s]?\\d{3,5}\\.?\\d{0,2}$";
+
     private String validate(VehicleForm form, Long excludeId) {
         if (form.getName() == null || form.getName().isBlank())
             return "Tên xe không được để trống.";
         if (form.getLicensePlate() == null || form.getLicensePlate().isBlank())
             return "Biển số xe không được để trống.";
-        if (excludeId == null && vehicleRepository.existsByLicensePlate(form.getLicensePlate().trim()))
+
+        String plate = form.getLicensePlate().trim().toUpperCase();
+        if (!plate.matches(LICENSE_PLATE_VN_REGEX))
+            return "Biển số xe không đúng định dạng Việt Nam (VD: 51A-123.45, 30H-12345).";
+
+        if (excludeId == null && vehicleRepository.existsByLicensePlate(plate))
             return "Biển số xe đã tồn tại.";
-        if (excludeId != null && vehicleRepository.existsByLicensePlateAndIdNot(
-                form.getLicensePlate().trim(), excludeId))
+        if (excludeId != null && vehicleRepository.existsByLicensePlateAndIdNot(plate, excludeId))
             return "Biển số xe đã tồn tại.";
         if (form.getPricePerKm() == null || form.getPricePerKm().compareTo(BigDecimal.ZERO) <= 0)
             return "Giá/km phải lớn hơn 0.";
