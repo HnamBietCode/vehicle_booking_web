@@ -128,11 +128,44 @@ public class UserService {
      */
     public String adminCreateUser(RegisterForm form,
             String[] licenseNumbers, String[] licenseClasses, String[] licenseExpiries, String[] licenseVehicleTypes) {
+
+        // ── Validate Email ──
+        if (form.getEmail() == null || form.getEmail().isBlank())
+            return "Email không được để trống.";
+        if (form.getEmail().length() > 100)
+            return "Email không được vượt quá 100 ký tự.";
+        if (!form.getEmail().matches("^[A-Za-z0-9._%+\\-]+@[A-Za-z0-9.\\-]+\\.[A-Za-z]{2,}$"))
+            return "Email không đúng định dạng (ví dụ: example@email.com).";
         if (userRepository.existsByEmail(form.getEmail()))
             return "Email đã được sử dụng.";
+
+        // ── Validate Số điện thoại ──
+        if (form.getPhone() == null || form.getPhone().isBlank())
+            return "Số điện thoại không được để trống.";
+        if (!form.getPhone().matches("^0[0-9]{9}$"))
+            return "Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 0 (ví dụ: 0901234567).";
         if (userRepository.existsByPhone(form.getPhone()))
             return "Số điện thoại đã được sử dụng.";
 
+        // ── Validate Họ và tên ──
+        if (form.getFullName() == null || form.getFullName().isBlank())
+            return "Họ và tên không được để trống.";
+        if (form.getFullName().trim().length() < 2 || form.getFullName().trim().length() > 100)
+            return "Họ và tên phải từ 2 đến 100 ký tự.";
+
+        // ── Validate Mật khẩu ──
+        if (form.getPassword() == null || form.getPassword().isBlank())
+            return "Mật khẩu không được để trống.";
+        if (form.getPassword().length() < 6)
+            return "Mật khẩu phải từ 6 ký tự trở lên.";
+        if (!form.getPassword().matches(".*[A-Z].*"))
+            return "Mật khẩu phải chứa ít nhất 1 chữ cái viết hoa.";
+        if (!form.getPassword().matches(".*[0-9].*"))
+            return "Mật khẩu phải chứa ít nhất 1 chữ số.";
+        if (!form.getPassword().equals(form.getConfirmPassword()))
+            return "Xác nhận mật khẩu không khớp.";
+
+        // ── Validate Vai trò ──
         Role role;
         try {
             role = Role.valueOf(form.getRole().toUpperCase());
@@ -140,7 +173,7 @@ public class UserService {
             return "Loại tài khoản không hợp lệ.";
         }
 
-        // Nếu là DRIVER, chỉ yêu cầu CCCD
+        // ── Validate CCCD (DRIVER) ──
         if (role == Role.DRIVER) {
             if (form.getCccd() == null || form.getCccd().isBlank()) {
                 return "Căn cước công dân (CCCD) không được để trống khi đăng ký tài xế.";
@@ -178,8 +211,20 @@ public class UserService {
             d.setVerificationStatus(VerificationStatus.PENDING);
             driverRepository.save(d);
 
-            // ── Lưu danh sách bằng lái ──
+            // ── Validate + Lưu danh sách bằng lái ──
             if (licenseNumbers != null && licenseNumbers.length > 0) {
+                // Validate từng bằng lái trước khi lưu
+                for (int i = 0; i < licenseNumbers.length; i++) {
+                    if (licenseNumbers[i] == null || licenseNumbers[i].isBlank()) continue;
+                    if (licenseNumbers[i].trim().length() > 12)
+                        return "Số bằng lái không được vượt quá 12 ký tự (bằng lái #" + (i + 1) + ").";
+                    if (licenseExpiries != null && i < licenseExpiries.length && !licenseExpiries[i].isBlank()) {
+                        java.time.LocalDate expiry = java.time.LocalDate.parse(licenseExpiries[i]);
+                        if (expiry.isBefore(java.time.LocalDate.now()))
+                            return "Hạn bằng lái không được là ngày trong quá khứ (bằng lái #" + (i + 1) + ").";
+                    }
+                }
+
                 java.util.Set<String> allVehicleTypes = new java.util.LinkedHashSet<>();
                 java.time.LocalDate latestExpiry = null;
                 String firstLicenseNumber = null;
@@ -225,13 +270,28 @@ public class UserService {
             return "Không tìm thấy tài khoản.";
         User user = optUser.get();
 
+        // ── Validate Số điện thoại ──
+        if (form.getPhone() == null || form.getPhone().isBlank())
+            return "Số điện thoại không được để trống.";
+        if (!form.getPhone().matches("^0[0-9]{9}$"))
+            return "Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 0 (ví dụ: 0901234567).";
         if (!user.getPhone().equals(form.getPhone()) && userRepository.existsByPhone(form.getPhone()))
             return "Số điện thoại đã được sử dụng.";
 
-        // Đổi mật khẩu nếu admin nhập
+        // ── Validate Họ và tên ──
+        if (form.getFullName() == null || form.getFullName().isBlank())
+            return "Họ và tên không được để trống.";
+        if (form.getFullName().trim().length() < 2 || form.getFullName().trim().length() > 100)
+            return "Họ và tên phải từ 2 đến 100 ký tự.";
+
+        // ── Validate + Đổi mật khẩu nếu admin nhập ──
         if (newPassword != null && !newPassword.isBlank()) {
             if (newPassword.length() < 6)
                 return "Mật khẩu mới phải từ 6 ký tự trở lên.";
+            if (!newPassword.matches(".*[A-Z].*"))
+                return "Mật khẩu mới phải chứa ít nhất 1 chữ cái viết hoa.";
+            if (!newPassword.matches(".*[0-9].*"))
+                return "Mật khẩu mới phải chứa ít nhất 1 chữ số.";
             user.setPassword(passwordEncoder.encode(newPassword));
         }
 
@@ -290,8 +350,20 @@ public class UserService {
             }
             driverRepository.save(d);
 
-            // ── Xử lý danh sách bằng lái ──
+            // ── Validate + Xử lý danh sách bằng lái ──
             if (licenseNumbers != null && licenseNumbers.length > 0) {
+                // Validate từng bằng lái trước khi lưu
+                for (int i = 0; i < licenseNumbers.length; i++) {
+                    if (licenseNumbers[i] == null || licenseNumbers[i].isBlank()) continue;
+                    if (licenseNumbers[i].trim().length() > 12)
+                        return "Số bằng lái không được vượt quá 12 ký tự (bằng lái #" + (i + 1) + ").";
+                    if (licenseExpiries != null && i < licenseExpiries.length && !licenseExpiries[i].isBlank()) {
+                        java.time.LocalDate expiry = java.time.LocalDate.parse(licenseExpiries[i]);
+                        if (expiry.isBefore(java.time.LocalDate.now()))
+                            return "Hạn bằng lái không được là ngày trong quá khứ (bằng lái #" + (i + 1) + ").";
+                    }
+                }
+
                 driverLicenseRepository.deleteByDriverId(d.getId());
                 java.util.Set<String> allVehicleTypes = new java.util.LinkedHashSet<>();
                 java.time.LocalDate latestExpiry = null;
