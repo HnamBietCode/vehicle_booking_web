@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <title>Đơn thuê tài xế</title>
+    <title>Don thue duoc giao</title>
     <style>
         *,
         *::before,
@@ -56,8 +56,14 @@
             gap: .5rem;
         }
 
-        .navbar-brand::before { content: '🚗'; font-size: 1.4rem; }
-        .navbar-nav { display: flex; align-items: center; gap: .25rem; margin-left: auto; list-style: none; }
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: .25rem;
+            margin-left: auto;
+            list-style: none;
+        }
+
         .nav-link {
             padding: .5rem .85rem;
             border-radius: 8px;
@@ -67,6 +73,7 @@
             font-weight: 500;
             transition: all .2s;
         }
+
         .nav-link:hover, .nav-link.active { background: var(--primary); color: #fff; }
 
         .main {
@@ -156,28 +163,28 @@
 
 <main class="main">
     <div class="page-header">
-        <h1 class="page-title">🧾 Đơn thuê được giao</h1>
+        <h1 class="page-title">Don thue duoc giao</h1>
     </div>
 
     <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
     <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
 
     <div class="card" th:if="${#lists.isEmpty(rentals)}">
-        <div style="color:var(--muted);">Chưa có đơn thuê nào.</div>
+        <div style="color:var(--muted);">Chua co don thue nao.</div>
     </div>
 
     <div class="card" th:if="${!#lists.isEmpty(rentals)}">
-        <h3 class="card-title">Danh sách đơn</h3>
+        <h3 class="card-title">Danh sach don</h3>
         <div class="table-wrap">
             <table>
                 <thead>
                 <tr>
-                    <th>Mã đơn</th>
-                    <th>Khách</th>
-                    <th>Thời gian</th>
-                    <th>Giá cơ bản</th>
-                    <th>Trạng thái</th>
-                    <th>Thao tác</th>
+                    <th>Ma don</th>
+                    <th>Khach</th>
+                    <th>Thoi gian</th>
+                    <th>Gia co ban</th>
+                    <th>Trang thai</th>
+                    <th>Thao tac</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -191,16 +198,36 @@
                         <span class="badge badge-pending" th:text="${r.paymentStatus}" style="margin-left:6px;"></span>
                     </td>
                     <td>
-                        <form th:if="${r.status.name() != 'COMPLETED' and r.status.name() != 'CANCELLED'}"
+                        <div th:if="${r.status.name() == 'PENDING'}" style="display:flex; gap:.5rem; flex-wrap:wrap;">
+                            <form th:action="@{/driver/rentals/{id}/accept(id=${r.id})}" method="post">
+                                <button type="submit" class="btn btn-primary btn-sm">Nhan don</button>
+                            </form>
+                            <form th:action="@{/driver/rentals/{id}/reject(id=${r.id})}" method="post" style="display:flex; gap:.4rem; align-items:center;">
+                                <select name="reason" class="form-control" style="min-width:160px;">
+                                    <option value="Tai xe tu choi nhan don.">Tai xe tu choi nhan don</option>
+                                    <option value="Khong phu hop lich trinh.">Khong phu hop lich trinh</option>
+                                    <option value="Ly do khac.">Ly do khac</option>
+                                </select>
+                                <button type="submit" class="btn btn-sm">Tu choi</button>
+                            </form>
+                        </div>
+
+                        <div th:if="${r.status.name() == 'CONFIRMED'}">
+                            <form th:action="@{/driver/rentals/{id}/start(id=${r.id})}" method="post">
+                                <button type="submit" class="btn btn-primary btn-sm">Bat dau</button>
+                            </form>
+                        </div>
+
+                        <form th:if="${r.status.name() == 'ACTIVE'}"
                               th:action="@{/driver/rentals/{id}/complete(id=${r.id})}" method="post"
                               class="inline-form">
-                            <input class="form-control" type="number" name="extraFee" min="0" step="1000" value="0" placeholder="Phí phát sinh">
-                            <input class="form-control" type="text" name="notes" placeholder="Ghi chú">
-                            <button type="submit" class="btn btn-primary btn-sm">✅ Hoàn thành</button>
+                            <input class="form-control" type="number" name="extraFee" min="0" step="1000" value="0" placeholder="Phi phat sinh">
+                            <input class="form-control" type="text" name="notes" placeholder="Ghi chu">
+                            <button type="submit" class="btn btn-primary btn-sm">Hoan thanh</button>
                         </form>
-                        <span th:unless="${r.status.name() != 'COMPLETED' and r.status.name() != 'CANCELLED'}" style="color:var(--muted);">
-                            Đã hoàn thành
-                        </span>
+
+                        <span th:if="${r.status.name() == 'COMPLETED'}" style="color:var(--muted);">Da hoan thanh</span>
+                        <span th:if="${r.status.name() == 'CANCELLED'}" style="color:var(--muted);">Da huy</span>
                     </td>
                 </tr>
                 </tbody>
@@ -210,7 +237,3 @@
 </main>
 </body>
 </html>
-
-
-
-
