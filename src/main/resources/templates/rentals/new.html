@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Dat thue xe co tai xe</title>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #3730A3;
+            --danger: #EF4444;
+            --success: #10B981;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --text: #1E293B;
+            --muted: #64748B;
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: .25rem;
+            margin-left: auto;
+            list-style: none;
+        }
+
+        .nav-link {
+            padding: .5rem .85rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--muted);
+            font-size: .9rem;
+            font-weight: 500;
+            transition: all .2s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 1.2rem;
+            color: var(--text);
+        }
+
+        .form-group {
+            margin-bottom: 1.1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: .875rem;
+            font-weight: 600;
+            margin-bottom: .4rem;
+            color: var(--text);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: .65rem 1rem;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: .95rem;
+            font-family: inherit;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, .15);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .6rem 1.3rem;
+            border: none;
+            border-radius: 8px;
+            font-size: .9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all .2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--border);
+            color: var(--muted);
+        }
+
+        .alert {
+            padding: .85rem 1.2rem;
+            border-radius: 8px;
+            margin-bottom: 1.2rem;
+            font-size: .9rem;
+            font-weight: 500;
+        }
+
+        .alert-danger {
+            background: #FEF2F2;
+            color: #991B1B;
+            border-left: 4px solid var(--danger);
+        }
+
+        .alert-success {
+            background: #F0FDF4;
+            color: #166534;
+            border-left: 4px solid var(--success);
+        }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .form-grid .full { grid-column: 1 / -1; }
+        .estimate-box {
+            margin-top: .5rem;
+            padding: .9rem 1rem;
+            border: 1px dashed var(--border);
+            border-radius: 10px;
+            background: #f8fafc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .estimate-label { color: var(--muted); font-weight: 600; font-size: .9rem; }
+        .estimate-value { color: var(--primary); font-weight: 800; font-size: 1.1rem; }
+        @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<nav th:replace="~{layout/base :: navbar}"></nav>
+
+<main class="main">
+    <div class="page-header">
+        <h1 class="page-title">Dat thue xe co tai xe</h1>
+        <a class="btn btn-outline" th:href="@{/vehicles/search}">Quay lai</a>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+    <div class="card">
+        <h3 class="card-title">Thong tin don thue</h3>
+        <form th:action="@{/rentals}" method="post" th:object="${form}">
+            <div class="form-grid">
+                <div class="form-group full">
+                    <label class="form-label" for="vehicleId">Xe</label>
+                    <select class="form-control" id="vehicleId" th:field="*{vehicleId}" required>
+                        <option value="">-- Chon xe --</option>
+                        <option th:each="v : ${vehicles}"
+                                th:value="${v.id}"
+                                th:attr="data-price-hour=${v.pricePerHour},data-price-day=${v.pricePerDay}"
+                                th:text="${v.name + ' | ' + v.licensePlate}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="rentalType">Hinh thuc thue</label>
+                    <select class="form-control" id="rentalType" th:field="*{rentalType}" required>
+                        <option th:each="t : ${rentalTypes}" th:value="${t}" th:text="${t}"></option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Diem don</label>
+                    <div style="display:flex; gap:1rem; margin-bottom:.5rem;">
+                        <label style="display:flex; gap:.4rem; align-items:center;">
+                            <input type="radio" name="pickupMode" value="POINT" checked> Chon diem co san
+                        </label>
+                        <label style="display:flex; gap:.4rem; align-items:center;">
+                            <input type="radio" name="pickupMode" value="MANUAL"> Tu nhap dia chi
+                        </label>
+                    </div>
+
+                    <select class="form-control" id="pickupPointId" th:field="*{pickupPointId}">
+                        <option value="">-- Chon diem don --</option>
+                        <option th:each="p : ${pickupPoints}"
+                                th:value="${p.id}"
+                                th:text="${p.name + ' - ' + p.address}">
+                        </option>
+                    </select>
+
+                    <div id="manualAddressFields" style="margin-top:.5rem; display:none;">
+                        <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap:1rem;">
+                            <div class="form-group full">
+                                <label class="form-label">Dia diem don (Tinh/Thanh pho)</label>
+                                <select id="province" class="form-control">
+                                    <option value="">-- Chon Tinh/Thanh pho --</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Quan/Huyen</label>
+                                <select id="district" class="form-control" disabled>
+                                    <option value="">-- Chon Quan/Huyen --</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Phuong/Xa</label>
+                                <select id="ward" class="form-control" disabled>
+                                    <option value="">-- Chon Phuong/Xa --</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group full">
+                                <label class="form-label">So nha / Ten duong</label>
+                                <input type="text" id="streetAddress" class="form-control" placeholder="Vi du: 123 Nguyen Hue">
+                            </div>
+                        </div>
+                        <input type="hidden" id="pickupAddress" th:field="*{pickupAddress}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="plannedStart">Thoi gian bat dau</label>
+                    <input class="form-control" id="plannedStart" th:field="*{plannedStart}" type="datetime-local" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="plannedEnd">Thoi gian ket thuc</label>
+                    <input class="form-control" id="plannedEnd" th:field="*{plannedEnd}" type="datetime-local" required>
+                </div>
+
+                <div class="form-group full">
+                    <label class="form-label" for="notes">Ghi chu</label>
+                    <textarea class="form-control" id="notes" th:field="*{notes}" rows="3"></textarea>
+                </div>
+
+                <div class="form-group full">
+                    <div class="estimate-box">
+                        <div class="estimate-label">Tam tinh theo lua chon hien tai</div>
+                        <div id="estimateValue" class="estimate-value">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:.6rem; margin-top:.5rem;">
+                <button class="btn btn-primary" type="submit">Dat thue</button>
+                <a class="btn btn-outline" th:href="@{/rentals/my}">Xem don cua toi</a>
+            </div>
+        </form>
+    </div>
+</main>
+<script>
+    (function () {
+        const pickupModeRadios = document.querySelectorAll('input[name=\"pickupMode\"]');
+        const pickupPoint = document.getElementById('pickupPointId');
+        const pickupAddress = document.getElementById('pickupAddress');
+        const manualAddressFields = document.getElementById('manualAddressFields');
+        const provinceSel = document.getElementById('province');
+        const districtSel = document.getElementById('district');
+        const wardSel = document.getElementById('ward');
+        const streetInp = document.getElementById('streetAddress');
+
+        const rentalType = document.getElementById('rentalType');
+        const vehicle = document.getElementById('vehicleId');
+        const start = document.getElementById('plannedStart');
+        const end = document.getElementById('plannedEnd');
+        const estimateValue = document.getElementById('estimateValue');
+
+        const fmtVnd = (n) => new Intl.NumberFormat('vi-VN').format(n) + 'd';
+
+        function updateFinalAddress() {
+            if (!pickupAddress) return;
+            const parts = [];
+            const street = (streetInp && streetInp.value || '').trim();
+            const ward = wardSel && wardSel.selectedOptions.length ? wardSel.selectedOptions[0].text : '';
+            const district = districtSel && districtSel.selectedOptions.length ? districtSel.selectedOptions[0].text : '';
+            const province = provinceSel && provinceSel.selectedOptions.length ? provinceSel.selectedOptions[0].text : '';
+
+            if (street) parts.push(street);
+            if (ward && ward.indexOf('Chon') !== 0) parts.push(ward);
+            if (district && district.indexOf('Chon') !== 0) parts.push(district);
+            if (province && province.indexOf('Chon') !== 0) parts.push(province);
+
+            pickupAddress.value = parts.join(', ');
+        }
+
+        async function fetchProvinces() {
+            if (!provinceSel) return;
+            try {
+                const res = await fetch('https://provinces.open-api.vn/api/p/');
+                const data = await res.json();
+                data.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.code;
+                    opt.text = p.name;
+                    provinceSel.add(opt);
+                });
+            } catch (e) {
+                console.error('Error fetching provinces', e);
+            }
+        }
+
+        function syncPickupMode() {
+            const mode = [...pickupModeRadios].find(r => r.checked)?.value || 'POINT';
+            const usePoint = mode === 'POINT';
+
+            pickupPoint.style.display = usePoint ? 'block' : 'none';
+            if (manualAddressFields) manualAddressFields.style.display = usePoint ? 'none' : 'block';
+
+            pickupPoint.required = usePoint;
+            if (provinceSel) provinceSel.required = !usePoint;
+            if (districtSel) districtSel.required = !usePoint;
+            if (wardSel) wardSel.required = !usePoint;
+            if (streetInp) streetInp.required = !usePoint;
+
+            if (usePoint) {
+                pickupAddress.value = '';
+            } else {
+                pickupPoint.value = '';
+            }
+        }
+
+        function updateEstimate() {
+            const selected = vehicle.options[vehicle.selectedIndex];
+            if (!selected || !selected.value || !start.value || !end.value) {
+                estimateValue.textContent = '--';
+                return;
+            }
+
+            const s = new Date(start.value);
+            const e = new Date(end.value);
+            const minutes = (e.getTime() - s.getTime()) / 60000;
+            if (!Number.isFinite(minutes) || minutes <= 0) {
+                estimateValue.textContent = '--';
+                return;
+            }
+
+            const priceHour = Number(selected.dataset.priceHour || 0);
+            const priceDay = Number(selected.dataset.priceDay || 0);
+            let estimate = 0;
+
+            if (rentalType.value === 'DAILY') {
+                const days = Math.max(1, Math.ceil(minutes / 1440));
+                estimate = days * priceDay;
+            } else {
+                const hours = Math.max(1, Math.ceil(minutes / 60));
+                estimate = hours * priceHour;
+            }
+            estimateValue.textContent = fmtVnd(estimate);
+        }
+
+        if (provinceSel) {
+            provinceSel.addEventListener('change', async () => {
+                districtSel.innerHTML = '<option value=\"\">-- Chon Quan/Huyen --</option>';
+                wardSel.innerHTML = '<option value=\"\">-- Chon Phuong/Xa --</option>';
+                districtSel.disabled = true;
+                wardSel.disabled = true;
+
+                if (provinceSel.value) {
+                    try {
+                        const res = await fetch(`https://provinces.open-api.vn/api/p/${provinceSel.value}?depth=2`);
+                        const data = await res.json();
+                        data.districts.forEach(d => {
+                            const opt = document.createElement('option');
+                            opt.value = d.code;
+                            opt.text = d.name;
+                            districtSel.add(opt);
+                        });
+                        districtSel.disabled = false;
+                    } catch (e) {
+                        console.error('Error fetching districts', e);
+                    }
+                }
+                updateFinalAddress();
+            });
+        }
+
+        if (districtSel) {
+            districtSel.addEventListener('change', async () => {
+                wardSel.innerHTML = '<option value=\"\">-- Chon Phuong/Xa --</option>';
+                wardSel.disabled = true;
+
+                if (districtSel.value) {
+                    try {
+                        const res = await fetch(`https://provinces.open-api.vn/api/d/${districtSel.value}?depth=2`);
+                        const data = await res.json();
+                        data.wards.forEach(w => {
+                            const opt = document.createElement('option');
+                            opt.value = w.code;
+                            opt.text = w.name;
+                            wardSel.add(opt);
+                        });
+                        wardSel.disabled = false;
+                    } catch (e) {
+                        console.error('Error fetching wards', e);
+                    }
+                }
+                updateFinalAddress();
+            });
+        }
+
+        if (wardSel) wardSel.addEventListener('change', updateFinalAddress);
+        if (streetInp) streetInp.addEventListener('input', updateFinalAddress);
+
+        pickupModeRadios.forEach(r => r.addEventListener('change', syncPickupMode));
+        [rentalType, vehicle, start, end].forEach(el => el.addEventListener('change', updateEstimate));
+        [start, end].forEach(el => el.addEventListener('input', updateEstimate));
+
+        fetchProvinces();
+        syncPickupMode();
+        updateEstimate();
+    })();
+</script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 package com.bookvehicle.example.sr.dto;
 
+import org.springframework.web.multipart.MultipartFile;
 import java.math.BigDecimal;
 
 public class VehicleForm {
@@ -10,6 +11,7 @@ public class VehicleForm {
     private String color;
     private Integer year;
     private String imageUrl;
+    private MultipartFile imageFile; // File upload từ form
     private String currentAddress;
     private BigDecimal pricePerKm;
     private BigDecimal pricePerHour;
@@ -36,6 +38,9 @@ public class VehicleForm {
 
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
+    public MultipartFile getImageFile() { return imageFile; }
+    public void setImageFile(MultipartFile imageFile) { this.imageFile = imageFile; }
 
     public String getCurrentAddress() { return currentAddress; }
     public void setCurrentAddress(String currentAddress) { this.currentAddress = currentAddress; }

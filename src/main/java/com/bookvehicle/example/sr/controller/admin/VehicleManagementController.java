@@ -3,6 +3,7 @@ package com.bookvehicle.example.sr.controller.admin;
 import com.bookvehicle.example.sr.config.SecurityUtil;
 import com.bookvehicle.example.sr.dto.VehicleForm;
 import com.bookvehicle.example.sr.model.*;
+import com.bookvehicle.example.sr.service.FileUploadService;
 import com.bookvehicle.example.sr.service.VehicleService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
@@ -19,15 +20,18 @@ import java.util.Optional;
 public class VehicleManagementController {
 
     private final VehicleService vehicleService;
+    private final FileUploadService fileUploadService;
 
-    public VehicleManagementController(VehicleService vehicleService) {
+    public VehicleManagementController(VehicleService vehicleService,
+                                        FileUploadService fileUploadService) {
         this.vehicleService = vehicleService;
+        this.fileUploadService = fileUploadService;
     }
 
     // ── Index ────────────────────────────────────────────────────────
 
     @GetMapping
-    public String index(@RequestParam(required = false) String category,
+    public String index(@RequestParam(name = "category", required = false) String category,
                         Model model, HttpSession session) {
         List<Vehicle> vehicles;
         if (category != null && !category.isBlank()) {
@@ -51,8 +55,10 @@ public class VehicleManagementController {
     public String detail(@PathVariable Long id, Model model, HttpSession session) {
         Optional<Vehicle> opt = vehicleService.findById(id);
         if (opt.isEmpty()) return "redirect:/admin/vehicles?error=notfound";
-        model.addAttribute("vehicle", opt.get());
-        model.addAttribute("approvedDrivers", vehicleService.findApprovedDrivers());
+        Vehicle v = opt.get();
+        model.addAttribute("vehicle", v);
+        // Chỉ hiện tài xế có bằng lái phù hợp với loại xe
+        model.addAttribute("eligibleDrivers", vehicleService.findEligibleDrivers(v.getCategory()));
         model.addAttribute("loggedUser", SecurityUtil.getLoggedUser(session));
         return "admin/vehicles/detail";
     }
@@ -73,6 +79,20 @@ public class VehicleManagementController {
                              Model model,
                              HttpSession session,
                              RedirectAttributes ra) {
+        // Xử lý upload ảnh
+        try {
+            if (form.getImageFile() != null && !form.getImageFile().isEmpty()) {
+                String imageUrl = fileUploadService.saveImage(form.getImageFile());
+                form.setImageUrl(imageUrl);
+            }
+        } catch (Exception e) {
+            model.addAttribute("error", "Lỗi upload ảnh: " + e.getMessage());
+            model.addAttribute("categories", Arrays.asList(VehicleCategory.values()));
+            model.addAttribute("statuses", Arrays.asList(VehicleStatus.values()));
+            model.addAttribute("loggedUser", SecurityUtil.getLoggedUser(session));
+            return "admin/vehicles/add";
+        }
+
         String error = vehicleService.create(form);
         if (error != null) {
             model.addAttribute("error", error);
@@ -121,6 +141,22 @@ public class VehicleManagementController {
                               Model model,
                               HttpSession session,
                               RedirectAttributes ra) {
+        // Xử lý upload ảnh mới
+        try {
+            if (form.getImageFile() != null && !form.getImageFile().isEmpty()) {
+                String imageUrl = fileUploadService.saveImage(form.getImageFile());
+                form.setImageUrl(imageUrl);
+            }
+            // Nếu không upload ảnh mới, giữ nguyên imageUrl cũ (từ hidden input)
+        } catch (Exception e) {
+            model.addAttribute("error", "Lỗi upload ảnh: " + e.getMessage());
+            model.addAttribute("categories", Arrays.asList(VehicleCategory.values()));
+            model.addAttribute("statuses", Arrays.asList(VehicleStatus.values()));
+            vehicleService.findById(id).ifPresent(v -> model.addAttribute("vehicle", v));
+            model.addAttribute("loggedUser", SecurityUtil.getLoggedUser(session));
+            return "admin/vehicles/edit";
+        }
+
         String error = vehicleService.update(id, form);
         if (error != null) {
             model.addAttribute("error", error);

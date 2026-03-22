@@ -20,3 +20,9 @@ INSERT IGNORE INTO pickup_points (name, address, latitude, longitude) VALUES
 ('Bến xe Miền Tây',         '395 Kinh Dương Vương, Bình Tân, TP.HCM', 10.7375000, 106.6127000),
 ('Ga Sài Gòn',              '1 Nguyễn Thông, Q.3, TP.HCM',            10.7800000, 106.6823000),
 ('Trung tâm TP.HCM - Q.1',  '19 Nguyễn Huệ, Q.1, TP.HCM',            10.7746000, 106.7033000);
+
+-- Giá thuê tài xế mặc định
+INSERT IGNORE INTO sober_rates (vehicle_category, hourly_rate, daily_rate) VALUES
+('MOTORCYCLE', 50000.00,  400000.00),
+('CAR_4',      150000.00, 1000000.00),
+('CAR_7',      200000.00, 1500000.00);

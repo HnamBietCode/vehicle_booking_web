@@ -160,6 +160,22 @@
             margin-top: .3rem;
         }
 
+        .field-error {
+            font-size: .78rem;
+            color: var(--danger);
+            margin-top: .3rem;
+            display: none;
+        }
+
+        .form-control.is-invalid {
+            border-color: var(--danger);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, .12);
+        }
+
+        .form-control.is-valid {
+            border-color: #22C55E;
+        }
+
         .btn {
             display: inline-flex;
             align-items: center;
@@ -224,15 +240,7 @@
 </head>
 
 <body>
-    <nav class="navbar">
-        <a class="navbar-brand" href="/">VehicleBook</a>
-        <ul class="navbar-nav">
-            <li><a class="nav-link" th:href="@{/vehicles/search}">🔍 Tìm xe</a></li>
-            <li><a class="nav-link active" th:href="@{/admin/users}">👥 Quản lý Users</a></li>
-            <li><a class="nav-link" th:href="@{/admin/vehicles}">🚗 Quản lý Xe</a></li>
-            <li><a class="nav-link" th:href="@{/auth/logout}" style="color:#EF4444;">Đăng xuất</a></li>
-        </ul>
-    </nav>
+    <nav th:replace="~{layout/base :: navbar}"></nav>
 
     <main class="main">
         <div class="breadcrumb">
@@ -261,13 +269,16 @@
                 <div class="form-group">
                     <label class="form-label" for="email">📧 Email</label>
                     <input type="email" id="email" class="form-control" name="email" th:value="*{email}"
-                        placeholder="example@email.com" required>
+                        placeholder="example@email.com" required maxlength="100">
+                    <p class="field-error" id="emailError"></p>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="phone">📱 Số điện thoại</label>
                     <input type="tel" id="phone" class="form-control" name="phone" th:value="*{phone}"
-                        placeholder="0901234567" required>
+                        placeholder="0901234567" required pattern="0[0-9]{9}" minlength="10">
+                    <p class="form-hint">Gồm 10 chữ số, bắt đầu bằng 0 (VD: 0901234567).</p>
+                    <p class="field-error" id="phoneError"></p>
                 </div>
 
                 <div class="section-title">Thông tin cá nhân</div>
@@ -275,14 +286,26 @@
                 <div class="form-group">
                     <label class="form-label" for="fullName">👤 Họ và tên</label>
                     <input type="text" id="fullName" class="form-control" name="fullName" th:value="*{fullName}"
-                        placeholder="Nguyễn Văn A" required>
+                        placeholder="Nguyễn Văn A" required minlength="2" maxlength="100">
+                    <p class="form-hint">Từ 2 đến 100 ký tự.</p>
+                    <p class="field-error" id="fullNameError"></p>
                 </div>
 
-                <div class="form-group" id="cccdGroup" style="display: none;">
-                    <label class="form-label" for="cccd">🪪 Căn Cước Công Dân (Dành cho tài xế)</label>
-                    <input type="text" id="cccd" class="form-control" name="cccd" th:value="*{cccd}"
-                        placeholder="Nhập 12 số CCCD">
-                    <p class="form-hint">Bắt buộc nhập 12 số đối với tài khoản Driver.</p>
+                <div id="driverFields" style="display: none;">
+                    <div class="section-title">Hồ sơ Tài xế</div>
+                    <div class="form-group">
+                        <label class="form-label" for="cccd">🪪 Căn cước công dân</label>
+                        <input type="text" id="cccd" class="form-control" name="cccd" th:value="*{cccd}"
+                            placeholder="Nhập 12 số CCCD" pattern="[0-9]{12}" minlength="12">
+                        <p class="form-hint">Bắt buộc nhập đúng 12 chữ số đối với tài khoản Tài xế.</p>
+                        <p class="field-error" id="cccdError"></p>
+                    </div>
+
+                    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+                        <span>🪪 Danh sách Bằng lái</span>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="addLicense()">+ Thêm bằng lái</button>
+                    </div>
+                    <div id="licensesContainer"></div>
                 </div>
 
                 <div class="section-title">Bảo mật</div>
@@ -290,14 +313,16 @@
                 <div class="form-group">
                     <label class="form-label" for="password">🔒 Mật khẩu</label>
                     <input type="password" id="password" class="form-control" name="password"
-                        placeholder="Tối thiểu 6 ký tự" required>
-                    <p class="form-hint">Mật khẩu sẽ được mã hóa BCrypt.</p>
+                        placeholder="Tối thiểu 6 ký tự, có chữ hoa và số" required minlength="6">
+                    <p class="form-hint">Tối thiểu 6 ký tự, ít nhất 1 chữ hoa và 1 chữ số. Mật khẩu sẽ được mã hóa BCrypt.</p>
+                    <p class="field-error" id="passwordError"></p>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="confirmPassword">🔒 Xác nhận mật khẩu</label>
                     <input type="password" id="confirmPassword" class="form-control" name="confirmPassword"
-                        placeholder="Nhập lại mật khẩu" required>
+                        placeholder="Nhập lại mật khẩu" required minlength="6">
+                    <p class="field-error" id="confirmPasswordError"></p>
                 </div>
 
                 <div class="btn-group">
@@ -308,29 +333,220 @@
         </div>
     </main>
 
+    <style>
+        .vehicle-types-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:.4rem; }
+        .vt-checkbox { display:flex; align-items:center; gap:.4rem; padding:.4rem .6rem;
+            border:1.5px solid var(--border); border-radius:8px; font-size:.82rem; cursor:pointer; transition:all .2s; }
+        .vt-checkbox:hover { border-color:var(--primary); background:#F5F3FF; }
+        .vt-checkbox:has(input:checked) { border-color:var(--primary); background:#EEF2FF; }
+        .license-row { border:1.5px solid var(--border); }
+        .btn-danger { background:var(--danger); color:#fff; }
+        .btn-sm { padding:.35rem .8rem; font-size:.8rem; }
+        input[type=checkbox] { width:1.1rem; height:1.1rem; accent-color:var(--primary); cursor:pointer; }
+    </style>
+
     <script>
+        const CLASS_MAP = {
+            'A1': ['MOTORCYCLE'],
+            'B1': ['CAR_4','CAR_7'],
+            'B2': ['CAR_4','CAR_7'],
+            'C':  ['CAR_16','CAR_29','CAR_45'],
+            'D':  ['CAR_16','CAR_29','CAR_45'],
+            'E':  ['CAR_29','CAR_45'],
+            'FC': ['TRUCK_SMALL','TRUCK_MEDIUM','TRUCK_LARGE']
+        };
+        let licenseCount = 0;
+
+        function addLicense() {
+            licenseCount++;
+            const html = `
+            <div class="license-row card" style="margin-bottom:1rem;padding:1rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;">
+                    <strong>Bằng lái #${licenseCount}</strong>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.license-row').remove()">✕ Xoá</button>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.7rem;">
+                    <div class="form-group" style="margin:0;"><label class="form-label">Số bằng lái</label>
+                        <input type="text" class="form-control" name="licenseNumbers" required></div>
+                    <div class="form-group" style="margin:0;"><label class="form-label">Hạng bằng</label>
+                        <select class="form-control license-class-select" name="licenseClasses" onchange="onClassChange(this)">
+                            <option value="A1">A1 – Xe máy</option>
+                            <option value="B1">B1 – Xe ô tô (AT)</option>
+                            <option value="B2" selected>B2 – Xe ô tô</option>
+                            <option value="C">C – Xe tải/khách</option>
+                            <option value="D">D – Xe khách lớn</option>
+                            <option value="E">E – Xe đầu kéo</option>
+                            <option value="FC">FC – Xe tải nặng</option>
+                        </select></div>
+                    <div class="form-group" style="margin:0;"><label class="form-label">Hạn bằng lái</label>
+                        <input type="date" class="form-control" name="licenseExpiries" required></div>
+                </div>
+                <div class="form-group" style="margin-top:.7rem;margin-bottom:0;">
+                    <label class="form-label">Loại xe</label>
+                    <div class="vehicle-types-grid vt-grid-row">
+                        <label class="vt-checkbox"><input type="checkbox" value="MOTORCYCLE" class="vt-cb"> Xe máy</label>
+                        <label class="vt-checkbox"><input type="checkbox" value="CAR_4" class="vt-cb" checked> Xe 4 chỗ</label>
+                        <label class="vt-checkbox"><input type="checkbox" value="CAR_7" class="vt-cb" checked> Xe 7 chỗ</label>
+                        <label class="vt-checkbox"><input type="checkbox" value="CAR_16" class="vt-cb"> Xe 16 chỗ</label>
+                        <label class="vt-checkbox"><input type="checkbox" value="CAR_29" class="vt-cb"> Xe 29 chỗ</label>
+                        <label class="vt-checkbox"><input type="checkbox" value="CAR_45" class="vt-cb"> Xe 45 chỗ</label>
+                        <label class="vt-checkbox"><input type="checkbox" value="TRUCK_SMALL" class="vt-cb"> Xe tải nhỏ</label>
+                        <label class="vt-checkbox"><input type="checkbox" value="TRUCK_MEDIUM" class="vt-cb"> Xe tải trung</label>
+                        <label class="vt-checkbox"><input type="checkbox" value="TRUCK_LARGE" class="vt-cb"> Xe tải lớn</label>
+                    </div>
+                    <input type="hidden" name="licenseVehicleTypes" class="vt-hidden">
+                </div>
+            </div>`;
+            document.getElementById('licensesContainer').insertAdjacentHTML('beforeend', html);
+            const newRow = document.getElementById('licensesContainer').lastElementChild;
+            onClassChange(newRow.querySelector('.license-class-select'));
+        }
+
+        function onClassChange(selectEl) {
+            const cls = selectEl.value;
+            const row = selectEl.closest('.license-row');
+            const cbs = row.querySelectorAll('.vt-cb');
+            const allowed = CLASS_MAP[cls] || [];
+            cbs.forEach(cb => { cb.checked = allowed.includes(cb.value); });
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
             const roleSelect = document.getElementById('role');
-            const cccdGroup = document.getElementById('cccdGroup');
+            const driverFields = document.getElementById('driverFields');
             const cccdInput = document.getElementById('cccd');
 
-            function toggleCccd() {
+            function toggleDriver() {
                 if (roleSelect.value === 'DRIVER') {
-                    cccdGroup.style.display = 'block';
+                    driverFields.style.display = 'block';
                     cccdInput.setAttribute('required', 'required');
                 } else {
-                    cccdGroup.style.display = 'none';
+                    driverFields.style.display = 'none';
                     cccdInput.removeAttribute('required');
                     cccdInput.value = '';
                 }
             }
 
-            roleSelect.addEventListener('change', toggleCccd);
+            // ── Helper: hiển thị/ẩn lỗi ──
+            function showError(id, msg) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.textContent = msg;
+                el.style.display = msg ? 'block' : 'none';
+                const input = el.closest('.form-group')?.querySelector('.form-control');
+                if (input) {
+                    input.classList.toggle('is-invalid', !!msg);
+                    input.classList.toggle('is-valid', !msg);
+                }
+            }
 
-            // Chạy hàm toggleCccd ngay khi tải trang để xử lý trường hợp user chọn form lỗi và được load lại
-            toggleCccd();
+            // ── Inline validation khi blur ──
+            document.getElementById('email')?.addEventListener('blur', function () {
+                const v = this.value.trim();
+                if (!v) showError('emailError', 'Email không được để trống.');
+                else if (!/^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/.test(v)) showError('emailError', 'Email không đúng định dạng.');
+                else if (v.length > 100) showError('emailError', 'Email không vượt quá 100 ký tự.');
+                else showError('emailError', '');
+            });
+
+            document.getElementById('phone')?.addEventListener('blur', validatePhone);
+            document.getElementById('phone')?.addEventListener('input', validatePhone);
+            function validatePhone() {
+                const v = document.getElementById('phone').value.trim();
+                if (!v) showError('phoneError', 'Số điện thoại không được để trống.');
+                else if (v.length > 10) showError('phoneError', 'SĐT chỉ được nhập đúng 10 chữ số (bạn đã nhập ' + v.length + ').');
+                else if (!/^0[0-9]{9}$/.test(v)) showError('phoneError', 'SĐT phải gồm đúng 10 chữ số, bắt đầu bằng 0.');
+                else showError('phoneError', '');
+            }
+
+            document.getElementById('fullName')?.addEventListener('blur', function () {
+                const v = this.value.trim();
+                if (!v) showError('fullNameError', 'Họ tên không được để trống.');
+                else if (v.length < 2 || v.length > 100) showError('fullNameError', 'Họ tên phải từ 2 đến 100 ký tự.');
+                else showError('fullNameError', '');
+            });
+
+            document.getElementById('password')?.addEventListener('blur', function () {
+                const v = this.value;
+                if (!v) showError('passwordError', 'Mật khẩu không được để trống.');
+                else if (v.length < 6) showError('passwordError', 'Mật khẩu phải từ 6 ký tự trở lên.');
+                else if (!/[A-Z]/.test(v)) showError('passwordError', 'Phải chứa ít nhất 1 chữ hoa.');
+                else if (!/[0-9]/.test(v)) showError('passwordError', 'Phải chứa ít nhất 1 chữ số.');
+                else showError('passwordError', '');
+            });
+
+            document.getElementById('confirmPassword')?.addEventListener('blur', function () {
+                const pw = document.getElementById('password').value;
+                if (this.value !== pw) showError('confirmPasswordError', 'Xác nhận mật khẩu không khớp.');
+                else showError('confirmPasswordError', '');
+            });
+
+            document.getElementById('cccd')?.addEventListener('blur', validateCccd);
+            document.getElementById('cccd')?.addEventListener('input', validateCccd);
+            function validateCccd() {
+                if (roleSelect.value === 'DRIVER') {
+                    const v = document.getElementById('cccd').value.trim();
+                    if (!v) showError('cccdError', 'CCCD không được để trống.');
+                    else if (v.length > 12) showError('cccdError', 'CCCD chỉ được nhập đúng 12 chữ số (bạn đã nhập ' + v.length + ').');
+                    else if (!/^[0-9]{12}$/.test(v)) showError('cccdError', 'CCCD phải gồm đúng 12 chữ số.');
+                    else showError('cccdError', '');
+                }
+            }
+
+            // ── Full validation khi submit ──
+            document.querySelector('form').addEventListener('submit', function (e) {
+                // Collect license checkboxes
+                document.querySelectorAll('.license-row').forEach(row => {
+                    const sel = [];
+                    row.querySelectorAll('.vt-cb').forEach(cb => { if (cb.checked) sel.push(cb.value); });
+                    row.querySelector('.vt-hidden').value = sel.join(',');
+                });
+
+                let hasError = false;
+
+                // Email
+                const email = document.getElementById('email').value.trim();
+                if (!email || !/^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/.test(email)) {
+                    showError('emailError', 'Email không hợp lệ.'); hasError = true;
+                } else showError('emailError', '');
+
+                // Phone
+                const phone = document.getElementById('phone').value.trim();
+                if (!phone || !/^0[0-9]{9}$/.test(phone)) {
+                    showError('phoneError', 'SĐT phải gồm 10 số, bắt đầu bằng 0.'); hasError = true;
+                } else showError('phoneError', '');
+
+                // FullName
+                const fn = document.getElementById('fullName').value.trim();
+                if (!fn || fn.length < 2 || fn.length > 100) {
+                    showError('fullNameError', 'Họ tên phải từ 2 đến 100 ký tự.'); hasError = true;
+                } else showError('fullNameError', '');
+
+                // Password
+                const pw = document.getElementById('password').value;
+                if (!pw || pw.length < 6) { showError('passwordError', 'Mật khẩu phải từ 6 ký tự.'); hasError = true; }
+                else if (!/[A-Z]/.test(pw)) { showError('passwordError', 'Phải chứa ít nhất 1 chữ hoa.'); hasError = true; }
+                else if (!/[0-9]/.test(pw)) { showError('passwordError', 'Phải chứa ít nhất 1 chữ số.'); hasError = true; }
+                else showError('passwordError', '');
+
+                // Confirm password
+                if (document.getElementById('confirmPassword').value !== pw) {
+                    showError('confirmPasswordError', 'Xác nhận mật khẩu không khớp.'); hasError = true;
+                } else showError('confirmPasswordError', '');
+
+                // CCCD (if driver)
+                if (roleSelect.value === 'DRIVER') {
+                    const cccd = document.getElementById('cccd').value.trim();
+                    if (!cccd || !/^[0-9]{12}$/.test(cccd)) {
+                        showError('cccdError', 'CCCD phải gồm đúng 12 chữ số.'); hasError = true;
+                    } else showError('cccdError', '');
+                }
+
+                if (hasError) { e.preventDefault(); return false; }
+            });
+
+            roleSelect.addEventListener('change', toggleDriver);
+            toggleDriver();
         });
     </script>
 </body>
-
 </html>

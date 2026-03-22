@@ -57,6 +57,37 @@ public class VehicleService {
                 .toList();
     }
 
+    /**
+     * Tìm tài xế đã duyệt VÀ có bằng lái phù hợp với loại xe.
+     */
+    @Transactional(readOnly = true)
+    public List<Driver> findEligibleDrivers(VehicleCategory category) {
+        return driverRepository.findAll().stream()
+                .filter(d -> d.getVerificationStatus() == VerificationStatus.APPROVED)
+                .filter(d -> supportsCategory(d.getVehicleTypes(), category))
+                .toList();
+    }
+
+    private boolean supportsCategory(String vehicleTypes, VehicleCategory category) {
+        if (vehicleTypes == null || vehicleTypes.isBlank()) return false;
+        String normalized = "," + vehicleTypes.replace(" ", "") + ",";
+        return normalized.contains("," + category.name() + ",");
+    }
+
+    private String getCategoryLabel(VehicleCategory cat) {
+        return switch (cat) {
+            case MOTORCYCLE -> "Xe máy";
+            case CAR_4 -> "Xe 4 chỗ";
+            case CAR_7 -> "Xe 7 chỗ";
+            case CAR_16 -> "Xe 16 chỗ";
+            case CAR_29 -> "Xe 29 chỗ";
+            case CAR_45 -> "Xe 45 chỗ";
+            case TRUCK_SMALL -> "Xe tải nhỏ";
+            case TRUCK_MEDIUM -> "Xe tải trung";
+            case TRUCK_LARGE -> "Xe tải lớn";
+        };
+    }
+
     // ── Search (public) ─────────────────────────────────────────────
 
     @Transactional(readOnly = true)
@@ -121,13 +152,19 @@ public class VehicleService {
         if (dOpt.get().getVerificationStatus() != VerificationStatus.APPROVED)
             return "Chỉ tài xế đã được duyệt mới có thể gán xe.";
 
+        // Kiểm tra tài xế có bằng lái phù hợp với loại xe
+        Vehicle v = vOpt.get();
+        Driver d = dOpt.get();
+        if (!supportsCategory(d.getVehicleTypes(), v.getCategory())) {
+            return "Tài xế này không có bằng lái phù hợp với loại xe " + getCategoryLabel(v.getCategory()) + ".";
+        }
+
         // Bỏ gán xe cũ của tài xế này nếu có
         vehicleRepository.findByAssignedDriver(driverId).ifPresent(old -> {
             old.setAssignedDriver(null);
             vehicleRepository.save(old);
         });
 
-        Vehicle v = vOpt.get();
         v.setAssignedDriver(driverId);
         vehicleRepository.save(v);
         return null;
@@ -150,15 +187,23 @@ public class VehicleService {
 
     // ── Internal helpers ────────────────────────────────────────────
 
+    // Regex biển số VN: 2 số + 1-2 chữ cái + (tùy chọn 1 số) + dấu gạch/trống + 3-5 số + (tùy chọn dấu chấm + 0-2 số)
+    private static final String LICENSE_PLATE_VN_REGEX =
+            "^\\d{2}[A-Z]{1,2}\\d?[-\\s]?\\d{3,5}\\.?\\d{0,2}$";
+
     private String validate(VehicleForm form, Long excludeId) {
         if (form.getName() == null || form.getName().isBlank())
             return "Tên xe không được để trống.";
         if (form.getLicensePlate() == null || form.getLicensePlate().isBlank())
             return "Biển số xe không được để trống.";
-        if (excludeId == null && vehicleRepository.existsByLicensePlate(form.getLicensePlate().trim()))
+
+        String plate = form.getLicensePlate().trim().toUpperCase();
+        if (!plate.matches(LICENSE_PLATE_VN_REGEX))
+            return "Biển số xe không đúng định dạng Việt Nam (VD: 51A-123.45, 30H-12345).";
+
+        if (excludeId == null && vehicleRepository.existsByLicensePlate(plate))
             return "Biển số xe đã tồn tại.";
-        if (excludeId != null && vehicleRepository.existsByLicensePlateAndIdNot(
-                form.getLicensePlate().trim(), excludeId))
+        if (excludeId != null && vehicleRepository.existsByLicensePlateAndIdNot(plate, excludeId))
             return "Biển số xe đã tồn tại.";
         if (form.getPricePerKm() == null || form.getPricePerKm().compareTo(BigDecimal.ZERO) <= 0)
             return "Giá/km phải lớn hơn 0.";

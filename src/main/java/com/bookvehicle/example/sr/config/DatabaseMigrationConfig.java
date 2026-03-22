@@ -29,6 +29,24 @@ public class DatabaseMigrationConfig {
                 System.out.println("Column current_address may already exist: " + e.getMessage());
             }
 
+            // Remove duplicate pickup points (keep the smallest id for same name+address)
+            jdbcTemplate.execute(
+                    "DELETE p1 FROM pickup_points p1 " +
+                    "JOIN pickup_points p2 ON p1.id > p2.id " +
+                    "AND p1.name = p2.name " +
+                    "AND p1.address = p2.address"
+            );
+
+            // Prevent duplicate pickup points in future runs
+            try {
+                jdbcTemplate.execute(
+                        "ALTER TABLE pickup_points " +
+                        "ADD CONSTRAINT uq_pickup_points_name_address UNIQUE (name, address)"
+                );
+            } catch (Exception e) {
+                System.out.println("Unique key for pickup_points may already exist: " + e.getMessage());
+            }
+
             // Recreate view to include current_address
             jdbcTemplate.execute("CREATE OR REPLACE VIEW v_available_vehicles AS " +
                     "SELECT v.id, v.category, v.name AS vehicle_name, v.license_plate, v.color, v.current_address, " +

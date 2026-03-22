@@ -354,15 +354,7 @@
 </head>
 
 <body>
-    <nav class="navbar">
-        <a class="navbar-brand" href="/">VehicleBook</a>
-        <ul class="navbar-nav">
-            <li><a class="nav-link" th:href="@{/vehicles/search}">🔍 Tìm xe</a></li>
-            <li><a class="nav-link" th:href="@{/admin/users}">👥 Users</a></li>
-            <li><a class="nav-link active" th:href="@{/admin/vehicles}">🚗 Xe</a></li>
-            <li><a class="nav-link" th:href="@{/auth/logout}" style="color:#EF4444;">Đăng xuất</a></li>
-        </ul>
-    </nav>
+    <nav th:replace="~{layout/base :: navbar}"></nav>
 
     <main class="main">
         <div class="breadcrumb">
@@ -482,17 +474,17 @@
             <div th:if="${vehicle.driver == null}">
                 <p style="color:var(--muted);margin-bottom:1rem;">Chưa có tài xế nào được gán.</p>
                 <form th:action="@{/admin/vehicles/{id}/assign-driver(id=${vehicle.id})}" method="post"
-                    class="assign-form">
+                    class="assign-form" th:if="${!#lists.isEmpty(eligibleDrivers)}">
                     <select name="driverId" class="form-control" required>
-                        <option value="">-- Chọn tài xế đã duyệt --</option>
-                        <option th:each="d : ${approvedDrivers}" th:value="${d.id}"
-                            th:text="${d.fullName + ' (CCCD: ' + d.cccd + ')'}">—</option>
+                        <option value="">-- Chọn tài xế có bằng lái phù hợp --</option>
+                        <option th:each="d : ${eligibleDrivers}" th:value="${d.id}"
+                            th:text="${d.fullName + ' (CCCD: ' + d.cccd + ' | Loại xe: ' + d.vehicleTypes + ')'}">—</option>
                     </select>
                     <button type="submit" class="btn btn-success btn-sm">✔ Gán tài xế</button>
                 </form>
-                <p th:if="${#lists.isEmpty(approvedDrivers)}"
-                    style="color:var(--muted);font-size:.85rem;margin-top:.5rem;">
-                    (Không có tài xế APPROVED nào để gán)
+                <p th:if="${#lists.isEmpty(eligibleDrivers)}"
+                    style="color:var(--danger);font-size:.85rem;margin-top:.5rem;">
+                    ⚠ Không có tài xế nào có bằng lái phù hợp với loại xe này. Vui lòng cập nhật bằng lái cho tài xế trước.
                 </p>
             </div>
         </div>

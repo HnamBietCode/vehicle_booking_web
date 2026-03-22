@@ -14,7 +14,7 @@ public class Vehicle {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false,
-            columnDefinition = "ENUM('MOTORCYCLE','CAR_4','CAR_7')")
+            columnDefinition = "ENUM('MOTORCYCLE','CAR_4','CAR_7','CAR_16','CAR_29','CAR_45','TRUCK_SMALL','TRUCK_MEDIUM','TRUCK_LARGE')")
     private VehicleCategory category;
 
     @Column(nullable = false, length = 100)

@@ -3,6 +3,8 @@ package com.bookvehicle.example.sr.model;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "drivers")
@@ -56,10 +58,26 @@ public class Driver {
     @Column(name = "approved_by")
     private Long approvedBy;
 
+    @Column(length = 100)
+    private String province;
+
+    @Column(length = 100)
+    private String district;
+
+    @Column(length = 100)
+    private String ward;
+
+    @Column(name = "last_completed_at")
+    private LocalDateTime lastCompletedAt;
+
     // Convenience join
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
     private User user;
+
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "driver_id", insertable = false, updatable = false)
+    private List<DriverLicense> licenses = new ArrayList<>();
 
     // ─── Getters & Setters ───────────────────────────────────────
 
@@ -110,6 +128,21 @@ public class Driver {
     public Long getApprovedBy() { return approvedBy; }
     public void setApprovedBy(Long approvedBy) { this.approvedBy = approvedBy; }
 
+    public String getProvince() { return province; }
+    public void setProvince(String province) { this.province = province; }
+
+    public String getDistrict() { return district; }
+    public void setDistrict(String district) { this.district = district; }
+
+    public String getWard() { return ward; }
+    public void setWard(String ward) { this.ward = ward; }
+
+    public LocalDateTime getLastCompletedAt() { return lastCompletedAt; }
+    public void setLastCompletedAt(LocalDateTime lastCompletedAt) { this.lastCompletedAt = lastCompletedAt; }
+
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
+
+    public List<DriverLicense> getLicenses() { return licenses; }
+    public void setLicenses(List<DriverLicense> licenses) { this.licenses = licenses; }
 }

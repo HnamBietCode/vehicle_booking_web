@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${pageTitle != null ? pageTitle + ' – VehicleBook' : 'VehicleBook'}">VehicleBook</title>
+    <title th:text="${pageTitle != null ? pageTitle + ' â€“ VehicleBook' : 'VehicleBook'}">VehicleBook</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -37,7 +37,7 @@
             min-height: 100vh;
         }
 
-        /* ── Navbar ── */
+        /* â”€â”€ Navbar â”€â”€ */
         .navbar {
             background: var(--surface);
             border-bottom: 1px solid var(--border);
@@ -62,7 +62,7 @@
         }
 
         .navbar-brand::before {
-            content: '🚗';
+            content: 'ðŸš—';
             font-size: 1.4rem;
         }
 
@@ -72,6 +72,7 @@
             gap: .25rem;
             margin-left: auto;
             list-style: none;
+            flex-wrap: nowrap;
         }
 
         .nav-link {
@@ -82,6 +83,7 @@
             font-size: .9rem;
             font-weight: 500;
             transition: all .2s;
+            white-space: nowrap;
         }
 
         .nav-link:hover,
@@ -100,14 +102,14 @@
             font-weight: 700;
         }
 
-        /* ── Main layout ── */
+        /* â”€â”€ Main layout â”€â”€ */
         .main {
             max-width: 1200px;
             margin: 2rem auto;
             padding: 0 1.5rem;
         }
 
-        /* ── Alerts ── */
+        /* â”€â”€ Alerts â”€â”€ */
         .alert {
             padding: .85rem 1.2rem;
             border-radius: 8px;
@@ -128,7 +130,7 @@
             border-left: 4px solid var(--success);
         }
 
-        /* ── Card ── */
+        /* â”€â”€ Card â”€â”€ */
         .card {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -144,7 +146,7 @@
             color: var(--text);
         }
 
-        /* ── Form ── */
+        /* â”€â”€ Form â”€â”€ */
         .form-group {
             margin-bottom: 1.1rem;
         }
@@ -177,7 +179,7 @@
             cursor: pointer;
         }
 
-        /* ── Buttons ── */
+        /* â”€â”€ Buttons â”€â”€ */
         .btn {
             display: inline-flex;
             align-items: center;
@@ -237,7 +239,7 @@
             color: #fff;
         }
 
-        /* ── Table ── */
+        /* â”€â”€ Table â”€â”€ */
         .table-wrap {
             overflow-x: auto;
         }
@@ -267,7 +269,7 @@
             background: #f8fafc;
         }
 
-        /* ── Badge ── */
+        /* â”€â”€ Badge â”€â”€ */
         .badge {
             display: inline-block;
             padding: .25rem .65rem;
@@ -326,7 +328,7 @@
             color: #991B1B;
         }
 
-        /* ── Page Header ── */
+        /* â”€â”€ Page Header â”€â”€ */
         .page-header {
             display: flex;
             align-items: center;
@@ -339,7 +341,7 @@
             font-weight: 700;
         }
 
-        /* ── Detail list ── */
+        /* â”€â”€ Detail list â”€â”€ */
         .detail-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -365,7 +367,7 @@
             font-weight: 500;
         }
 
-        /* ── Premium card ── */
+        /* â”€â”€ Premium card â”€â”€ */
         .premium-hero {
             background: linear-gradient(135deg, #4F46E5, #7C3AED);
             color: #fff;
@@ -423,32 +425,36 @@
 </head>
 
 <body>
-    <!-- ─── Navbar ─────────────────────────────────────────────────── -->
+    <!-- â”€â”€â”€ Navbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <nav class="navbar" th:fragment="navbar">
         <a class="navbar-brand" href="/">VehicleBook</a>
         <ul class="navbar-nav"
             th:if="${session?.loggedUser != null || #httpServletRequest.getAttribute('loggedUser') != null}">
             <th:block th:with="u=${session?.loggedUser ?: #httpServletRequest.getAttribute('loggedUser')}">
-                <li><a class="nav-link" th:href="@{/vehicles/search}">🔍 Tìm xe</a></li>
-                <li th:if="${u?.role?.name() == 'ADMIN'}">
-                    <a class="nav-link" th:href="@{/admin/users}">Quản lý Users</a>
-                </li>
-                <li th:if="${u?.role?.name() == 'ADMIN'}">
-                    <a class="nav-link" th:href="@{/admin/vehicles}">🚗 Quản lý Xe</a>
-                </li>
-                <li>
-                    <a class="nav-link" th:href="@{/profile}">👤 Hồ sơ</a>
-                </li>
+                <li th:if="${u?.role?.name() != 'ADMIN'}"><a class="nav-link" th:href="@{/vehicles/search}">🔍 Tìm xe</a></li>
+                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/users}">👥 Quản lý Users</a></li>
+                <li th:if="${u?.role?.name() == 'DRIVER'}"><a class="nav-link" th:href="@{/driver/dashboard}">📈 Thống kê</a></li>
+                <li th:if="${u?.role?.name() == 'DRIVER'}"><a class="nav-link" th:href="@{/driver/rentals}">🧾 Đơn thuê</a></li>
+                <li th:if="${u?.role?.name() == 'DRIVER'}"><a class="nav-link" th:href="@{/driver/sober-bookings}">🚗 Xử lý lái hộ</a></li>
+                <li th:if="${u?.role?.name() == 'CUSTOMER'}"><a class="nav-link" th:href="@{/rentals/my}">🧾 Đơn thuê</a></li>
+                <li th:if="${u?.role?.name() == 'CUSTOMER'}"><a class="nav-link" th:href="@{/sober-bookings/new}">🚗 Thuê tài xế</a></li>
+                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/vehicles}">🚗 Quản lý xe</a></li>
+                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/pickup-points}">📍 Điểm đón</a></li>
+                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/sober-bookings}">🚗 Quản lý lái hộ</a></li>
+                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/withdrawals}">💸 Rút tiền</a></li>
+                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/dashboard}">📊 Báo cáo</a></li>
+                <li th:if="${u?.role?.name() != 'ADMIN'}"><a class="nav-link" th:href="@{/profile}">👤 Hồ sơ</a></li>
                 <li th:if="${u?.role?.name() == 'CUSTOMER'}">
                     <a class="nav-link" th:href="@{/premium}">
                         ⭐ Premium
                         <span class="nav-badge" th:if="${u != null}">VIP</span>
                     </a>
                 </li>
+                <li th:if="${u?.role?.name() != 'ADMIN'}"><a class="nav-link" th:href="@{/wallet}">💳 Ví điện tử</a></li>
                 <li>
                     <a class="nav-link" th:href="@{/auth/logout}" style="color:#EF4444;"
-                        onmouseover="this.style.background='#EF4444';this.style.color='#fff'"
-                        onmouseout="this.style.background='';this.style.color='#EF4444'">Đăng xuất</a>
+                       onmouseover="this.style.background='#EF4444';this.style.color='#fff'"
+                       onmouseout="this.style.background='';this.style.color='#EF4444'">Đăng xuất</a>
                 </li>
             </th:block>
         </ul>
@@ -456,12 +462,11 @@
             th:unless="${session?.loggedUser != null || #httpServletRequest.getAttribute('loggedUser') != null}">
             <li><a class="nav-link" th:href="@{/vehicles/search}">🔍 Tìm xe</a></li>
             <li><a class="nav-link" th:href="@{/auth/login}">Đăng nhập</a></li>
-            <li><a class="nav-link btn-primary btn" th:href="@{/auth/register}" style="margin-left:.5rem;">Đăng ký</a>
-            </li>
+            <li><a class="nav-link btn-primary btn" th:href="@{/auth/register}" style="margin-left:.5rem;">Đăng ký</a></li>
         </ul>
     </nav>
 
-    <!-- ─── Main content slot ─────────────────────────────────────── -->
+    <!-- â”€â”€â”€ Main content slot â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <main class="main" th:fragment="main">
         <!-- child page content fills here -->
     </main>
@@ -469,3 +474,6 @@
 </body>
 
 </html>
+
+
+

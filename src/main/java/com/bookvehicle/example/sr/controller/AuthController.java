@@ -26,7 +26,8 @@ public class AuthController {
     /** Hiển thị form đăng ký */
     @GetMapping("/register")
     public String showRegisterForm(Model model, HttpSession session) {
-        if (SecurityUtil.isLoggedIn(session)) return "redirect:/";
+        if (SecurityUtil.isLoggedIn(session))
+            return "redirect:/";
         model.addAttribute("form", new RegisterForm());
         return "auth/register";
     }
@@ -34,15 +35,22 @@ public class AuthController {
     /** Xử lý đăng ký */
     @PostMapping("/register")
     public String handleRegister(@ModelAttribute("form") RegisterForm form,
-                                  Model model,
-                                  RedirectAttributes redirectAttributes) {
+            Model model,
+            RedirectAttributes redirectAttributes) {
         String error = authService.register(form);
         if (error != null) {
             model.addAttribute("error", error);
             return "auth/register";
         }
-        redirectAttributes.addFlashAttribute("success",
-                "Đăng ký thành công! Vui lòng đăng nhập.");
+
+        String role = form.getRole().toUpperCase();
+        if ("DRIVER".equals(role)) {
+            redirectAttributes.addFlashAttribute("success",
+                    "Đăng ký thành công! Vui lòng chờ Admin duyệt hồ sơ trước khi đăng nhập.");
+        } else {
+            redirectAttributes.addFlashAttribute("success",
+                    "Đăng ký thành công! Vui lòng đăng nhập.");
+        }
         return "redirect:/auth/login";
     }
 
@@ -51,9 +59,10 @@ public class AuthController {
     /** Hiển thị form đăng nhập */
     @GetMapping("/login")
     public String showLoginForm(Model model,
-                                HttpSession session,
-                                @RequestParam(required = false) String error) {
-        if (SecurityUtil.isLoggedIn(session)) return "redirect:/";
+            HttpSession session,
+            @RequestParam(name = "error", required = false) String error) {
+        if (SecurityUtil.isLoggedIn(session))
+            return "redirect:/";
         model.addAttribute("form", new LoginForm());
         if ("forbidden".equals(error))
             model.addAttribute("error", "Bạn không có quyền truy cập trang đó.");
@@ -63,9 +72,9 @@ public class AuthController {
     /** Xử lý đăng nhập */
     @PostMapping("/login")
     public String handleLogin(@ModelAttribute("form") LoginForm form,
-                               Model model,
-                               HttpSession session,
-                               @RequestParam(required = false) String redirect) {
+            Model model,
+            HttpSession session,
+            @RequestParam(name = "redirect", required = false) String redirect) {
         User user = authService.login(form.getEmail(), form.getPassword());
         if (user == null) {
             model.addAttribute("form", form);
@@ -75,11 +84,12 @@ public class AuthController {
         SecurityUtil.setLoggedUser(session, user);
 
         // Redirect đến trang đích hoặc trang chủ theo role
-        if (redirect != null && !redirect.isBlank()) return "redirect:" + redirect;
+        if (redirect != null && !redirect.isBlank())
+            return "redirect:" + redirect;
         return switch (user.getRole()) {
-            case ADMIN    -> "redirect:/admin/users";
+            case ADMIN -> "redirect:/admin/users";
             case CUSTOMER -> "redirect:/profile";
-            case DRIVER   -> "redirect:/profile";
+            case DRIVER -> "redirect:/profile";
         };
     }
 

@@ -7,6 +7,8 @@
     <title>Sửa xe – Admin</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         *,
         *::before,
@@ -226,19 +228,236 @@
             padding-bottom: .5rem;
             border-bottom: 1px solid var(--border);
         }
+
+        /* ── Upload Zone ── */
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all .3s ease;
+            background: var(--bg);
+            position: relative;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.dragover {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, .04);
+        }
+
+        .upload-zone input[type="file"] {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 2.5rem;
+            margin-bottom: .5rem;
+        }
+
+        .upload-text {
+            font-size: .9rem;
+            color: var(--muted);
+        }
+
+        .upload-text strong {
+            color: var(--primary);
+        }
+
+        .upload-hint {
+            font-size: .75rem;
+            color: var(--muted);
+            margin-top: .3rem;
+        }
+
+        .image-preview {
+            margin-top: 1rem;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            object-fit: cover;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, .1);
+        }
+
+        .image-preview .remove-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            margin-top: .5rem;
+            padding: .3rem .8rem;
+            font-size: .8rem;
+            color: var(--danger);
+            background: #FEF2F2;
+            border: 1px solid #FECACA;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .image-preview .remove-btn:hover {
+            background: #FEE2E2;
+        }
+
+        .current-image {
+            margin-bottom: .75rem;
+        }
+
+        .current-image-label {
+            font-size: .8rem;
+            color: var(--muted);
+            margin-bottom: .4rem;
+        }
+
+        .current-image img {
+            max-width: 100%;
+            max-height: 180px;
+            border-radius: 8px;
+            object-fit: cover;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, .1);
+        }
+
+        /* ── Address Autocomplete ── */
+        .address-wrapper {
+            position: relative;
+            z-index: 1000;
+        }
+
+        .address-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 220px;
+            overflow-y: auto;
+            z-index: 50;
+            display: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .1);
+        }
+
+        .address-suggestions.show {
+            display: block;
+        }
+
+        .address-suggestion-item {
+            padding: .65rem 1rem;
+            cursor: pointer;
+            font-size: .88rem;
+            border-bottom: 1px solid var(--border);
+            transition: background .15s;
+            display: flex;
+            align-items: flex-start;
+            gap: .5rem;
+        }
+
+        .address-suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .address-suggestion-item:hover {
+            background: rgba(79, 70, 229, .06);
+        }
+
+        .address-suggestion-item .pin {
+            flex-shrink: 0;
+            color: var(--primary);
+            margin-top: 2px;
+        }
+
+        #map-preview {
+            height: 220px;
+            border-radius: 8px;
+            margin-top: .75rem;
+            display: none;
+            border: 1.5px solid var(--border);
+        }
+
+        #map-preview.show {
+            display: block;
+        }
+
+        .field-error {
+            font-size: .78rem;
+            color: var(--danger);
+            margin-top: .3rem;
+            display: none;
+        }
+
+        .form-hint {
+            font-size: .78rem;
+            color: var(--muted);
+            margin-top: .3rem;
+        }
+
+        .form-control.is-invalid {
+            border-color: var(--danger);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, .12);
+        }
+
+        .form-control.is-valid {
+            border-color: #22C55E;
+        }
+
+        /* ── Vehicle Name Suggestions ── */
+        .name-wrapper {
+            position: relative;
+        }
+
+        .name-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 240px;
+            overflow-y: auto;
+            z-index: 50;
+            display: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .1);
+        }
+
+        .name-suggestions.show {
+            display: block;
+        }
+
+        .name-suggestion-item {
+            padding: .6rem 1rem;
+            cursor: pointer;
+            font-size: .88rem;
+            border-bottom: 1px solid var(--border);
+            transition: background .15s;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .name-suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .name-suggestion-item:hover {
+            background: rgba(79, 70, 229, .06);
+        }
+
+        .name-suggestion-item .brand {
+            font-weight: 600;
+            color: var(--primary);
+        }
     </style>
 </head>
 
 <body>
-    <nav class="navbar">
-        <a class="navbar-brand" href="/">VehicleBook</a>
-        <ul class="navbar-nav">
-            <li><a class="nav-link" th:href="@{/vehicles/search}">🔍 Tìm xe</a></li>
-            <li><a class="nav-link" th:href="@{/admin/users}">👥 Users</a></li>
-            <li><a class="nav-link active" th:href="@{/admin/vehicles}">🚗 Xe</a></li>
-            <li><a class="nav-link" th:href="@{/auth/logout}" style="color:#EF4444;">Đăng xuất</a></li>
-        </ul>
-    </nav>
+    <nav th:replace="~{layout/base :: navbar}"></nav>
 
     <main class="main">
         <div class="breadcrumb">
@@ -250,7 +469,11 @@
         <div th:if="${error}" class="alert-danger" th:text="${error}"></div>
 
         <div class="card">
-            <form th:action="@{/admin/vehicles/{id}/edit(id=${vehicle.id})}" method="post" th:object="${form}">
+            <form th:action="@{/admin/vehicles/{id}/edit(id=${vehicle.id})}" method="post" th:object="${form}"
+                  enctype="multipart/form-data">
+
+                <!-- Hidden field giữ URL ảnh cũ -->
+                <input type="hidden" name="imageUrl" th:value="*{imageUrl}" id="hiddenImageUrl" />
 
                 <div class="section-title">Thông tin cơ bản</div>
                 <div class="form-grid">
@@ -285,14 +508,22 @@
 
                 <div class="form-group">
                     <label class="form-label" for="name">Tên xe *</label>
-                    <input type="text" id="name" class="form-control" name="name" th:value="*{name}" required>
+                    <div class="name-wrapper">
+                        <input type="text" id="name" class="form-control" name="name" th:value="*{name}"
+                            placeholder="Gõ hãng xe để xem gợi ý..." required autocomplete="off">
+                        <div class="name-suggestions" id="nameSuggestions"></div>
+                    </div>
+                    <p class="form-hint">Gõ tên hãng xe để xem gợi ý model.</p>
                 </div>
 
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label" for="licensePlate">Biển số xe *</label>
                         <input type="text" id="licensePlate" class="form-control" name="licensePlate"
-                            th:value="*{licensePlate}" required>
+                            th:value="*{licensePlate}" required
+                            style="text-transform:uppercase;">
+                        <p class="form-hint">VD: 51A-123.45, 30H-12345, 59C1-123.45</p>
+                        <p class="field-error" id="licensePlateError"></p>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="color">Màu sắc</label>
@@ -306,16 +537,44 @@
                         <input type="number" id="year" class="form-control" name="year" th:value="*{year}" min="1990"
                             max="2030">
                     </div>
-                    <div class="form-group" style="grid-column: 1 / -1;">
-                        <label class="form-label" for="imageUrl">URL ảnh xe</label>
-                        <input type="url" id="imageUrl" class="form-control" name="imageUrl" th:value="*{imageUrl}">
+                </div>
+
+                <!-- ── Image Upload ── -->
+                <div class="form-group">
+                    <label class="form-label">📷 Hình ảnh xe</label>
+
+                    <!-- Hiển thị ảnh hiện tại nếu có -->
+                    <div class="current-image" id="currentImage"
+                         th:if="${form.imageUrl != null and !form.imageUrl.isEmpty()}">
+                        <div class="current-image-label">Ảnh hiện tại:</div>
+                        <img th:src="${form.imageUrl}" alt="Ảnh xe hiện tại" />
+                    </div>
+
+                    <div class="upload-zone" id="uploadZone">
+                        <input type="file" id="imageFile" name="imageFile" accept="image/*" />
+                        <div class="upload-icon">📁</div>
+                        <div class="upload-text">
+                            <strong>Nhấn để chọn ảnh mới</strong> hoặc kéo thả file vào đây
+                        </div>
+                        <div class="upload-hint">Nếu không chọn ảnh mới, ảnh cũ sẽ được giữ nguyên — Tối đa 5MB</div>
+                    </div>
+                    <div class="image-preview" id="imagePreview" style="display: none;">
+                        <img id="previewImg" src="" alt="Preview" />
+                        <button type="button" class="remove-btn" id="removeBtn">❌ Huỷ ảnh mới</button>
                     </div>
                 </div>
 
-                <div class="form-group" style="grid-column: 1 / -1;">
-                    <label class="form-label" for="currentAddress">Khu vực / Địa chỉ hiện tại</label>
-                    <textarea id="currentAddress" class="form-control" name="currentAddress" rows="2"
-                        placeholder="Ví dụ: Quận 1, TP. HCM" th:text="*{currentAddress}"></textarea>
+                <!-- ── Address Autocomplete + Map ── -->
+                <div class="form-group">
+                    <label class="form-label" for="currentAddress">📍 Khu vực / Địa chỉ hiện tại</label>
+                    <div class="address-wrapper">
+                        <input type="text" id="currentAddress" class="form-control" name="currentAddress"
+                            th:value="*{currentAddress}"
+                            placeholder="Gõ để tìm địa chỉ tại Việt Nam..."
+                            autocomplete="off" />
+                        <div class="address-suggestions" id="addressSuggestions"></div>
+                    </div>
+                    <div id="map-preview"></div>
                 </div>
 
                 <div class="section-title">Bảng giá</div>
@@ -344,6 +603,371 @@
             </form>
         </div>
     </main>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ════════════════════════════════════════════════════
+        //  VEHICLE NAME DATABASE (phổ biến tại Việt Nam)
+        // ════════════════════════════════════════════════════
+        const VEHICLE_DB = {
+            MOTORCYCLE: [
+                'Honda Wave Alpha','Honda Wave RSX','Honda Vision','Honda SH 125','Honda SH 150','Honda SH Mode',
+                'Honda Air Blade 125','Honda Air Blade 160','Honda Winner X','Honda Lead 125','Honda PCX 125','Honda PCX 160',
+                'Honda Vario 125','Honda Future 125','Honda Blade 110','Honda CB150R','Honda CBR150R','Honda CB300R',
+                'Yamaha Exciter 155','Yamaha NVX 155','Yamaha Sirius','Yamaha Jupiter Finn','Yamaha Grande',
+                'Yamaha FreeGo','Yamaha Janus','Yamaha XSR 155','Yamaha MT-15','Yamaha R15',
+                'SYM Attila','SYM Elegant','SYM Star SR 170',
+                'Piaggio Vespa Sprint','Piaggio Vespa Primavera','Piaggio Liberty','Piaggio Medley',
+                'Suzuki Raider 150','Suzuki Satria','Suzuki GSX-R150','Suzuki Address',
+                'VinFast Klara S','VinFast Feliz S','VinFast Vento','VinFast Theon S'
+            ],
+            CAR_4: [
+                'Toyota Vios','Toyota Camry','Toyota Corolla Altis','Toyota Yaris',
+                'Honda City','Honda Civic','Honda Accord',
+                'Hyundai Accent','Hyundai Elantra','Hyundai Ioniq 5',
+                'Kia Morning','Kia Soluto','Kia K3','Kia K5',
+                'Mazda 2','Mazda 3','Mazda 6',
+                'VinFast VF3','VinFast VF5','VinFast VF6','VinFast VF7',
+                'Mitsubishi Attrage','MG 5','MG ZS',
+                'Ford Focus','Chevrolet Cruze'
+            ],
+            CAR_7: [
+                'Toyota Innova','Toyota Fortuner','Toyota Corolla Cross','Toyota Rush','Toyota Veloz Cross','Toyota Raize',
+                'Honda CR-V','Honda HR-V','Honda BR-V',
+                'Hyundai Tucson','Hyundai Santa Fe','Hyundai Creta','Hyundai Stargazer',
+                'Kia Seltos','Kia Sportage','Kia Sorento','Kia Carnival',
+                'Mazda CX-5','Mazda CX-8','Mazda CX-3',
+                'VinFast VF8','VinFast VF9',
+                'Ford Everest','Ford Territory',
+                'Mitsubishi Xpander','Mitsubishi Outlander','Mitsubishi Pajero Sport',
+                'Suzuki XL7','Suzuki Ertiga'
+            ],
+            CAR_16: [
+                'Ford Transit 16 chỗ','Hyundai Solati 16 chỗ','Mercedes Sprinter 16 chỗ',
+                'Toyota Hiace 16 chỗ','GAZ Gazelle 16 chỗ'
+            ],
+            CAR_29: [
+                'Hyundai County 29 chỗ','Thaco Town 29 chỗ','Isuzu Samco 29 chỗ',
+                'Daewoo Lestar 29 chỗ','Fuso Rosa 29 chỗ'
+            ],
+            CAR_45: [
+                'Hyundai Universe 45 chỗ','Thaco Bus 45 chỗ','Samco Felix 45 chỗ',
+                'Daewoo BX212 45 chỗ','Hyundai Aero City 45 chỗ'
+            ],
+            TRUCK_SMALL: [
+                'Hyundai Porter H150','Suzuki Carry Pro','Thaco Towner','Thaco Kia K200',
+                'Dongben 870kg','Isuzu QKR 270','Veam VPT095'
+            ],
+            TRUCK_MEDIUM: [
+                'Hyundai Mighty EX8','Hyundai HD72','Isuzu NQR 75','Isuzu NPR 400',
+                'Hino 300 Series','Thaco Ollin','Thaco Auman C160','Fuso Canter',
+                'Dongfeng B180 8 tấn'
+            ],
+            TRUCK_LARGE: [
+                'Hyundai HD320','Isuzu FVR 900','Isuzu GVR 34 tấn','Hino 500 Series','Hino 700 Series',
+                'Thaco Auman C300','Dongfeng Hoàng Huy 4 chân','Chenglong H7',
+                'Volvo FH','Scania R-Series'
+            ]
+        };
+
+        // ── Name Autocomplete Logic ──
+        const nameInput = document.getElementById('name');
+        const nameSugBox = document.getElementById('nameSuggestions');
+        const categorySelect = document.getElementById('category');
+        let nameDebounce = null;
+
+        nameInput.addEventListener('input', () => {
+            clearTimeout(nameDebounce);
+            nameDebounce = setTimeout(() => filterNames(), 100);
+        });
+
+        nameInput.addEventListener('focus', () => {
+            if (nameInput.value.trim().length >= 1) filterNames();
+        });
+
+        function filterNames() {
+            const query = nameInput.value.trim().toLowerCase();
+            if (query.length < 1) { nameSugBox.innerHTML = ''; nameSugBox.classList.remove('show'); return; }
+
+            const selectedCat = categorySelect.value;
+            let pool = [];
+
+            if (selectedCat && VEHICLE_DB[selectedCat]) {
+                pool = VEHICLE_DB[selectedCat];
+            } else {
+                Object.values(VEHICLE_DB).forEach(arr => pool.push(...arr));
+            }
+
+            const matches = pool.filter(name => name.toLowerCase().includes(query)).slice(0, 10);
+
+            nameSugBox.innerHTML = '';
+            if (matches.length === 0) { nameSugBox.classList.remove('show'); return; }
+
+            matches.forEach(m => {
+                const div = document.createElement('div');
+                div.className = 'name-suggestion-item';
+                const parts = m.split(' ');
+                div.innerHTML = '<span class="brand">' + parts[0] + '</span> ' + parts.slice(1).join(' ');
+                div.addEventListener('click', () => {
+                    nameInput.value = m;
+                    nameSugBox.innerHTML = '';
+                    nameSugBox.classList.remove('show');
+                });
+                nameSugBox.appendChild(div);
+            });
+            nameSugBox.classList.add('show');
+        }
+
+        categorySelect.addEventListener('change', () => {
+            if (nameInput.value.trim().length >= 1) filterNames();
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.name-wrapper')) {
+                nameSugBox.classList.remove('show');
+            }
+        });
+
+        // ════════════════════════════════════════════════════
+        //  LICENSE PLATE VN VALIDATION
+        // ════════════════════════════════════════════════════
+        const LP_REGEX = /^\d{2}[A-Z]{1,2}\d?[\-\s]?\d{3,5}[\.]?\d{0,2}$/;
+
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = msg;
+            el.style.display = msg ? 'block' : 'none';
+            const input = el.closest('.form-group')?.querySelector('.form-control');
+            if (input) {
+                input.classList.toggle('is-invalid', !!msg);
+                input.classList.toggle('is-valid', !msg);
+            }
+        }
+
+        const lpInput = document.getElementById('licensePlate');
+        function validateLP() {
+            const v = lpInput.value.trim().toUpperCase();
+            if (!v) showError('licensePlateError', 'Biển số xe không được để trống.');
+            else if (!LP_REGEX.test(v)) showError('licensePlateError', 'Biển số không đúng định dạng VN (VD: 51A-123.45, 30H-12345).');
+            else showError('licensePlateError', '');
+        }
+        lpInput.addEventListener('blur', validateLP);
+        lpInput.addEventListener('input', validateLP);
+
+        // Submit validation
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const lp = lpInput.value.trim().toUpperCase();
+            if (!lp || !LP_REGEX.test(lp)) {
+                showError('licensePlateError', 'Biển số không đúng định dạng VN (VD: 51A-123.45, 30H-12345).');
+                e.preventDefault();
+                return false;
+            }
+            lpInput.value = lp;
+        });
+
+        // ════════════════════════════════════════════════════
+        //  IMAGE UPLOAD
+        // ════════════════════════════════════════════════════
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('imageFile');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('previewImg');
+        const removeBtn = document.getElementById('removeBtn');
+        const currentImage = document.getElementById('currentImage');
+
+        uploadZone.addEventListener('click', () => fileInput.click());
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                showPreview(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                showPreview(fileInput.files[0]);
+            }
+        });
+
+        function showPreview(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImg.src = e.target.result;
+                imagePreview.style.display = 'block';
+                uploadZone.style.display = 'none';
+                if (currentImage) currentImage.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        removeBtn.addEventListener('click', () => {
+            fileInput.value = '';
+            previewImg.src = '';
+            imagePreview.style.display = 'none';
+            uploadZone.style.display = 'block';
+            if (currentImage) currentImage.style.display = 'block';
+        });
+
+        // ════════════════════════════════════════════════════
+        //  ADDRESS AUTOCOMPLETE (Nominatim – Vietnam)
+        //  Nominatim cho phép tối đa 1 request/giây.
+        //  Code này đảm bảo tuân thủ rate-limit.
+        // ════════════════════════════════════════════════════
+        const addressInput = document.getElementById('currentAddress');
+        const suggestionsBox = document.getElementById('addressSuggestions');
+        const mapDiv = document.getElementById('map-preview');
+        let debounceTimer = null;
+        let map = null;
+        let marker = null;
+        let lastRequestTime = 0;           // Timestamp lần gọi API gần nhất
+        let initAbortController = null;    // Để huỷ request ban đầu nếu user gõ
+
+        // ── Hàm gọi Nominatim API (có rate-limit protection) ──
+        async function nominatimSearch(query, limit) {
+            // Đảm bảo ít nhất 1.1 giây giữa 2 request
+            const now = Date.now();
+            const elapsed = now - lastRequestTime;
+            if (elapsed < 1100) {
+                await new Promise(r => setTimeout(r, 1100 - elapsed));
+            }
+            lastRequestTime = Date.now();
+
+            const url = 'https://nominatim.openstreetmap.org/search?format=json'
+                + '&q=' + encodeURIComponent(query)
+                + '&countrycodes=vn&limit=' + (limit || 6)
+                + '&accept-language=vi';
+            const res = await fetch(url);
+            if (!res.ok) {
+                console.warn('Nominatim returned status:', res.status);
+                return [];
+            }
+            return await res.json();
+        }
+
+        // ── Khi user gõ vào ô địa chỉ → tìm gợi ý ──
+        addressInput.addEventListener('input', () => {
+            // Huỷ request ban đầu (load trang) nếu còn đang chạy
+            if (initAbortController) {
+                initAbortController.abort();
+                initAbortController = null;
+            }
+
+            clearTimeout(debounceTimer);
+            const query = addressInput.value.trim();
+            if (query.length < 2) {
+                suggestionsBox.innerHTML = '';
+                suggestionsBox.classList.remove('show');
+                return;
+            }
+            debounceTimer = setTimeout(() => searchAddress(query), 500);
+        });
+
+        // ── Khi focus lại ô input → hiện lại suggestions nếu có ──
+        addressInput.addEventListener('focus', () => {
+            if (suggestionsBox.children.length > 0) {
+                suggestionsBox.classList.add('show');
+            }
+        });
+
+        // ── Tìm kiếm và hiển thị gợi ý ──
+        async function searchAddress(query) {
+            try {
+                const data = await nominatimSearch(query, 6);
+
+                suggestionsBox.innerHTML = '';
+                if (!data || data.length === 0) {
+                    suggestionsBox.classList.remove('show');
+                    return;
+                }
+
+                data.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'address-suggestion-item';
+                    div.innerHTML = '<span class="pin">📍</span><span>' + item.display_name + '</span>';
+                    div.addEventListener('click', () => selectAddress(item));
+                    suggestionsBox.appendChild(div);
+                });
+                suggestionsBox.classList.add('show');
+            } catch (e) {
+                if (e.name !== 'AbortError') {
+                    console.error('Address search error:', e);
+                }
+            }
+        }
+
+        // ── Chọn 1 gợi ý ──
+        function selectAddress(item) {
+            addressInput.value = item.display_name;
+            suggestionsBox.innerHTML = '';
+            suggestionsBox.classList.remove('show');
+            showMap(parseFloat(item.lat), parseFloat(item.lon), item.display_name);
+        }
+
+        // ── Hiển thị bản đồ ──
+        function showMap(lat, lng, label) {
+            mapDiv.style.display = 'block';
+            mapDiv.classList.add('show');
+
+            // Xoá map cũ rồi tạo lại
+            if (map) {
+                map.remove();
+                map = null;
+                marker = null;
+            }
+
+            map = L.map('map-preview').setView([lat, lng], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
+            marker = L.marker([lat, lng]).addTo(map).bindPopup(label).openPopup();
+
+            setTimeout(() => map.invalidateSize(), 300);
+        }
+
+        // ── Ẩn dropdown khi click ra ngoài ──
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.address-wrapper')) {
+                suggestionsBox.classList.remove('show');
+            }
+        });
+
+        // ── Load map cho địa chỉ đã có khi mở trang ──
+        window.addEventListener('DOMContentLoaded', () => {
+            const addr = addressInput.value.trim();
+            if (addr.length > 3) {
+                initAbortController = new AbortController();
+                const signal = initAbortController.signal;
+
+                lastRequestTime = Date.now();
+                fetch('https://nominatim.openstreetmap.org/search?format=json'
+                    + '&q=' + encodeURIComponent(addr)
+                    + '&countrycodes=vn&limit=1&accept-language=vi',
+                    { signal: signal })
+                .then(r => { if (r.ok) return r.json(); return []; })
+                .then(data => {
+                    if (data && data.length > 0) {
+                        showMap(parseFloat(data[0].lat), parseFloat(data[0].lon), data[0].display_name);
+                    }
+                })
+                .catch(() => {})
+                .finally(() => { initAbortController = null; });
+            }
+        });
+    </script>
 </body>
 
 </html>

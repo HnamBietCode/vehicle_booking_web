@@ -26,10 +26,10 @@ public class VehicleSearchController {
     }
 
     @GetMapping("/search")
-    public String search(@RequestParam(required = false) String category,
-                         @RequestParam(required = false) BigDecimal maxPrice,
-                         @RequestParam(required = false) String location,
-                         @RequestParam(required = false, defaultValue = "false") boolean freeDriver,
+    public String search(@RequestParam(name = "category", required = false) String category,
+                         @RequestParam(name = "maxPrice", required = false) BigDecimal maxPrice,
+                         @RequestParam(name = "location", required = false) String location,
+                         @RequestParam(name = "freeDriver", required = false, defaultValue = "false") boolean freeDriver,
                          Model model,
                          HttpSession session) {
 

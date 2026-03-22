@@ -40,18 +40,33 @@ CREATE TABLE IF NOT EXISTS drivers (
     driver_license      VARCHAR(12)  NOT NULL,
     license_image_url   VARCHAR(500),
     license_expiry      DATE NOT NULL,
-    vehicle_types       SET('MOTORCYCLE', 'CAR_4', 'CAR_7') NOT NULL,
+    vehicle_types       VARCHAR(255) NOT NULL,
     verification_status ENUM('PENDING', 'APPROVED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
     rejection_reason    TEXT,
     is_available        BOOLEAN NOT NULL DEFAULT TRUE,
     approved_at         DATETIME,
     approved_by         BIGINT,
+    province            VARCHAR(100),
+    district            VARCHAR(100),
+    ward                VARCHAR(100),
+    last_completed_at   DATETIME,
 
     CONSTRAINT fk_drivers_user      FOREIGN KEY (user_id)     REFERENCES users (id) ON DELETE CASCADE,
     CONSTRAINT fk_drivers_approver  FOREIGN KEY (approved_by) REFERENCES users (id) ON DELETE SET NULL,
     CONSTRAINT uq_drivers_user_id   UNIQUE (user_id),
-    CONSTRAINT uq_drivers_cccd      UNIQUE (cccd),
-    CONSTRAINT uq_drivers_license   UNIQUE (driver_license)
+    CONSTRAINT uq_drivers_cccd      UNIQUE (cccd)
+);
+
+CREATE TABLE IF NOT EXISTS driver_licenses (
+    id              BIGINT PRIMARY KEY AUTO_INCREMENT,
+    driver_id       BIGINT NOT NULL,
+    license_number  VARCHAR(20) NOT NULL,
+    license_class   VARCHAR(10) NOT NULL,
+    license_expiry  DATE NOT NULL,
+    vehicle_types   VARCHAR(255) NOT NULL,
+
+    CONSTRAINT fk_dl_driver FOREIGN KEY (driver_id) REFERENCES drivers (id) ON DELETE CASCADE,
+    INDEX idx_dl_driver (driver_id)
 );
 
 CREATE TABLE IF NOT EXISTS user_sessions (
@@ -75,7 +90,8 @@ CREATE TABLE IF NOT EXISTS pickup_points (
     latitude    DECIMAL(10, 7),
     longitude   DECIMAL(10, 7),
     is_active   BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_pickup_points_name_address UNIQUE (name, address)
 );
 
 CREATE TABLE IF NOT EXISTS vehicles (
@@ -222,8 +238,6 @@ CREATE TABLE IF NOT EXISTS ratings (
     INDEX idx_ratings_target       (target_type, target_id)
 );
 
-
-
 CREATE TABLE IF NOT EXISTS daily_revenue (
     id               BIGINT PRIMARY KEY AUTO_INCREMENT,
     report_date      DATE NOT NULL,
@@ -255,6 +269,46 @@ CREATE TABLE IF NOT EXISTS notifications (
     CONSTRAINT fk_notif_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     INDEX idx_notif_user    (user_id, is_read),
     INDEX idx_notif_created (created_at)
+);
+
+CREATE TABLE IF NOT EXISTS sober_bookings (
+    id               BIGINT PRIMARY KEY AUTO_INCREMENT,
+    customer_id      BIGINT         NOT NULL,
+    driver_id        BIGINT,
+    vehicle_category ENUM('MOTORCYCLE', 'CAR_4', 'CAR_7') NOT NULL,
+    customer_vehicle VARCHAR(100),
+    pickup_address   VARCHAR(300)   NOT NULL,
+    start_time       DATETIME       NOT NULL,
+    duration         INT            NOT NULL,
+    duration_unit    ENUM('HOURLY', 'DAILY') NOT NULL,
+    notes            TEXT,
+    status           ENUM('PENDING', 'ACCEPTED', 'ARRIVED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED') NOT NULL DEFAULT 'PENDING',
+    hourly_rate      DECIMAL(10, 2),
+    daily_rate       DECIMAL(10, 2),
+    total_price      DECIMAL(10, 2),
+    actual_start     DATETIME,
+    actual_end       DATETIME,
+    cancel_reason    TEXT,
+    province         VARCHAR(100),
+    district         VARCHAR(100),
+    ward             VARCHAR(100),
+    payment_status   ENUM('PENDING', 'PAID', 'REFUNDED') NOT NULL DEFAULT 'PENDING',
+    created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_sober_customer FOREIGN KEY (customer_id) REFERENCES customers (id),
+    CONSTRAINT fk_sober_driver   FOREIGN KEY (driver_id)   REFERENCES drivers   (id) ON DELETE SET NULL,
+    INDEX idx_sober_customer     (customer_id),
+    INDEX idx_sober_driver       (driver_id),
+    INDEX idx_sober_status       (status)
+);
+
+CREATE TABLE IF NOT EXISTS sober_rates (
+    id               BIGINT PRIMARY KEY AUTO_INCREMENT,
+    vehicle_category ENUM('MOTORCYCLE', 'CAR_4', 'CAR_7') NOT NULL UNIQUE,
+    hourly_rate      DECIMAL(10, 2) NOT NULL,
+    daily_rate       DECIMAL(10, 2) NOT NULL,
+    updated_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- ============================================================
@@ -299,3 +353,76 @@ JOIN customers c   ON c.id   = db.customer_id
 JOIN users     u_c ON u_c.id = c.user_id
 LEFT JOIN drivers d    ON d.id   = db.driver_id
 LEFT JOIN users   u_d ON u_d.id = d.user_id;
+
+-- ============================================================
+-- IDEMPOTENT UPDATES (For existing databases)
+-- ============================================================
+
+-- Ensure existing database is updated to the new VARCHAR type for drivers
+ALTER TABLE drivers MODIFY COLUMN vehicle_types VARCHAR(255) NOT NULL;
+
+-- Ensure missing columns are added to driver_bookings if the table already existed
+SET @s = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'driver_bookings' AND COLUMN_NAME = 'distance_km' AND TABLE_SCHEMA = DATABASE()) = 0, 'ALTER TABLE driver_bookings ADD COLUMN distance_km DECIMAL(8, 2) AFTER dest_lng', 'SELECT 1'));
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @s = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'driver_bookings' AND COLUMN_NAME = 'base_price' AND TABLE_SCHEMA = DATABASE()) = 0, 'ALTER TABLE driver_bookings ADD COLUMN base_price DECIMAL(10, 2) AFTER distance_km', 'SELECT 1'));
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @s = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'driver_bookings' AND COLUMN_NAME = 'discount_amount' AND TABLE_SCHEMA = DATABASE()) = 0, 'ALTER TABLE driver_bookings ADD COLUMN discount_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00 AFTER base_price', 'SELECT 1'));
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @s = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'driver_bookings' AND COLUMN_NAME = 'total_price' AND TABLE_SCHEMA = DATABASE()) = 0, 'ALTER TABLE driver_bookings ADD COLUMN total_price DECIMAL(10, 2) AFTER discount_amount', 'SELECT 1'));
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @s = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'driver_bookings' AND COLUMN_NAME = 'payment_status' AND TABLE_SCHEMA = DATABASE()) = 0, 'ALTER TABLE driver_bookings ADD COLUMN payment_status ENUM(\'PENDING\', \'PAID\', \'REFUNDED\') NOT NULL DEFAULT \'PENDING\' AFTER cancel_reason', 'SELECT 1'));
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @s = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'driver_bookings' AND COLUMN_NAME = 'accepted_at' AND TABLE_SCHEMA = DATABASE()) = 0, 'ALTER TABLE driver_bookings ADD COLUMN accepted_at DATETIME AFTER notes', 'SELECT 1'));
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @s = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'driver_bookings' AND COLUMN_NAME = 'completed_at' AND TABLE_SCHEMA = DATABASE()) = 0, 'ALTER TABLE driver_bookings ADD COLUMN completed_at DATETIME AFTER accepted_at', 'SELECT 1'));
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- Ensure missing columns are added to sober_bookings
+SET @s = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'sober_bookings' AND COLUMN_NAME = 'cancel_reason' AND TABLE_SCHEMA = DATABASE()) = 0, 'ALTER TABLE sober_bookings ADD COLUMN cancel_reason TEXT AFTER actual_end', 'SELECT 1'));
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @s = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'sober_bookings' AND COLUMN_NAME = 'hourly_rate' AND TABLE_SCHEMA = DATABASE()) = 0, 'ALTER TABLE sober_bookings ADD COLUMN hourly_rate DECIMAL(10, 2) AFTER status', 'SELECT 1'));
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @s = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'sober_bookings' AND COLUMN_NAME = 'daily_rate' AND TABLE_SCHEMA = DATABASE()) = 0, 'ALTER TABLE sober_bookings ADD COLUMN daily_rate DECIMAL(10, 2) AFTER hourly_rate', 'SELECT 1'));
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- Ensure advanced assignment columns
+SET @s = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'drivers' AND COLUMN_NAME = 'province' AND TABLE_SCHEMA = DATABASE()) = 0, 'ALTER TABLE drivers ADD COLUMN province VARCHAR(100), ADD COLUMN district VARCHAR(100), ADD COLUMN ward VARCHAR(100), ADD COLUMN last_completed_at DATETIME', 'SELECT 1'));
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @s = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'sober_bookings' AND COLUMN_NAME = 'province' AND TABLE_SCHEMA = DATABASE()) = 0, 'ALTER TABLE sober_bookings ADD COLUMN province VARCHAR(100), ADD COLUMN district VARCHAR(100), ADD COLUMN ward VARCHAR(100)', 'SELECT 1'));
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- Drop old unique constraint on driver_license (now using driver_licenses table)
+SET @s = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_NAME = 'drivers' AND INDEX_NAME = 'uq_drivers_license' AND TABLE_SCHEMA = DATABASE()) > 0, 'ALTER TABLE drivers DROP INDEX uq_drivers_license', 'SELECT 1'));
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- Expand vehicles.category ENUM to include all vehicle types
+ALTER TABLE vehicles MODIFY COLUMN category ENUM('MOTORCYCLE','CAR_4','CAR_7','CAR_16','CAR_29','CAR_45','TRUCK_SMALL','TRUCK_MEDIUM','TRUCK_LARGE') NOT NULL;
+
+-- Withdrawal requests table
+CREATE TABLE IF NOT EXISTS withdrawal_requests (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    amount DECIMAL(15,2) NOT NULL,
+    bank_name VARCHAR(100),
+    account_number VARCHAR(50),
+    account_holder VARCHAR(100),
+    note VARCHAR(500),
+    status ENUM('PENDING','APPROVED','REJECTED') NOT NULL DEFAULT 'PENDING',
+    admin_note VARCHAR(500),
+    processed_at DATETIME,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Expand transactions.reference_type ENUM to include WITHDRAWAL
+ALTER TABLE transactions MODIFY COLUMN reference_type ENUM('RENTAL','BOOKING','MANUAL','WITHDRAWAL') NOT NULL;

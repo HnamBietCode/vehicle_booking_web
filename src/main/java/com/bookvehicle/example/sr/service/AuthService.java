@@ -19,8 +19,8 @@ public class AuthService {
     private final BCryptPasswordEncoder passwordEncoder;
 
     public AuthService(UserRepository userRepository,
-                       CustomerRepository customerRepository,
-                       DriverRepository driverRepository) {
+            CustomerRepository customerRepository,
+            DriverRepository driverRepository) {
         this.userRepository = userRepository;
         this.customerRepository = customerRepository;
         this.driverRepository = driverRepository;
@@ -29,6 +29,7 @@ public class AuthService {
 
     /**
      * Đăng ký tài khoản mới (CUSTOMER hoặc DRIVER).
+     * 
      * @return thông báo lỗi nếu thất bại, null nếu thành công.
      */
     public String register(RegisterForm form) {
@@ -51,12 +52,13 @@ public class AuthService {
         Role role;
         try {
             role = Role.valueOf(form.getRole().toUpperCase());
-            if (role == Role.ADMIN) return "Không thể tự đăng ký tài khoản Admin.";
+            if (role == Role.ADMIN)
+                return "Không thể tự đăng ký tài khoản Admin.";
         } catch (Exception e) {
             return "Loại tài khoản không hợp lệ.";
         }
 
-        // Nếu là DRIVER, yêu cầu phải nhập CCCD hợp lệ (đúng 12 số)
+        // Nếu là DRIVER, yêu cầu phải nhập đủ thông tin chuyên ngành
         if (role == Role.DRIVER) {
             if (form.getCccd() == null || form.getCccd().isBlank()) {
                 return "Căn cước công dân (CCCD) không được để trống khi đăng ký tài xế.";
@@ -67,6 +69,19 @@ public class AuthService {
             if (driverRepository.existsByCccd(form.getCccd())) {
                 return "Căn cước công dân (CCCD) đã tồn tại.";
             }
+
+            if (form.getDriverLicense() == null || form.getDriverLicense().isBlank()) {
+                return "Bằng lái xe không được để trống.";
+            }
+            if (form.getLicenseExpiry() == null) {
+                return "Ngày hết hạn bằng lái không được để trống.";
+            }
+            if (form.getLicenseExpiry().isBefore(java.time.LocalDate.now())) {
+                return "Bằng lái xe đã hết hạn.";
+            }
+            if (form.getVehicleTypes() == null || form.getVehicleTypes().isBlank()) {
+                return "Loại xe không được để trống.";
+            }
         }
 
         // Tạo User
@@ -75,7 +90,8 @@ public class AuthService {
         user.setPhone(form.getPhone().trim());
         user.setPassword(passwordEncoder.encode(form.getPassword()));
         user.setRole(role);
-        user.setIsActive(true);
+        // Tài xế đăng ký thì isActive = false để đợi admin duyệt
+        user.setIsActive(role != Role.DRIVER);
         User savedUser = userRepository.save(user);
 
         // Tạo profile phụ
@@ -89,16 +105,13 @@ public class AuthService {
             Driver d = new Driver();
             d.setUserId(savedUser.getId());
             d.setFullName(form.getFullName().trim());
-            
-            // Lấy CCCD từ form (đã qua vòng check ở trên)
-            d.setCccd(form.getCccd().trim());
-            
-            // Vẫn dùng ID để tạo placeholder cho Giấy Phép Lái Xe vì màn đăng ký ban đầu chưa yêu cầu
-            String uniquePlaceholder = String.format("%012d", savedUser.getId());
-            d.setDriverLicense(uniquePlaceholder); 
 
-            d.setLicenseExpiry(java.time.LocalDate.now().plusYears(1));
-            d.setVehicleTypes("CAR_4");
+            // Lấy dữ liệu chuyên ngành từ form
+            d.setCccd(form.getCccd().trim());
+            d.setDriverLicense(form.getDriverLicense().trim());
+            d.setLicenseExpiry(form.getLicenseExpiry());
+            d.setVehicleTypes(form.getVehicleTypes().trim());
+
             d.setVerificationStatus(VerificationStatus.PENDING);
             driverRepository.save(d);
         }
@@ -108,15 +121,19 @@ public class AuthService {
 
     /**
      * Xác thực đăng nhập.
+     * 
      * @return User nếu hợp lệ, null nếu sai thông tin.
      */
     @Transactional(readOnly = true)
     public User login(String email, String rawPassword) {
         Optional<User> opt = userRepository.findByEmail(email.trim().toLowerCase());
-        if (opt.isEmpty()) return null;
+        if (opt.isEmpty())
+            return null;
         User user = opt.get();
-        if (!user.getIsActive()) return null;
-        if (!passwordEncoder.matches(rawPassword, user.getPassword())) return null;
+        if (!user.getIsActive())
+            return null;
+        if (!passwordEncoder.matches(rawPassword, user.getPassword()))
+            return null;
         return user;
     }
 }
