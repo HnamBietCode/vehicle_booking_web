@@ -1,0 +1,246 @@
+﻿<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chỉnh sửa hồ sơ – VehicleBook</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #3730A3;
+            --danger: #EF4444;
+            --border: #E2E8F0;
+            --bg: #F8FAFC;
+            --surface: #fff;
+            --muted: #64748B;
+            --text: #1E293B;
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .navbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .navbar-brand::before {
+            content: '🚗 ';
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: .25rem;
+            margin-left: auto;
+            list-style: none;
+        }
+
+        .nav-link {
+            padding: .5rem .85rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--muted);
+            font-size: .9rem;
+            font-weight: 500;
+            transition: all .2s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .main {
+            max-width: 640px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .page-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .page-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .page-sub {
+            color: var(--muted);
+            font-size: .9rem;
+            margin-top: .25rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.75rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: .85rem;
+            font-weight: 600;
+            margin-bottom: .45rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: .7rem 1rem;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: .95rem;
+            font-family: inherit;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, .15);
+        }
+
+        .form-hint {
+            font-size: .78rem;
+            color: var(--muted);
+            margin-top: .3rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .6rem 1.3rem;
+            border: none;
+            border-radius: 8px;
+            font-size: .9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all .2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--border);
+            color: var(--muted);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: .75rem;
+            margin-top: 1.5rem;
+        }
+
+        .alert-danger {
+            background: #FEF2F2;
+            color: #991B1B;
+            border-left: 4px solid var(--danger);
+            padding: .75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: .9rem;
+        }
+    </style>
+</head>
+
+<body>
+    <nav th:replace="~{layout/base :: navbar}"></nav>
+
+    <main class="main">
+        <div class="page-header">
+            <h1 class="page-title">✏️ Chỉnh sửa hồ sơ</h1>
+            <p class="page-sub" th:text="${user.email}">email@example.com</p>
+        </div>
+
+        <div th:if="${error}" class="alert-danger" th:text="${error}"></div>
+
+        <div class="card">
+            <form th:action="@{/profile/edit}" method="post" th:object="${form}">
+
+                <div class="form-group">
+                    <label class="form-label" for="fullName">👤 Họ và tên</label>
+                    <input type="text" id="fullName" class="form-control" name="fullName" th:value="*{fullName}"
+                        placeholder="Nguyễn Văn A" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="phone">📱 Số điện thoại</label>
+                    <input type="tel" id="phone" class="form-control" name="phone" th:value="*{phone}"
+                        placeholder="0901234567" required>
+                </div>
+
+                <div class="form-group" th:if="${user?.role?.name() == 'CUSTOMER'}">
+                    <label class="form-label" for="address">📍 Địa chỉ</label>
+                    <input type="text" id="address" class="form-control" name="address" th:value="*{address}"
+                        placeholder="123 Đường ABC, Quận XYZ, TP.HCM">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="avatarUrl">🖼️ URL Ảnh đại diện</label>
+                    <input type="url" id="avatarUrl" class="form-control" name="avatarUrl" th:value="*{avatarUrl}"
+                        placeholder="https://example.com/avatar.jpg">
+                    <p class="form-hint">Để trống nếu không muốn thay đổi.</p>
+                </div>
+
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">💾 Lưu thay đổi</button>
+                    <a class="btn btn-outline" th:href="@{/profile}">← Huỷ</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</body>
+
+</html>

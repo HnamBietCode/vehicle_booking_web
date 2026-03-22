@@ -1,0 +1,92 @@
+﻿<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý điểm đón - Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: #f8fafc; color: #1e293b; }
+        .navbar { background: #fff; border-bottom: 1px solid #e2e8f0; padding: 0 2rem; display:flex; align-items:center; height:64px; }
+        .navbar-brand { font-weight:700; font-size:1.3rem; color:#4f46e5; text-decoration:none; }
+        .navbar-nav { margin-left:auto; list-style:none; display:flex; gap:.25rem; }
+        .nav-link { padding:.5rem .85rem; border-radius:8px; text-decoration:none; color:#64748b; font-size:.9rem; font-weight:500; }
+        .nav-link.active, .nav-link:hover { background:#4f46e5; color:#fff; }
+        .main { max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem; }
+        .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; }
+        .page-title { font-size:1.5rem; font-weight:700; }
+        .btn { border:none; border-radius:8px; padding:.55rem 1rem; text-decoration:none; font-weight:600; cursor:pointer; }
+        .btn-primary { background:#4f46e5; color:#fff; }
+        .btn-outline { background:#fff; color:#475569; border:1px solid #dbe2ea; }
+        .btn-danger { background:#ef4444; color:#fff; }
+        .btn-sm { padding:.35rem .7rem; font-size:.8rem; }
+        .alert { padding:.85rem 1rem; border-radius:8px; margin-bottom:1rem; }
+        .alert-success { background:#f0fdf4; color:#166534; border-left:4px solid #10b981; }
+        .alert-danger { background:#fef2f2; color:#991b1b; border-left:4px solid #ef4444; }
+        .card { background:#fff; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; }
+        table { width:100%; border-collapse:collapse; font-size:.9rem; }
+        th { background:#f8fafc; color:#64748b; text-align:left; padding:.75rem 1rem; border-bottom:2px solid #e2e8f0; }
+        td { padding:.75rem 1rem; border-bottom:1px solid #e2e8f0; vertical-align:middle; }
+        .badge { display:inline-block; padding:.2rem .6rem; border-radius:999px; font-size:.72rem; font-weight:700; }
+        .badge-active { background:#d1fae5; color:#065f46; }
+        .badge-inactive { background:#fee2e2; color:#991b1b; }
+        .action-group { display:flex; gap:.4rem; }
+    </style>
+</head>
+<body>
+<nav th:replace="~{layout/base :: navbar}"></nav>
+
+<main class="main">
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <div class="page-header">
+        <h1 class="page-title">📍 Quản lý điểm đón</h1>
+        <a class="btn btn-primary" th:href="@{/admin/pickup-points/add}">➕ Thêm điểm đón</a>
+    </div>
+
+    <div class="card">
+        <table>
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Tên điểm</th>
+                <th>Địa chỉ</th>
+                <th>Tọa độ</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="p,iter : ${points}">
+                <td th:text="${iter.count}"></td>
+                <td th:text="${p.name}"></td>
+                <td th:text="${p.address}"></td>
+                <td th:text="${(p.latitude != null ? p.latitude : '—') + ' / ' + (p.longitude != null ? p.longitude : '—')}"></td>
+                <td>
+                    <span th:if="${p.isActive}" class="badge badge-active">ACTIVE</span>
+                    <span th:unless="${p.isActive}" class="badge badge-inactive">INACTIVE</span>
+                </td>
+                <td>
+                    <div class="action-group">
+                        <a class="btn btn-outline btn-sm" th:href="@{/admin/pickup-points/{id}/edit(id=${p.id})}">Sửa</a>
+                        <form th:if="${p.isActive}" th:action="@{/admin/pickup-points/{id}/delete(id=${p.id})}" method="post" onsubmit="return confirm('Ẩn điểm đón này?')" style="display:inline;">
+                            <button class="btn btn-danger btn-sm" type="submit">Ẩn</button>
+                        </form>
+                        <form th:unless="${p.isActive}" th:action="@{/admin/pickup-points/{id}/activate(id=${p.id})}" method="post" style="display:inline;">
+                            <button class="btn btn-primary btn-sm" type="submit">Mở</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(points)}">
+                <td colspan="6" style="text-align:center; color:#64748b; padding:1.5rem;">Chưa có điểm đón nào.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

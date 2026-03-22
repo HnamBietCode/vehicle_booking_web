@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle != null ? pageTitle + ' - VehicleBook' : 'VehicleBook'}">VehicleBook</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #3730A3;
+            --accent: #F59E0B;
+            --danger: #EF4444;
+            --success: #10B981;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --text: #1E293B;
+            --muted: #64748B;
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* â”€â”€ Navbar â”€â”€ */
+        .navbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .navbar-brand::before {
+            content: '🚗';
+            font-size: 1.4rem;
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: .25rem;
+            margin-left: auto;
+            list-style: none;
+            flex-wrap: nowrap;
+        }
+
+        .nav-link {
+            padding: .5rem .85rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--muted);
+            font-size: .9rem;
+            font-weight: 500;
+            transition: all .2s;
+            white-space: nowrap;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .nav-badge {
+            background: var(--accent);
+            color: #fff;
+            font-size: .7rem;
+            padding: .15rem .45rem;
+            border-radius: 999px;
+            margin-left: .3rem;
+            font-weight: 700;
+        }
+
+        /* â”€â”€ Main layout â”€â”€ */
+        .main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        /* â”€â”€ Alerts â”€â”€ */
+        .alert {
+            padding: .85rem 1.2rem;
+            border-radius: 8px;
+            margin-bottom: 1.2rem;
+            font-size: .9rem;
+            font-weight: 500;
+        }
+
+        .alert-danger {
+            background: #FEF2F2;
+            color: #991B1B;
+            border-left: 4px solid var(--danger);
+        }
+
+        .alert-success {
+            background: #F0FDF4;
+            color: #166534;
+            border-left: 4px solid var(--success);
+        }
+
+        /* â”€â”€ Card â”€â”€ */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 1.2rem;
+            color: var(--text);
+        }
+
+        /* â”€â”€ Form â”€â”€ */
+        .form-group {
+            margin-bottom: 1.1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: .875rem;
+            font-weight: 600;
+            margin-bottom: .4rem;
+            color: var(--text);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: .65rem 1rem;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: .95rem;
+            font-family: inherit;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, .15);
+        }
+
+        select.form-control {
+            cursor: pointer;
+        }
+
+        /* â”€â”€ Buttons â”€â”€ */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .6rem 1.3rem;
+            border: none;
+            border-radius: 8px;
+            font-size: .9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all .2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            opacity: .9;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: #fff;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--border);
+            color: var(--muted);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-sm {
+            padding: .35rem .8rem;
+            font-size: .8rem;
+        }
+
+        .btn-warning {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        /* â”€â”€ Table â”€â”€ */
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .9rem;
+        }
+
+        th {
+            background: var(--bg);
+            font-weight: 600;
+            color: var(--muted);
+            padding: .75rem 1rem;
+            text-align: left;
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: .75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        tr:hover td {
+            background: #f8fafc;
+        }
+
+        /* â”€â”€ Badge â”€â”€ */
+        .badge {
+            display: inline-block;
+            padding: .25rem .65rem;
+            border-radius: 999px;
+            font-size: .75rem;
+            font-weight: 600;
+        }
+
+        .badge-admin {
+            background: #EDE9FE;
+            color: #5B21B6;
+        }
+
+        .badge-customer {
+            background: #DBEAFE;
+            color: #1D4ED8;
+        }
+
+        .badge-driver {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .badge-premium {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .badge-standard {
+            background: #F1F5F9;
+            color: var(--muted);
+        }
+
+        .badge-active {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .badge-inactive {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .badge-pending {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .badge-approved {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .badge-rejected {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        /* â”€â”€ Page Header â”€â”€ */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        /* â”€â”€ Detail list â”€â”€ */
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.2rem;
+        }
+
+        @media(max-width:600px) {
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .detail-item label {
+            font-size: .8rem;
+            color: var(--muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .detail-item p {
+            margin-top: .25rem;
+            font-weight: 500;
+        }
+
+        /* â”€â”€ Premium card â”€â”€ */
+        .premium-hero {
+            background: linear-gradient(135deg, #4F46E5, #7C3AED);
+            color: #fff;
+            border-radius: var(--radius);
+            padding: 2.5rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .premium-hero h1 {
+            font-size: 2rem;
+            margin-bottom: .5rem;
+        }
+
+        .premium-hero p {
+            opacity: .85;
+            margin-bottom: 1.5rem;
+        }
+
+        .plan-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.2rem;
+        }
+
+        .plan-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            text-align: center;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .plan-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 20px rgba(79, 70, 229, .12);
+        }
+
+        .plan-card .price {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: .5rem 0;
+        }
+
+        .plan-card .months {
+            font-size: .85rem;
+            color: var(--muted);
+        }
+    </style>
+    <th:block th:fragment="head">
+        <!-- child page styles slot -->
+    </th:block>
+</head>
+
+<body>
+    <!-- â”€â”€â”€ Navbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <nav class="navbar" th:fragment="navbar">
+        <a class="navbar-brand" href="/">VehicleBook</a>
+        <ul class="navbar-nav"
+            th:if="${session?.loggedUser != null || #httpServletRequest.getAttribute('loggedUser') != null}">
+            <th:block th:with="u=${session?.loggedUser ?: #httpServletRequest.getAttribute('loggedUser')}">
+                <li th:if="${u?.role?.name() != 'ADMIN'}"><a class="nav-link" th:href="@{/vehicles/search}">🔍 Tìm xe</a></li>
+                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/users}">👥 Quản lý Users</a></li>
+                <li th:if="${u?.role?.name() == 'DRIVER'}"><a class="nav-link" th:href="@{/driver/dashboard}">📈 Thống kê</a></li>
+                <li th:if="${u?.role?.name() == 'DRIVER'}"><a class="nav-link" th:href="@{/driver/rentals}">🧾 Đơn thuê</a></li>
+                <li th:if="${u?.role?.name() == 'DRIVER'}"><a class="nav-link" th:href="@{/driver/sober-bookings}">🚗 Xử lý lái hộ</a></li>
+                <li th:if="${u?.role?.name() == 'CUSTOMER'}"><a class="nav-link" th:href="@{/rentals/my}">🧾 Đơn thuê</a></li>
+                <li th:if="${u?.role?.name() == 'CUSTOMER'}"><a class="nav-link" th:href="@{/bookings/options}">Đặt dịch vụ</a></li>
+                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/vehicles}">🚗 Quản lý xe</a></li>
+                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/pickup-points}">📍 Điểm đón</a></li>
+                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/sober-bookings}">🚗 Quản lý lái hộ</a></li>
+                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/withdrawals}">💸 Rút tiền</a></li>
+                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/realtime}">Realtime</a></li>
+                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/dashboard}">📊 Báo cáo</a></li>
+                <li th:if="${u?.role?.name() != 'ADMIN'}"><a class="nav-link" th:href="@{/profile}">👤 Hồ sơ</a></li>
+                <li th:if="${u?.role?.name() == 'CUSTOMER'}">
+                    <a class="nav-link" th:href="@{/premium}">
+                        ⭐ Premium
+                        <span class="nav-badge" th:if="${u != null}">VIP</span>
+                    </a>
+                </li>
+                <li th:if="${u?.role?.name() != 'ADMIN'}"><a class="nav-link" th:href="@{/wallet}">💳 Ví điện tử</a></li>
+                <li>
+                    <a class="nav-link" th:href="@{/auth/logout}" style="color:#EF4444;"
+                       onmouseover="this.style.background='#EF4444';this.style.color='#fff'"
+                       onmouseout="this.style.background='';this.style.color='#EF4444'">Đăng xuất</a>
+                </li>
+            </th:block>
+        </ul>
+        <ul class="navbar-nav"
+            th:unless="${session?.loggedUser != null || #httpServletRequest.getAttribute('loggedUser') != null}">
+            <li><a class="nav-link" th:href="@{/vehicles/search}">🔍 Tìm xe</a></li>
+            <li><a class="nav-link" th:href="@{/auth/login}">Đăng nhập</a></li>
+            <li><a class="nav-link btn-primary btn" th:href="@{/auth/register}" style="margin-left:.5rem;">Đăng ký</a></li>
+        </ul>
+    </nav>
+
+    <!-- â”€â”€â”€ Main content slot â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <main class="main" th:fragment="main">
+        <!-- child page content fills here -->
+    </main>
+
+</body>
+
+</html>
+
+
+

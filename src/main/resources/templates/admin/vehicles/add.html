@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thêm xe – Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #3730A3;
+            --danger: #EF4444;
+            --border: #E2E8F0;
+            --bg: #F8FAFC;
+            --surface: #fff;
+            --muted: #64748B;
+            --text: #1E293B;
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .navbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .navbar-brand::before {
+            content: '🚗 ';
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: .25rem;
+            margin-left: auto;
+            list-style: none;
+        }
+
+        .nav-link {
+            padding: .5rem .85rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--muted);
+            font-size: .9rem;
+            font-weight: 500;
+            transition: all .2s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .main {
+            max-width: 700px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            font-size: .85rem;
+            color: var(--muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .breadcrumb a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .breadcrumb span::before {
+            content: ' / ';
+        }
+
+        .page-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.75rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0 1.2rem;
+        }
+
+        @media(max-width: 560px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 1.15rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: .85rem;
+            font-weight: 600;
+            margin-bottom: .45rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: .7rem 1rem;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: .95rem;
+            font-family: inherit;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, .15);
+        }
+
+        select.form-control {
+            cursor: pointer;
+        }
+
+        .form-hint {
+            font-size: .78rem;
+            color: var(--muted);
+            margin-top: .3rem;
+        }
+
+        .field-error {
+            font-size: .78rem;
+            color: var(--danger);
+            margin-top: .3rem;
+            display: none;
+        }
+
+        .form-control.is-invalid {
+            border-color: var(--danger);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, .12);
+        }
+
+        .form-control.is-valid {
+            border-color: #22C55E;
+        }
+
+        /* ── Vehicle Name Suggestions ── */
+        .name-wrapper {
+            position: relative;
+        }
+
+        .name-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 240px;
+            overflow-y: auto;
+            z-index: 50;
+            display: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .1);
+        }
+
+        .name-suggestions.show {
+            display: block;
+        }
+
+        .name-suggestion-item {
+            padding: .6rem 1rem;
+            cursor: pointer;
+            font-size: .88rem;
+            border-bottom: 1px solid var(--border);
+            transition: background .15s;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .name-suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .name-suggestion-item:hover {
+            background: rgba(79, 70, 229, .06);
+        }
+
+        .name-suggestion-item .brand {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .6rem 1.3rem;
+            border: none;
+            border-radius: 8px;
+            font-size: .9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all .2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--border);
+            color: var(--muted);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: .75rem;
+            margin-top: 1.5rem;
+        }
+
+        .alert-danger {
+            background: #FEF2F2;
+            color: #991B1B;
+            border-left: 4px solid var(--danger);
+            padding: .75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: .9rem;
+        }
+
+        .section-title {
+            font-size: .9rem;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin: 1.5rem 0 .75rem;
+            padding-bottom: .5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* ── Upload Zone ── */
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all .3s ease;
+            background: var(--bg);
+            position: relative;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.dragover {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, .04);
+        }
+
+        .upload-zone input[type="file"] {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 2.5rem;
+            margin-bottom: .5rem;
+        }
+
+        .upload-text {
+            font-size: .9rem;
+            color: var(--muted);
+        }
+
+        .upload-text strong {
+            color: var(--primary);
+        }
+
+        .upload-hint {
+            font-size: .75rem;
+            color: var(--muted);
+            margin-top: .3rem;
+        }
+
+        .image-preview {
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            object-fit: cover;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, .1);
+        }
+
+        .image-preview .remove-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            margin-top: .5rem;
+            padding: .3rem .8rem;
+            font-size: .8rem;
+            color: var(--danger);
+            background: #FEF2F2;
+            border: 1px solid #FECACA;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .image-preview .remove-btn:hover {
+            background: #FEE2E2;
+        }
+
+        /* ── Address Autocomplete ── */
+        .address-wrapper {
+            position: relative;
+            z-index: 1000;
+        }
+
+        .address-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 220px;
+            overflow-y: auto;
+            z-index: 50;
+            display: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .1);
+        }
+
+        .address-suggestions.show {
+            display: block;
+        }
+
+        .address-suggestion-item {
+            padding: .65rem 1rem;
+            cursor: pointer;
+            font-size: .88rem;
+            border-bottom: 1px solid var(--border);
+            transition: background .15s;
+            display: flex;
+            align-items: flex-start;
+            gap: .5rem;
+        }
+
+        .address-suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .address-suggestion-item:hover {
+            background: rgba(79, 70, 229, .06);
+        }
+
+        .address-suggestion-item .pin {
+            flex-shrink: 0;
+            color: var(--primary);
+            margin-top: 2px;
+        }
+
+        #map-preview {
+            height: 220px;
+            border-radius: 8px;
+            margin-top: .75rem;
+            display: none;
+            border: 1.5px solid var(--border);
+        }
+
+        #map-preview.show {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <nav th:replace="~{layout/base :: navbar}"></nav>
+
+    <main class="main">
+        <div class="breadcrumb">
+            <a th:href="@{/admin/vehicles}">Quản lý Xe</a>
+            <span>Thêm xe mới</span>
+        </div>
+        <h1 class="page-title">➕ Thêm xe mới</h1>
+        <div th:if="${error}" class="alert-danger" th:text="${error}"></div>
+
+        <div class="card">
+            <form th:action="@{/admin/vehicles/add}" method="post" th:object="${form}"
+                  enctype="multipart/form-data">
+
+                <div class="section-title">Thông tin cơ bản</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="category">Loại xe *</label>
+                        <select id="category" class="form-control" name="category" required>
+                            <option value="">-- Chọn loại xe --</option>
+                            <option value="MOTORCYCLE" th:selected="*{category == 'MOTORCYCLE'}">🏍️ Xe máy</option>
+                            <option value="CAR_4" th:selected="*{category == 'CAR_4'}">🚗 Ô tô 4 chỗ</option>
+                            <option value="CAR_7" th:selected="*{category == 'CAR_7'}">🚐 Ô tô 7 chỗ</option>
+                            <option value="CAR_16" th:selected="*{category == 'CAR_16'}">🚐 Ô tô 16 chỗ</option>
+                            <option value="CAR_29" th:selected="*{category == 'CAR_29'}">🚌 Ô tô 29 chỗ</option>
+                            <option value="CAR_45" th:selected="*{category == 'CAR_45'}">🚌 Ô tô 45 chỗ</option>
+                            <option value="TRUCK_SMALL" th:selected="*{category == 'TRUCK_SMALL'}">🚚 Xe tải nhỏ
+                            </option>
+                            <option value="TRUCK_MEDIUM" th:selected="*{category == 'TRUCK_MEDIUM'}">🚚 Xe tải trung
+                            </option>
+                            <option value="TRUCK_LARGE" th:selected="*{category == 'TRUCK_LARGE'}">🚛 Xe tải lớn
+                            </option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="status">Trạng thái *</label>
+                        <select id="status" class="form-control" name="status" required>
+                            <option value="AVAILABLE" th:selected="*{status == 'AVAILABLE'}">✅ Trống (chưa có khách)
+                            </option>
+                            <option value="ON_TRIP" th:selected="*{status == 'ON_TRIP'}">🚦 Đang hoạt động (có khách)
+                            </option>
+                            <option value="MAINTENANCE" th:selected="*{status == 'MAINTENANCE'}">🔧 Bảo trì</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="assignedDriverId">Tài xế gán (tùy chọn)</label>
+                        <select id="assignedDriverId" class="form-control" th:field="*{assignedDriverId}">
+                            <option value="">-- Không gán tài xế --</option>
+                            <option th:each="d : ${eligibleDrivers}" th:value="${d.id}"
+                                    th:text="${d.fullName + ' (CCCD: ' + d.cccd + ')'}"></option>
+                        </select>
+                        <p class="form-hint">Có thể để trống, tài xế sẽ nhận đơn sau.</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="name">Tên xe *</label>
+                    <div class="name-wrapper">
+                        <input type="text" id="name" class="form-control" name="name" th:value="*{name}"
+                            placeholder="Gõ hãng xe để xem gợi ý... (VD: Honda, Toyota)" required autocomplete="off">
+                        <div class="name-suggestions" id="nameSuggestions"></div>
+                    </div>
+                    <p class="form-hint">Gõ tên hãng xe để xem gợi ý model.</p>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="licensePlate">Biển số xe *</label>
+                        <input type="text" id="licensePlate" class="form-control" name="licensePlate"
+                            th:value="*{licensePlate}" placeholder="51A-123.45" required
+                            style="text-transform:uppercase;">
+                        <p class="form-hint">VD: 51A-123.45, 30H-12345, 59C1-123.45</p>
+                        <p class="field-error" id="licensePlateError"></p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="color">Màu sắc</label>
+                        <input type="text" id="color" class="form-control" name="color" th:value="*{color}"
+                            placeholder="Đỏ, Trắng...">
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="year">Năm sản xuất</label>
+                        <input type="number" id="year" class="form-control" name="year" th:value="*{year}"
+                            placeholder="2022" min="1990" max="2030">
+                    </div>
+                </div>
+
+                <!-- ── Image Upload ── -->
+                <div class="form-group">
+                    <label class="form-label">📷 Hình ảnh xe</label>
+                    <div class="upload-zone" id="uploadZone">
+                        <input type="file" id="imageFile" name="imageFile" accept="image/*" />
+                        <div class="upload-icon">📁</div>
+                        <div class="upload-text">
+                            <strong>Nhấn để chọn ảnh</strong> hoặc kéo thả file vào đây
+                        </div>
+                        <div class="upload-hint">Hỗ trợ: JPG, PNG, WebP, GIF — Tối đa 5MB</div>
+                    </div>
+                    <div class="image-preview" id="imagePreview">
+                        <img id="previewImg" src="" alt="Preview" />
+                        <button type="button" class="remove-btn" id="removeBtn">❌ Xoá ảnh</button>
+                    </div>
+                </div>
+
+                <!-- ── Address Autocomplete + Map ── -->
+                <div class="form-group">
+                    <label class="form-label" for="currentAddress">📍 Khu vực / Địa chỉ hiện tại</label>
+                    <div class="address-wrapper">
+                        <input type="text" id="currentAddress" class="form-control" name="currentAddress"
+                            th:value="*{currentAddress}"
+                            placeholder="Gõ để tìm địa chỉ tại Việt Nam..."
+                            autocomplete="off" />
+                        <div class="address-suggestions" id="addressSuggestions"></div>
+                    </div>
+                    <div id="map-preview"></div>
+                </div>
+
+                <h3 style="grid-column: 1 / -1; margin-top:1.5rem; margin-bottom:.5rem; font-size:1.1rem;">Bảng giá
+                </h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="pricePerKm">Giá / km (đồng) *</label>
+                        <input type="number" id="pricePerKm" class="form-control" name="pricePerKm"
+                            th:value="*{pricePerKm}" placeholder="5000" min="0" step="500" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="pricePerHour">Giá / giờ (đồng) *</label>
+                        <input type="number" id="pricePerHour" class="form-control" name="pricePerHour"
+                            th:value="*{pricePerHour}" placeholder="50000" min="0" step="1000" required>
+                    </div>
+                </div>
+                <div class="form-group" style="max-width: 320px;">
+                    <label class="form-label" for="pricePerDay">Giá / ngày (đồng) *</label>
+                    <input type="number" id="pricePerDay" class="form-control" name="pricePerDay"
+                        th:value="*{pricePerDay}" placeholder="300000" min="0" step="5000" required>
+                </div>
+
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">💾 Lưu xe</button>
+                    <a class="btn btn-outline" th:href="@{/admin/vehicles}">← Huỷ</a>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ════════════════════════════════════════════════════
+        //  VEHICLE NAME DATABASE (phổ biến tại Việt Nam)
+        // ════════════════════════════════════════════════════
+        const VEHICLE_DB = {
+            MOTORCYCLE: [
+                'Honda Wave Alpha','Honda Wave RSX','Honda Vision','Honda SH 125','Honda SH 150','Honda SH Mode',
+                'Honda Air Blade 125','Honda Air Blade 160','Honda Winner X','Honda Lead 125','Honda PCX 125','Honda PCX 160',
+                'Honda Vario 125','Honda Future 125','Honda Blade 110','Honda CB150R','Honda CBR150R','Honda CB300R',
+                'Yamaha Exciter 155','Yamaha NVX 155','Yamaha Sirius','Yamaha Jupiter Finn','Yamaha Grande',
+                'Yamaha FreeGo','Yamaha Janus','Yamaha XSR 155','Yamaha MT-15','Yamaha R15',
+                'SYM Attila','SYM Elegant','SYM Star SR 170',
+                'Piaggio Vespa Sprint','Piaggio Vespa Primavera','Piaggio Liberty','Piaggio Medley',
+                'Suzuki Raider 150','Suzuki Satria','Suzuki GSX-R150','Suzuki Address',
+                'VinFast Klara S','VinFast Feliz S','VinFast Vento','VinFast Theon S'
+            ],
+            CAR_4: [
+                'Toyota Vios','Toyota Camry','Toyota Corolla Altis','Toyota Yaris',
+                'Honda City','Honda Civic','Honda Accord',
+                'Hyundai Accent','Hyundai Elantra','Hyundai Ioniq 5',
+                'Kia Morning','Kia Soluto','Kia K3','Kia K5',
+                'Mazda 2','Mazda 3','Mazda 6',
+                'VinFast VF3','VinFast VF5','VinFast VF6','VinFast VF7',
+                'Mitsubishi Attrage','MG 5','MG ZS',
+                'Ford Focus','Chevrolet Cruze'
+            ],
+            CAR_7: [
+                'Toyota Innova','Toyota Fortuner','Toyota Corolla Cross','Toyota Rush','Toyota Veloz Cross','Toyota Raize',
+                'Honda CR-V','Honda HR-V','Honda BR-V',
+                'Hyundai Tucson','Hyundai Santa Fe','Hyundai Creta','Hyundai Stargazer',
+                'Kia Seltos','Kia Sportage','Kia Sorento','Kia Carnival',
+                'Mazda CX-5','Mazda CX-8','Mazda CX-3',
+                'VinFast VF8','VinFast VF9',
+                'Ford Everest','Ford Territory',
+                'Mitsubishi Xpander','Mitsubishi Outlander','Mitsubishi Pajero Sport',
+                'Suzuki XL7','Suzuki Ertiga'
+            ],
+            CAR_16: [
+                'Ford Transit 16 chỗ','Hyundai Solati 16 chỗ','Mercedes Sprinter 16 chỗ',
+                'Toyota Hiace 16 chỗ','GAZ Gazelle 16 chỗ'
+            ],
+            CAR_29: [
+                'Hyundai County 29 chỗ','Thaco Town 29 chỗ','Isuzu Samco 29 chỗ',
+                'Daewoo Lestar 29 chỗ','Fuso Rosa 29 chỗ'
+            ],
+            CAR_45: [
+                'Hyundai Universe 45 chỗ','Thaco Bus 45 chỗ','Samco Felix 45 chỗ',
+                'Daewoo BX212 45 chỗ','Hyundai Aero City 45 chỗ'
+            ],
+            TRUCK_SMALL: [
+                'Hyundai Porter H150','Suzuki Carry Pro','Thaco Towner','Thaco Kia K200',
+                'Dongben 870kg','Isuzu QKR 270','Veam VPT095'
+            ],
+            TRUCK_MEDIUM: [
+                'Hyundai Mighty EX8','Hyundai HD72','Isuzu NQR 75','Isuzu NPR 400',
+                'Hino 300 Series','Thaco Ollin','Thaco Auman C160','Fuso Canter',
+                'Dongfeng B180 8 tấn'
+            ],
+            TRUCK_LARGE: [
+                'Hyundai HD320','Isuzu FVR 900','Isuzu GVR 34 tấn','Hino 500 Series','Hino 700 Series',
+                'Thaco Auman C300','Dongfeng Hoàng Huy 4 chân','Chenglong H7',
+                'Volvo FH','Scania R-Series'
+            ]
+        };
+
+        // ── Name Autocomplete Logic ──
+        const nameInput = document.getElementById('name');
+        const nameSugBox = document.getElementById('nameSuggestions');
+        const categorySelect = document.getElementById('category');
+        let nameDebounce = null;
+
+        nameInput.addEventListener('input', () => {
+            clearTimeout(nameDebounce);
+            nameDebounce = setTimeout(() => filterNames(), 100);
+        });
+
+        nameInput.addEventListener('focus', () => {
+            if (nameInput.value.trim().length >= 1) filterNames();
+        });
+
+        function filterNames() {
+            const query = nameInput.value.trim().toLowerCase();
+            if (query.length < 1) { nameSugBox.innerHTML = ''; nameSugBox.classList.remove('show'); return; }
+
+            const selectedCat = categorySelect.value;
+            let pool = [];
+
+            if (selectedCat && VEHICLE_DB[selectedCat]) {
+                pool = VEHICLE_DB[selectedCat];
+            } else {
+                // Nếu chưa chọn category → gộp tất cả
+                Object.values(VEHICLE_DB).forEach(arr => pool.push(...arr));
+            }
+
+            const matches = pool.filter(name => name.toLowerCase().includes(query)).slice(0, 10);
+
+            nameSugBox.innerHTML = '';
+            if (matches.length === 0) { nameSugBox.classList.remove('show'); return; }
+
+            matches.forEach(m => {
+                const div = document.createElement('div');
+                div.className = 'name-suggestion-item';
+                // Highlight brand name
+                const parts = m.split(' ');
+                div.innerHTML = '<span class="brand">' + parts[0] + '</span> ' + parts.slice(1).join(' ');
+                div.addEventListener('click', () => {
+                    nameInput.value = m;
+                    nameSugBox.innerHTML = '';
+                    nameSugBox.classList.remove('show');
+                });
+                nameSugBox.appendChild(div);
+            });
+            nameSugBox.classList.add('show');
+        }
+
+        // Khi đổi loại xe → clear suggestions
+        categorySelect.addEventListener('change', () => {
+            if (nameInput.value.trim().length >= 1) filterNames();
+        });
+
+        // Ẩn dropdown khi click ra ngoài
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.name-wrapper')) {
+                nameSugBox.classList.remove('show');
+            }
+        });
+
+        // ════════════════════════════════════════════════════
+        //  LICENSE PLATE VN VALIDATION
+        // ════════════════════════════════════════════════════
+        const LP_REGEX = /^\d{2}[A-Z]{1,2}\d?[\-\s]?\d{3,5}[\.]?\d{0,2}$/;
+
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = msg;
+            el.style.display = msg ? 'block' : 'none';
+            const input = el.closest('.form-group')?.querySelector('.form-control');
+            if (input) {
+                input.classList.toggle('is-invalid', !!msg);
+                input.classList.toggle('is-valid', !msg);
+            }
+        }
+
+        const lpInput = document.getElementById('licensePlate');
+        function validateLP() {
+            const v = lpInput.value.trim().toUpperCase();
+            if (!v) showError('licensePlateError', 'Biển số xe không được để trống.');
+            else if (!LP_REGEX.test(v)) showError('licensePlateError', 'Biển số không đúng định dạng VN (VD: 51A-123.45, 30H-12345).');
+            else showError('licensePlateError', '');
+        }
+        lpInput.addEventListener('blur', validateLP);
+        lpInput.addEventListener('input', validateLP);
+
+        // Submit validation
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const lp = lpInput.value.trim().toUpperCase();
+            if (!lp || !LP_REGEX.test(lp)) {
+                showError('licensePlateError', 'Biển số không đúng định dạng VN (VD: 51A-123.45, 30H-12345).');
+                e.preventDefault();
+                return false;
+            }
+            // Auto-uppercase the value
+            lpInput.value = lp;
+        });
+
+        // ════════════════════════════════════════════════════
+        //  IMAGE UPLOAD
+        // ════════════════════════════════════════════════════
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('imageFile');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('previewImg');
+        const removeBtn = document.getElementById('removeBtn');
+
+        uploadZone.addEventListener('click', () => fileInput.click());
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                showPreview(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                showPreview(fileInput.files[0]);
+            }
+        });
+
+        function showPreview(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImg.src = e.target.result;
+                imagePreview.style.display = 'block';
+                uploadZone.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        removeBtn.addEventListener('click', () => {
+            fileInput.value = '';
+            previewImg.src = '';
+            imagePreview.style.display = 'none';
+            uploadZone.style.display = 'block';
+        });
+
+        // ════════════════════════════════════════════════════
+        //  ADDRESS AUTOCOMPLETE (Nominatim – Vietnam)
+        // ════════════════════════════════════════════════════
+        const addressInput = document.getElementById('currentAddress');
+        const suggestionsBox = document.getElementById('addressSuggestions');
+        const mapDiv = document.getElementById('map-preview');
+        let debounceTimer = null;
+        let map = null;
+        let marker = null;
+
+        // Khi user gõ vào ô địa chỉ → tìm gợi ý
+        addressInput.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            const query = addressInput.value.trim();
+            if (query.length < 2) {
+                suggestionsBox.innerHTML = '';
+                suggestionsBox.classList.remove('show');
+                return;
+            }
+            debounceTimer = setTimeout(() => searchAddress(query), 400);
+        });
+
+        // Khi focus lại ô input mà đã có text >= 2 ký tự → tìm lại
+        addressInput.addEventListener('focus', () => {
+            const query = addressInput.value.trim();
+            if (query.length >= 2 && suggestionsBox.children.length === 0) {
+                searchAddress(query);
+            } else if (suggestionsBox.children.length > 0) {
+                suggestionsBox.classList.add('show');
+            }
+        });
+
+        async function searchAddress(query) {
+            try {
+                const url = 'https://nominatim.openstreetmap.org/search?format=json'
+                    + '&q=' + encodeURIComponent(query)
+                    + '&countrycodes=vn&limit=6&accept-language=vi';
+                const res = await fetch(url);
+                const data = await res.json();
+
+                suggestionsBox.innerHTML = '';
+                if (!data || data.length === 0) {
+                    suggestionsBox.classList.remove('show');
+                    return;
+                }
+
+                data.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'address-suggestion-item';
+                    div.innerHTML = '<span class="pin">📍</span><span>' + item.display_name + '</span>';
+                    div.addEventListener('click', () => selectAddress(item));
+                    suggestionsBox.appendChild(div);
+                });
+                suggestionsBox.classList.add('show');
+            } catch (e) {
+                console.error('Address search error:', e);
+            }
+        }
+
+        function selectAddress(item) {
+            addressInput.value = item.display_name;
+            suggestionsBox.innerHTML = '';
+            suggestionsBox.classList.remove('show');
+            showMap(parseFloat(item.lat), parseFloat(item.lon), item.display_name);
+        }
+
+        function showMap(lat, lng, label) {
+            mapDiv.style.display = 'block';
+            mapDiv.classList.add('show');
+
+            // Nếu map đã tồn tại → xoá rồi tạo lại
+            if (map) {
+                map.remove();
+                map = null;
+                marker = null;
+            }
+
+            map = L.map('map-preview').setView([lat, lng], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
+            marker = L.marker([lat, lng]).addTo(map).bindPopup(label).openPopup();
+
+            // Fix Leaflet map rendering khi container thay đổi kích thước
+            setTimeout(() => map.invalidateSize(), 300);
+        }
+
+        // Ẩn dropdown khi click ra ngoài
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.address-wrapper')) {
+                suggestionsBox.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+
+</html>

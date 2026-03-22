@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chi tiết xe – Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #3730A3;
+            --danger: #EF4444;
+            --success: #10B981;
+            --accent: #F59E0B;
+            --border: #E2E8F0;
+            --bg: #F8FAFC;
+            --surface: #fff;
+            --muted: #64748B;
+            --text: #1E293B;
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .navbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .navbar-brand::before {
+            content: '🚗 ';
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: .25rem;
+            margin-left: auto;
+            list-style: none;
+        }
+
+        .nav-link {
+            padding: .5rem .85rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--muted);
+            font-size: .9rem;
+            font-weight: 500;
+            transition: all .2s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .main {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            font-size: .85rem;
+            color: var(--muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .breadcrumb a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .breadcrumb span::before {
+            content: ' / ';
+        }
+
+        .page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .page-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .btn-group-inline {
+            display: flex;
+            gap: .5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .55rem 1.1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: .875rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all .2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: #fff;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--border);
+            color: var(--muted);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-sm {
+            padding: .35rem .75rem;
+            font-size: .8rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 1.2rem;
+            color: var(--text);
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.2rem;
+        }
+
+        @media(max-width:600px) {
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .detail-item label {
+            font-size: .8rem;
+            color: var(--muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .detail-item p {
+            margin-top: .25rem;
+            font-weight: 500;
+            font-size: .95rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: .25rem .65rem;
+            border-radius: 999px;
+            font-size: .75rem;
+            font-weight: 600;
+        }
+
+        .badge-motorcycle {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .badge-car4,
+        .badge-car_4 {
+            background: #DBEAFE;
+            color: #1D4ED8;
+        }
+
+        .badge-car7,
+        .badge-car_7 {
+            background: #EDE9FE;
+            color: #5B21B6;
+        }
+
+        .badge-car_16,
+        .badge-car_29,
+        .badge-car_45 {
+            background: #FCE7F3;
+            color: #BE185D;
+        }
+
+        .badge-truck_small,
+        .badge-truck_medium,
+        .badge-truck_large {
+            background: #E0F2FE;
+            color: #0369A1;
+        }
+
+        .badge-available {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .badge-on_trip {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .badge-maintenance {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .vehicle-img-lg {
+            width: 100%;
+            max-height: 240px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 1.2rem;
+        }
+
+        .stars {
+            color: var(--accent);
+            font-size: 1.1rem;
+        }
+
+        .alert {
+            padding: .85rem 1.2rem;
+            border-radius: 8px;
+            margin-bottom: 1.2rem;
+            font-size: .9rem;
+            font-weight: 500;
+        }
+
+        .alert-danger {
+            background: #FEF2F2;
+            color: #991B1B;
+            border-left: 4px solid var(--danger);
+        }
+
+        .alert-success {
+            background: #F0FDF4;
+            color: #166534;
+            border-left: 4px solid var(--success);
+        }
+
+        select.form-control {
+            padding: .55rem .9rem;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: .875rem;
+            font-family: inherit;
+            cursor: pointer;
+            min-width: 180px;
+        }
+
+        select.form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .assign-form {
+            display: flex;
+            gap: .75rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .driver-info {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: .85rem;
+        }
+
+        .driver-info strong {
+            display: block;
+            font-weight: 600;
+        }
+
+        .driver-info span {
+            font-size: .82rem;
+            color: var(--muted);
+        }
+    </style>
+</head>
+
+<body>
+    <nav th:replace="~{layout/base :: navbar}"></nav>
+
+    <main class="main">
+        <div class="breadcrumb">
+            <a th:href="@{/admin/vehicles}">Quản lý Xe</a>
+            <span th:text="${vehicle.name}">Chi tiết</span>
+        </div>
+
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title" th:text="${vehicle.name}">—</h1>
+                <span th:text="${vehicle.licensePlate}" style="color:var(--muted);font-size:.9rem;">—</span>
+            </div>
+            <div class="btn-group-inline">
+                <a class="btn btn-outline" th:href="@{/admin/vehicles/{id}/edit(id=${vehicle.id})}">✏️ Sửa</a>
+                <a class="btn btn-outline" th:href="@{/ratings/vehicle/{id}(id=${vehicle.id})}">⭐ Đánh giá</a>
+                <form th:action="@{/admin/vehicles/{id}/delete(id=${vehicle.id})}" method="post" style="display:inline;"
+                    onsubmit="return confirm('Xoá xe này?')">
+                    <button type="submit" class="btn btn-danger btn-sm">🗑 Xoá</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Ảnh xe nếu có -->
+        <img th:if="${vehicle.imageUrl != null}" th:src="${vehicle.imageUrl}" class="vehicle-img-lg" alt="Ảnh xe"
+            onerror="this.style.display='none'">
+
+        <!-- Thông tin chi tiết -->
+        <div class="card">
+            <div class="card-title">📋 Thông tin xe</div>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <label>Loại xe</label>
+                    <p>
+                        <span class="badge" th:classappend="${'badge-' + #strings.toLowerCase(vehicle.category.name())}"
+                            th:text="${vehicle.category.name() == 'MOTORCYCLE' ? '🏍 Xe máy' : 
+                                    (vehicle.category.name() == 'CAR_4' ? '🚗 4 chỗ' : 
+                                    (vehicle.category.name() == 'CAR_7' ? '🚐 7 chỗ' : 
+                                    (vehicle.category.name() == 'CAR_16' ? '🚐 16 chỗ' : 
+                                    (vehicle.category.name() == 'CAR_29' ? '🚌 29 chỗ' : 
+                                    (vehicle.category.name() == 'CAR_45' ? '🚌 45 chỗ' : 
+                                    (vehicle.category.name() == 'TRUCK_SMALL' ? '🚚 Tải nhỏ' : 
+                                    (vehicle.category.name() == 'TRUCK_MEDIUM' ? '🚚 Tải trung' : '🚛 Tải lớn')))))))}">—</span>
+                    </p>
+                </div>
+                <div class="detail-item">
+                    <label>Trạng thái</label>
+                    <p>
+                        <span class="badge"
+                            th:classappend="${vehicle.status.name() == 'AVAILABLE' ? 'badge-available' : (vehicle.status.name() == 'ON_TRIP' ? 'badge-on_trip' : 'badge-maintenance')}"
+                            th:text="${vehicle.status.name() == 'AVAILABLE' ? 'Trống (chưa có khách)' : (vehicle.status.name() == 'ON_TRIP' ? 'Đang hoạt động (có khách)' : 'Bảo trì')}">—</span>
+                    </p>
+                </div>
+                <div class="detail-item" style="grid-column: 1 / -1;">
+                    <label>Khu vực / Địa chỉ hiện tại</label>
+                    <p th:text="${vehicle.currentAddress ?: '—'}">—</p>
+                </div>
+                <div class="detail-item">
+                    <label>Màu sắc</label>
+                    <p th:text="${vehicle.color ?: '—'}">—</p>
+                </div>
+                <div class="detail-item">
+                    <label>Năm sản xuất</label>
+                    <p th:text="${vehicle.year ?: '—'}">—</p>
+                </div>
+                <div class="detail-item">
+                    <label>Giá / km</label>
+                    <p th:text="${#numbers.formatDecimal(vehicle.pricePerKm, 0, 'COMMA', 0, 'POINT') + ' đ'}">—</p>
+                </div>
+                <div class="detail-item">
+                    <label>Giá / giờ</label>
+                    <p th:text="${#numbers.formatDecimal(vehicle.pricePerHour, 0, 'COMMA', 0, 'POINT') + ' đ'}">—</p>
+                </div>
+                <div class="detail-item">
+                    <label>Giá / ngày</label>
+                    <p th:text="${#numbers.formatDecimal(vehicle.pricePerDay, 0, 'COMMA', 0, 'POINT') + ' đ'}">—</p>
+                </div>
+                <div class="detail-item">
+                    <label>Đánh giá TB</label>
+                    <p><span class="stars">⭐</span> <span th:text="${vehicle.avgRating}">0.00</span> / 5</p>
+                </div>
+                <div class="detail-item">
+                    <label>Tổng chuyến</label>
+                    <p th:text="${vehicle.totalTrips + ' chuyến'}">0 chuyến</p>
+                </div>
+                <div class="detail-item">
+                    <label>Ngày thêm</label>
+                    <p th:text="${#temporals.format(vehicle.createdAt,'dd/MM/yyyy')}">—</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tài xế được gán -->
+        <div class="card">
+            <div class="card-title">🧑‍✈️ Tài xế được gán</div>
+
+            <!-- Đã có tài xế -->
+            <div th:if="${vehicle.driver != null}" style="margin-bottom:1.2rem;">
+                <div class="driver-info">
+                    <span style="font-size:2.2rem;">🧑‍✈️</span>
+                    <div>
+                        <strong th:text="${vehicle.driver.fullName}">—</strong>
+                        <span th:text="'CCCD: ' + ${vehicle.driver.cccd}">—</span><br>
+                        <span th:text="'Bằng lái: ' + ${vehicle.driver.driverLicense}">—</span>
+                    </div>
+                </div>
+                <form th:action="@{/admin/vehicles/{id}/unassign-driver(id=${vehicle.id})}" method="post"
+                    style="margin-top:.85rem;">
+                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bỏ gán tài xế này?')">✖
+                        Bỏ gán tài xế</button>
+                </form>
+            </div>
+
+            <!-- Chưa có tài xế -->
+            <div th:if="${vehicle.driver == null}">
+                <p style="color:var(--muted);margin-bottom:1rem;">Chưa có tài xế nào được gán.</p>
+                <form th:action="@{/admin/vehicles/{id}/assign-driver(id=${vehicle.id})}" method="post"
+                    class="assign-form" th:if="${!#lists.isEmpty(eligibleDrivers)}">
+                    <select name="driverId" class="form-control" required>
+                        <option value="">-- Chọn tài xế có bằng lái phù hợp --</option>
+                        <option th:each="d : ${eligibleDrivers}" th:value="${d.id}"
+                            th:text="${d.fullName + ' (CCCD: ' + d.cccd + ' | Loại xe: ' + d.vehicleTypes + ')'}">—</option>
+                    </select>
+                    <button type="submit" class="btn btn-success btn-sm">✔ Gán tài xế</button>
+                </form>
+                <p th:if="${#lists.isEmpty(eligibleDrivers)}"
+                    style="color:var(--danger);font-size:.85rem;margin-top:.5rem;">
+                    ⚠ Không có tài xế nào có bằng lái phù hợp với loại xe này. Vui lòng cập nhật bằng lái cho tài xế trước.
+                </p>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thống Kê Cá Nhân | Tài Xế</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* BASE CSS copied from layout/base.html for consistency */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #3730A3;
+            --accent: #F59E0B;
+            --danger: #EF4444;
+            --success: #10B981;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --text: #1E293B;
+            --muted: #64748B;
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .navbar-brand::before {
+            content: '🚗';
+            font-size: 1.4rem;
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: .25rem;
+            margin-left: auto;
+            list-style: none;
+        }
+
+        .nav-link {
+            padding: .5rem .85rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--muted);
+            font-size: .9rem;
+            font-weight: 500;
+            transition: all .2s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 1.2rem;
+            color: var(--text);
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        /* Dashboard specific CSS */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+        }
+
+        .kpi-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .revenue-bg {
+            background: #E0E7FF;
+            color: #4F46E5;
+        }
+
+        .trips-bg {
+            background: #D1FAE5;
+            color: #059669;
+        }
+
+        .kpi-details .kpi-label {
+            color: var(--muted);
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .kpi-details .kpi-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .chart-card {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+        }
+
+        .filter-select {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            font-weight: 500;
+            font-family: inherit;
+        }
+
+        #emptyStateMsg {
+            display: none;
+            text-align: center;
+            color: var(--muted);
+            padding: 2rem;
+            font-weight: 500;
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 8px;
+            margin-top: 2rem;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <!-- Navbar from layout/base.html -->
+    <nav th:replace="~{layout/base :: navbar}"></nav>
+
+    <main class="main">
+        <div class="page-header">
+            <h1 class="page-title">📈 Thống Kê Hoạt Động Của Bạn</h1>
+            <select id="periodSelector" class="filter-select">
+                <option value="weekly">7 Ngày Qua</option>
+                <option value="monthly" selected>30 Ngày Qua</option>
+                <option value="yearly">Năm Nay</option>
+            </select>
+        </div>
+
+        <!-- KPI Grid -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-icon revenue-bg">💵</div>
+                <div class="kpi-details">
+                    <p class="kpi-label">Tổng Thu Nhập</p>
+                    <h3 id="totalRevenue" class="kpi-value">Đang tải...</h3>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon trips-bg">🚖</div>
+                <div class="kpi-details">
+                    <p class="kpi-label">Số Chuyến Phụ Trách</p>
+                    <h3 id="totalTrips" class="kpi-value">Đang tải...</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="card chart-card" id="chartCard">
+            <h3 class="card-title">📉 Biểu Đồ Thu Nhập & Chuyến Đi</h3>
+            <div class="chart-container">
+                <canvas id="driverChart"></canvas>
+            </div>
+            <div id="emptyStateMsg">Chưa có dữ liệu giao dịch trong khoảng thời gian này.</div>
+        </div>
+
+        <!-- JavaScript Logic -->
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                let driverChart = null;
+                const periodSelector = document.getElementById('periodSelector');
+                const totalRevenueEl = document.getElementById('totalRevenue');
+                const totalTripsEl = document.getElementById('totalTrips');
+                const emptyMsg = document.getElementById('emptyStateMsg');
+                const canvas = document.getElementById('driverChart');
+
+                const formatCurrency = (value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+                const formatDate = (dateStr) => {
+                    const d = new Date(dateStr);
+                    return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+                };
+
+                const fetchDashboardData = async (period) => {
+                    try {
+                        const response = await fetch(`/api/driver/reports/dashboard?period=${period}`);
+                        if (!response.ok) throw new Error('Network error');
+                        const data = await response.json();
+
+                        totalRevenueEl.innerText = formatCurrency(data.totalRevenue);
+                        totalTripsEl.innerText = data.totalTrips;
+                    } catch (error) {
+                        console.error("Error fetching dashboard KPIs", error);
+                        totalRevenueEl.innerText = 'Lỗi!';
+                        totalTripsEl.innerText = 'Lỗi!';
+                    }
+                };
+
+                const fetchChartData = async (period) => {
+                    try {
+                        const response = await fetch(`/api/driver/reports/charts?period=${period}`);
+                        if (!response.ok) throw new Error('Network error');
+                        const data = await response.json();
+
+                        const labels = data.map(item => formatDate(item.date));
+                        const revenueData = data.map(item => item.revenue);
+                        const tripsData = data.map(item => item.trips);
+
+                        // Check empty state
+                        const hasData = revenueData.some(v => v > 0) || tripsData.some(v => v > 0);
+                        if (!hasData) {
+                            emptyMsg.style.display = 'block';
+                            canvas.style.display = 'none';
+                        } else {
+                            emptyMsg.style.display = 'none';
+                            canvas.style.display = 'block';
+                        }
+
+                        if (driverChart) driverChart.destroy();
+
+                        const ctx = canvas.getContext('2d');
+                        driverChart = new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: labels,
+                                datasets: [
+                                    {
+                                        label: 'Thu Nhập (VND)',
+                                        data: revenueData,
+                                        type: 'line',
+                                        borderColor: '#4F46E5',
+                                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                                        borderWidth: 3,
+                                        pointBackgroundColor: '#4F46E5',
+                                        tension: 0.4,
+                                        fill: true,
+                                        yAxisID: 'y'
+                                    },
+                                    {
+                                        label: 'Số Chuyến',
+                                        data: tripsData,
+                                        type: 'bar',
+                                        backgroundColor: '#10B981',
+                                        borderRadius: 4,
+                                        yAxisID: 'y1'
+                                    }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                interaction: { mode: 'index', intersect: false },
+                                plugins: {
+                                    tooltip: { backgroundColor: '#1E293B', padding: 12, cornerRadius: 8 },
+                                    legend: { labels: { usePointStyle: true, font: { family: "'Inter', sans-serif", weight: '500' } } }
+                                },
+                                scales: {
+                                    x: { grid: { display: false } },
+                                    y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Thu Nhập (VND)' }, grid: { borderDash: [5, 5] } },
+                                    y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'Số Chuyến' }, grid: { display: false }, beginAtZero: true, suggestedMax: 5 }
+                                }
+                            }
+                        });
+                    } catch (error) {
+                        console.error('Error rendering chart', error);
+                    }
+                };
+
+                const loadData = (p) => { fetchDashboardData(p); fetchChartData(p); };
+                periodSelector.addEventListener('change', (e) => loadData(e.target.value));
+                loadData(periodSelector.value); // init
+            });
+        </script>
+    </main>
+</body>
+
+</html>

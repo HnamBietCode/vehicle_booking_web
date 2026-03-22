@@ -1,0 +1,301 @@
+﻿<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đánh giá – VehicleBook</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #3730A3;
+            --accent: #F59E0B;
+            --danger: #EF4444;
+            --success: #10B981;
+            --border: #E2E8F0;
+            --bg: #F8FAFC;
+            --surface: #fff;
+            --muted: #64748B;
+            --text: #1E293B;
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .navbar-brand::before {
+            content: '🚗 ';
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: .25rem;
+            margin-left: auto;
+            list-style: none;
+        }
+
+        .nav-link {
+            padding: .5rem .85rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--muted);
+            font-size: .9rem;
+            font-weight: 500;
+            transition: all .2s;
+        }
+
+        .nav-link:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .main {
+            max-width: 520px;
+            margin: 2.5rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: .35rem;
+        }
+
+        .card-sub {
+            font-size: .9rem;
+            color: var(--muted);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .alert {
+            padding: .85rem 1.2rem;
+            border-radius: 8px;
+            margin-bottom: 1.2rem;
+            font-size: .9rem;
+            font-weight: 500;
+        }
+
+        .alert-danger {
+            background: #FEF2F2;
+            color: #991B1B;
+            border-left: 4px solid var(--danger);
+        }
+
+        .alert-success {
+            background: #F0FDF4;
+            color: #166534;
+            border-left: 4px solid var(--success);
+        }
+
+        /* Star rating interactive */
+        .star-rating {
+            display: flex;
+            justify-content: center;
+            gap: .5rem;
+            margin-bottom: 1.5rem;
+            flex-direction: row-reverse;
+        }
+
+        .star-rating input {
+            display: none;
+        }
+
+        .star-rating label {
+            font-size: 2.5rem;
+            cursor: pointer;
+            color: #D1D5DB;
+            transition: color .15s;
+            user-select: none;
+        }
+
+        .star-rating input:checked~label,
+        .star-rating label:hover,
+        .star-rating label:hover~label {
+            color: var(--accent);
+        }
+
+        .star-hint {
+            text-align: center;
+            font-size: .82rem;
+            color: var(--muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: .875rem;
+            font-weight: 600;
+            margin-bottom: .4rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: .7rem 1rem;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: .95rem;
+            font-family: inherit;
+            transition: border-color .2s;
+            resize: vertical;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, .12);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .4rem;
+            padding: .65rem 1.3rem;
+            border: none;
+            border-radius: 8px;
+            font-size: .9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all .2s;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--border);
+            color: var(--muted);
+            margin-top: .75rem;
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+    </style>
+</head>
+
+<body>
+    <nav th:replace="~{layout/base :: navbar}"></nav>
+
+    <main class="main">
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+        <div class="card">
+            <div class="card-icon">
+                <span th:text="${form.targetType == 'DRIVER' ? '🧑‍✈️' : '🚗'}">⭐</span>
+            </div>
+            <div class="card-title">Đánh giá của bạn</div>
+            <div class="card-sub">
+                <span
+                    th:text="${form.targetType == 'DRIVER' ? 'Tài xế: ' : (assignedDriver != null ? 'Xe và Tài xế: ' : 'Xe: ')}"></span>
+                <strong th:text="${targetName ?: '—'}">—</strong>
+                <span th:if="${form.targetType == 'VEHICLE' and assignedDriver != null}"
+                    style="display:block; font-size: 0.85rem; color: #6B7280; margin-top: 0.25rem;">
+                    (Đánh giá này sẽ được áp dụng cho cả xe và tài xế <strong
+                        th:text="${assignedDriver.fullName}"></strong>)
+                </span>
+            </div>
+
+            <form th:action="@{/ratings/rate}" method="post" th:object="${form}">
+                <!-- Hidden fields -->
+                <input type="hidden" name="targetType" th:value="*{targetType}">
+                <input type="hidden" name="targetId" th:value="*{targetId}">
+                <input type="hidden" name="refType" th:value="*{refType}">
+                <input type="hidden" name="refId" th:value="*{refId}">
+
+                <!-- Star selector (RTL trick for CSS-only stars) -->
+                <div class="star-rating">
+                    <input type="radio" id="star5" name="stars" value="5" th:checked="*{stars == 5}" required>
+                    <label for="star5" title="5 sao – Xuất sắc">★</label>
+                    <input type="radio" id="star4" name="stars" value="4" th:checked="*{stars == 4}">
+                    <label for="star4" title="4 sao – Tốt">★</label>
+                    <input type="radio" id="star3" name="stars" value="3" th:checked="*{stars == 3}">
+                    <label for="star3" title="3 sao – Bình thường">★</label>
+                    <input type="radio" id="star2" name="stars" value="2" th:checked="*{stars == 2}">
+                    <label for="star2" title="2 sao – Tệ">★</label>
+                    <input type="radio" id="star1" name="stars" value="1" th:checked="*{stars == 1}">
+                    <label for="star1" title="1 sao – Rất tệ">★</label>
+                </div>
+                <div class="star-hint">Nhấn vào ngôi sao để chọn số sao (1–5)</div>
+
+                <div class="form-group">
+                    <label class="form-label" for="comment">💬 Nhận xét (tuỳ chọn)</label>
+                    <textarea id="comment" class="form-control" name="comment" rows="4" th:text="*{comment}"
+                        placeholder="Chia sẻ trải nghiệm của bạn..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">⭐ Gửi đánh giá</button>
+            </form>
+
+            <a class="btn btn-outline" onclick="history.back()">← Quay lại</a>
+        </div>
+    </main>
+</body>
+
+</html>

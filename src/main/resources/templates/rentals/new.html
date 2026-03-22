@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <title th:text="${rentalMode == T(com.bookvehicle.example.sr.model.VehicleRental.RentalMode).VEHICLE_ONLY ? 'Dat thue xe' : 'Dat thue xe co tai xe'}">Dat thue xe</title>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #3730A3;
+            --danger: #EF4444;
+            --success: #10B981;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --text: #1E293B;
+            --muted: #64748B;
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: .25rem;
+            margin-left: auto;
+            list-style: none;
+        }
+
+        .nav-link {
+            padding: .5rem .85rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--muted);
+            font-size: .9rem;
+            font-weight: 500;
+            transition: all .2s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 1.2rem;
+            color: var(--text);
+        }
+
+        .form-group {
+            margin-bottom: 1.1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: .875rem;
+            font-weight: 600;
+            margin-bottom: .4rem;
+            color: var(--text);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: .65rem 1rem;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: .95rem;
+            font-family: inherit;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, .15);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .6rem 1.3rem;
+            border: none;
+            border-radius: 8px;
+            font-size: .9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all .2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--border);
+            color: var(--muted);
+        }
+
+        .alert {
+            padding: .85rem 1.2rem;
+            border-radius: 8px;
+            margin-bottom: 1.2rem;
+            font-size: .9rem;
+            font-weight: 500;
+        }
+
+        .alert-danger {
+            background: #FEF2F2;
+            color: #991B1B;
+            border-left: 4px solid var(--danger);
+        }
+
+        .alert-success {
+            background: #F0FDF4;
+            color: #166534;
+            border-left: 4px solid var(--success);
+        }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .form-grid .full { grid-column: 1 / -1; }
+        .address-wrapper { position: relative; }
+        #addressSuggestions {
+            box-shadow: 0 10px 28px rgba(15, 23, 42, .10);
+            position: relative;
+            z-index: 10;
+        }
+        #map-preview {
+            display: none;
+            margin-top: .75rem;
+            height: 260px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            background: #eef2f7;
+        }
+        .estimate-box {
+            margin-top: .5rem;
+            padding: .9rem 1rem;
+            border: 1px dashed var(--border);
+            border-radius: 10px;
+            background: #f8fafc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .estimate-label { color: var(--muted); font-weight: 600; font-size: .9rem; }
+        .estimate-value { color: var(--primary); font-weight: 800; font-size: 1.1rem; }
+        @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<nav th:replace="~{layout/base :: navbar}"></nav>
+
+<main class="main">
+    <div class="page-header">
+        <h1 class="page-title" th:text="${rentalMode == T(com.bookvehicle.example.sr.model.VehicleRental.RentalMode).VEHICLE_ONLY ? 'Dat thue xe (Giao xe boi tai xe bat ky)' : 'Dat thue xe co tai xe'}">Dat thue xe</h1>
+        <a class="btn btn-outline" th:href="@{/vehicles/search}">Quay lai</a>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+    <div class="card">
+        <h3 class="card-title">Thong tin don thue</h3>
+        <form th:action="@{/rentals}" method="post" th:object="${form}">
+            <input type="hidden" th:field="*{rentalMode}">
+            <div class="form-grid">
+                <div class="form-group full">
+                    <label class="form-label" for="vehicleId">Xe</label>
+                    <select class="form-control" id="vehicleId" th:field="*{vehicleId}" required>
+                        <option value="">-- Chon xe --</option>
+                        <option th:each="v : ${vehicles}"
+                                th:value="${v.id}"
+                                th:attr="data-price-hour=${v.pricePerHour},data-price-day=${v.pricePerDay}"
+                                th:text="${v.name + ' | ' + v.licensePlate}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="rentalType">Hinh thuc thue</label>
+                    <select class="form-control" id="rentalType" th:field="*{rentalType}" required>
+                        <option th:each="t : ${rentalTypes}" th:value="${t}" th:text="${t}"></option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Diem don</label>
+                    <div style="display:flex; gap:1rem; margin-bottom:.5rem;">
+                        <label style="display:flex; gap:.4rem; align-items:center;">
+                            <input type="radio" name="pickupMode" value="POINT" checked> Chon diem co san
+                        </label>
+                        <label style="display:flex; gap:.4rem; align-items:center;">
+                            <input type="radio" name="pickupMode" value="MANUAL"> Tu nhap dia chi
+                        </label>
+                    </div>
+
+                    <select class="form-control" id="pickupPointId" th:field="*{pickupPointId}">
+                        <option value="">-- Chon diem don --</option>
+                        <option th:each="p : ${pickupPoints}"
+                                th:value="${p.id}"
+                                th:text="${p.name + ' - ' + p.address}">
+                        </option>
+                    </select>
+
+                    <div id="manualAddressFields" style="margin-top:.5rem; display:none;">
+                        <div class="form-group address-wrapper">
+                            <label class="form-label">Dia diem don</label>
+                            <input type="text" id="manualPickupAddress" class="form-control" placeholder="Nhap dia chi nhu ben admin">
+                            <div id="addressSuggestions" style="display:none; margin-top:.5rem; border:1px solid #dbe3ef; border-radius:12px; background:#fff; overflow:hidden;"></div>
+                            <div id="map-preview"></div>
+                        </div>
+                        <input type="hidden" id="pickupAddress" th:field="*{pickupAddress}">
+                        <input type="hidden" id="pickupLat" th:field="*{pickupLat}">
+                        <input type="hidden" id="pickupLng" th:field="*{pickupLng}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="plannedStart">Thoi gian bat dau</label>
+                    <input class="form-control" id="plannedStart" th:field="*{plannedStart}" type="datetime-local" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="plannedEnd">Thoi gian ket thuc</label>
+                    <input class="form-control" id="plannedEnd" th:field="*{plannedEnd}" type="datetime-local" required>
+                </div>
+
+                <div class="form-group full">
+                    <label class="form-label" for="notes">Ghi chu</label>
+                    <textarea class="form-control" id="notes" th:field="*{notes}" rows="3"></textarea>
+                </div>
+
+                <div class="form-group full">
+                    <div class="estimate-box">
+                        <div class="estimate-label">Tam tinh theo lua chon hien tai</div>
+                        <div id="estimateValue" class="estimate-value">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:.6rem; margin-top:.5rem;">
+                <button class="btn btn-primary" type="submit">Dat thue</button>
+                <a class="btn btn-outline" th:href="@{/rentals/my}">Xem don cua toi</a>
+            </div>
+        </form>
+    </div>
+</main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    (function () {
+        const pickupModeRadios = document.querySelectorAll('input[name=\"pickupMode\"]');
+        const pickupPoint = document.getElementById('pickupPointId');
+        const pickupAddress = document.getElementById('pickupAddress');
+        const pickupLat = document.getElementById('pickupLat');
+        const pickupLng = document.getElementById('pickupLng');
+        const manualAddressFields = document.getElementById('manualAddressFields');
+        const addressInput = document.getElementById('manualPickupAddress');
+        const suggestionBox = document.getElementById('addressSuggestions');
+        const mapPreview = document.getElementById('map-preview');
+        let suggestionTimer = null;
+        let selectedSuggestedAddress = '';
+        let map = null;
+        let marker = null;
+
+        const rentalType = document.getElementById('rentalType');
+        const vehicle = document.getElementById('vehicleId');
+        const start = document.getElementById('plannedStart');
+        const end = document.getElementById('plannedEnd');
+        const estimateValue = document.getElementById('estimateValue');
+
+        const fmtVnd = (n) => new Intl.NumberFormat('vi-VN').format(n) + 'd';
+
+        function updateFinalAddress() {
+            if (!pickupAddress) return;
+            pickupAddress.value = selectedSuggestedAddress || (addressInput?.value || '').trim();
+            if (!selectedSuggestedAddress && pickupLat && pickupLng) {
+                pickupLat.value = '';
+                pickupLng.value = '';
+            }
+        }
+
+        function clearSuggestions() {
+            if (!suggestionBox) return;
+            suggestionBox.innerHTML = '';
+            suggestionBox.style.display = 'none';
+        }
+
+        function renderSuggestions(items) {
+            if (!suggestionBox) return;
+            if (!items.length) {
+                clearSuggestions();
+                return;
+            }
+
+            suggestionBox.innerHTML = items.map((item, index) => `
+                <button
+                    type="button"
+                    data-index="${index}"
+                    style="display:block;width:100%;text-align:left;padding:.75rem .9rem;border:none;border-bottom:${index === items.length - 1 ? 'none' : '1px solid #eef2f7'};background:#fff;cursor:pointer;">
+                    ${item.display_name}
+                </button>
+            `).join('');
+            suggestionBox.style.display = 'block';
+
+            suggestionBox.querySelectorAll('button[data-index]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const picked = items[Number(btn.dataset.index)];
+                    selectedSuggestedAddress = picked.display_name;
+                    addressInput.value = picked.display_name;
+                    pickupAddress.value = picked.display_name;
+                    if (pickupLat && pickupLng) {
+                        pickupLat.value = picked.lat;
+                        pickupLng.value = picked.lon;
+                    }
+                    clearSuggestions();
+                    showMap(parseFloat(picked.lat), parseFloat(picked.lon), picked.display_name);
+                });
+            });
+        }
+
+        function hideMap() {
+            if (!mapPreview) return;
+            mapPreview.style.display = 'none';
+            if (map) {
+                map.remove();
+                map = null;
+                marker = null;
+            }
+        }
+
+        function showMap(lat, lng, label) {
+            if (!mapPreview || Number.isNaN(lat) || Number.isNaN(lng)) return;
+            mapPreview.style.display = 'block';
+
+            if (map) {
+                map.remove();
+                map = null;
+                marker = null;
+            }
+
+            map = L.map('map-preview').setView([lat, lng], 16);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
+            marker = L.marker([lat, lng]).addTo(map).bindPopup(label).openPopup();
+            setTimeout(() => map.invalidateSize(), 250);
+        }
+
+        async function searchAddress(query) {
+            if (!query || query.length < 1) {
+                clearSuggestions();
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    'https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&countrycodes=vn&accept-language=vi&q='
+                    + encodeURIComponent(query),
+                    { headers: { Accept: 'application/json' } }
+                );
+                if (!response.ok) {
+                    clearSuggestions();
+                    return;
+                }
+                const data = await response.json();
+                renderSuggestions(Array.isArray(data) ? data : []);
+            } catch (e) {
+                console.error('Error fetching address suggestions', e);
+                clearSuggestions();
+            }
+        }
+
+        function syncPickupMode() {
+            const mode = [...pickupModeRadios].find(r => r.checked)?.value || 'POINT';
+            const usePoint = mode === 'POINT';
+
+            pickupPoint.style.display = usePoint ? 'block' : 'none';
+            if (manualAddressFields) manualAddressFields.style.display = usePoint ? 'none' : 'block';
+
+            pickupPoint.required = usePoint;
+            if (addressInput) addressInput.required = !usePoint;
+
+            if (usePoint) {
+                selectedSuggestedAddress = '';
+                pickupAddress.value = '';
+                if (pickupLat && pickupLng) {
+                    pickupLat.value = '';
+                    pickupLng.value = '';
+                }
+                if (addressInput) addressInput.value = '';
+                clearSuggestions();
+                hideMap();
+            } else {
+                pickupPoint.value = '';
+            }
+        }
+
+        function updateEstimate() {
+            const selected = vehicle.options[vehicle.selectedIndex];
+            if (!selected || !selected.value || !start.value || !end.value) {
+                estimateValue.textContent = '--';
+                return;
+            }
+
+            const s = new Date(start.value);
+            const e = new Date(end.value);
+            const minutes = (e.getTime() - s.getTime()) / 60000;
+            if (!Number.isFinite(minutes) || minutes <= 0) {
+                estimateValue.textContent = '--';
+                return;
+            }
+
+            const priceHour = Number(selected.dataset.priceHour || 0);
+            const priceDay = Number(selected.dataset.priceDay || 0);
+            let estimate = 0;
+
+            if (rentalType.value === 'DAILY') {
+                const days = Math.max(1, Math.ceil(minutes / 1440));
+                estimate = days * priceDay;
+            } else {
+                const hours = Math.max(1, Math.ceil(minutes / 60));
+                estimate = hours * priceHour;
+            }
+            estimateValue.textContent = fmtVnd(estimate);
+        }
+
+        if (addressInput) {
+            addressInput.addEventListener('input', () => {
+                selectedSuggestedAddress = '';
+                updateFinalAddress();
+                hideMap();
+                if (suggestionTimer) window.clearTimeout(suggestionTimer);
+                suggestionTimer = window.setTimeout(() => searchAddress(addressInput.value.trim()), 350);
+            });
+
+            addressInput.addEventListener('focus', () => {
+                const query = addressInput.value.trim();
+                if (query.length >= 1 && suggestionBox.children.length === 0) {
+                    searchAddress(query);
+                } else if (suggestionBox.children.length > 0) {
+                    suggestionBox.style.display = 'block';
+                }
+            });
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.address-wrapper')) {
+                clearSuggestions();
+            }
+        });
+
+        pickupModeRadios.forEach(r => r.addEventListener('change', syncPickupMode));
+        [rentalType, vehicle, start, end].forEach(el => el.addEventListener('change', updateEstimate));
+        [start, end].forEach(el => el.addEventListener('input', updateEstimate));
+
+        syncPickupMode();
+        updateEstimate();
+    })();
+</script>
+</body>
+</html>

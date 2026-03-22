@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản lý Rút tiền – Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --primary: #4F46E5; --primary-dark: #3730A3;
+            --danger: #EF4444; --success: #10B981; --accent: #F59E0B;
+            --border: #E2E8F0; --bg: #F8FAFC; --surface: #fff;
+            --muted: #64748B; --text: #1E293B; --radius: 12px;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+
+        .main { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; }
+        .page-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 1.5rem; }
+
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.75rem; margin-bottom: 1.5rem; }
+
+        .alert { padding: .85rem 1.2rem; border-radius: 8px; margin-bottom: 1.2rem; font-size: .9rem; font-weight: 500; }
+        .alert-danger { background: #FEF2F2; color: #991B1B; border-left: 4px solid var(--danger); }
+        .alert-success { background: #F0FDF4; color: #166534; border-left: 4px solid var(--success); }
+
+        .filter-bar { display: flex; gap: .75rem; margin-bottom: 1.5rem; align-items: center; }
+        .filter-bar a { padding: .5rem 1rem; border-radius: 8px; text-decoration: none; font-size: .875rem; font-weight: 600; color: var(--muted); border: 1.5px solid var(--border); transition: all .2s; }
+        .filter-bar a:hover, .filter-bar a.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+        table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+        th { background: var(--bg); font-weight: 600; color: var(--muted); padding: .75rem; text-align: left; border-bottom: 2px solid var(--border); }
+        td { padding: .75rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tr:hover td { background: #f8fafc; }
+
+        .badge { display: inline-block; padding: .2rem .6rem; border-radius: 999px; font-size: .72rem; font-weight: 700; }
+        .badge-pending { background: #FEF3C7; color: #92400E; }
+        .badge-approved { background: #D1FAE5; color: #065F46; }
+        .badge-rejected { background: #FEE2E2; color: #991B1B; }
+
+        .btn { display: inline-flex; align-items: center; gap: .3rem; padding: .4rem .9rem; border: none; border-radius: 8px; font-size: .8rem; font-weight: 600; cursor: pointer; text-decoration: none; transition: all .2s; }
+        .btn-success { background: var(--success); color: #fff; }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-sm { padding: .3rem .65rem; font-size: .75rem; }
+
+        .action-form { display: inline-flex; gap: .35rem; align-items: center; }
+        .action-form input[type=text] { padding: .3rem .5rem; border: 1.5px solid var(--border); border-radius: 6px; font-size: .8rem; width: 150px; }
+
+        .amount-col { font-weight: 700; color: var(--danger); }
+        .bank-info { font-size: .8rem; color: var(--muted); }
+        .bank-info strong { color: var(--text); }
+    </style>
+</head>
+
+<body>
+    <nav th:replace="~{layout/base :: navbar}"></nav>
+
+    <main class="main">
+        <h1 class="page-title">💰 Quản lý Yêu cầu Rút tiền</h1>
+
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+        <div class="filter-bar">
+            <a th:href="@{/admin/withdrawals}" th:classappend="${selectedStatus == null ? 'active' : ''}">📋 Tất cả</a>
+            <a th:href="@{/admin/withdrawals(status='PENDING')}" th:classappend="${selectedStatus == 'PENDING' ? 'active' : ''}">⏳ Chờ duyệt</a>
+        </div>
+
+        <div class="card">
+            <div th:if="${withdrawals.empty}" style="text-align:center;color:var(--muted);padding:2rem;">
+                Không có yêu cầu rút tiền nào.
+            </div>
+
+            <table th:unless="${withdrawals.empty}">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Người dùng</th>
+                        <th>Số tiền</th>
+                        <th>Thông tin NH</th>
+                        <th>Ghi chú</th>
+                        <th>Trạng thái</th>
+                        <th>Ngày tạo</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="wr : ${withdrawals}">
+                        <td th:text="${wr.id}"></td>
+                        <td>
+                            <span th:each="u : ${users}" th:if="${u.id == wr.userId}">
+                                <strong th:text="${u.email}"></strong><br>
+                                <span style="font-size:.78rem;color:var(--muted);" th:text="'ID: ' + ${wr.userId}"></span>
+                            </span>
+                        </td>
+                        <td class="amount-col" th:text="${#numbers.formatDecimal(wr.amount, 0, 'COMMA', 0, 'POINT') + '₫'}"></td>
+                        <td class="bank-info">
+                            <strong th:text="${wr.bankName ?: '—'}"></strong><br>
+                            <span th:text="${wr.accountNumber ?: '—'}"></span><br>
+                            <span th:text="${wr.accountHolder ?: '—'}"></span>
+                        </td>
+                        <td th:text="${wr.note ?: '—'}" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;"></td>
+                        <td>
+                            <span class="badge" th:classappend="${wr.status.name() == 'PENDING' ? 'badge-pending' : (wr.status.name() == 'APPROVED' ? 'badge-approved' : 'badge-rejected')}"
+                                  th:text="${wr.status.name() == 'PENDING' ? '⏳ Chờ duyệt' : (wr.status.name() == 'APPROVED' ? '✅ Đã duyệt' : '❌ Từ chối')}"></span>
+                            <div th:if="${wr.adminNote != null}" style="font-size:.75rem;color:var(--muted);margin-top:.3rem;" th:text="'Admin: ' + ${wr.adminNote}"></div>
+                            <div th:if="${wr.processedAt != null}" style="font-size:.72rem;color:var(--muted);" th:text="'Xử lý: ' + ${#temporals.format(wr.processedAt, 'dd/MM HH:mm')}"></div>
+                        </td>
+                        <td th:text="${#temporals.format(wr.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                        <td>
+                            <div th:if="${wr.status.name() == 'PENDING'}" style="display:flex;flex-direction:column;gap:.4rem;">
+                                <form th:action="@{/admin/withdrawals/{id}/approve(id=${wr.id})}" method="post" class="action-form">
+                                    <input type="text" name="adminNote" placeholder="Ghi chú admin">
+                                    <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Duyệt rút tiền #' + this.closest('tr').firstElementChild.textContent + '?')">✔ Duyệt</button>
+                                </form>
+                                <form th:action="@{/admin/withdrawals/{id}/reject(id=${wr.id})}" method="post" class="action-form">
+                                    <input type="text" name="adminNote" placeholder="Lý do từ chối">
+                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Từ chối & hoàn tiền yêu cầu #' + this.closest('tr').firstElementChild.textContent + '?')">✖ Từ chối</button>
+                                </form>
+                            </div>
+                            <span th:if="${wr.status.name() != 'PENDING'}" style="color:var(--muted);font-size:.8rem;">Đã xử lý</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</body>
+
+</html>

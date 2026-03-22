@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chi tiết tài khoản – Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #3730A3;
+            --danger: #EF4444;
+            --success: #10B981;
+            --accent: #F59E0B;
+            --bg: #F8FAFC;
+            --surface: #fff;
+            --border: #E2E8F0;
+            --text: #1E293B;
+            --muted: #64748B;
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .navbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .navbar-brand::before {
+            content: '🚗 ';
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: .25rem;
+            margin-left: auto;
+            list-style: none;
+        }
+
+        .nav-link {
+            padding: .5rem .85rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--muted);
+            font-size: .9rem;
+            font-weight: 500;
+            transition: all .2s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .main {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            font-size: .85rem;
+            color: var(--muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .breadcrumb a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .breadcrumb span::before {
+            content: ' / ';
+        }
+
+        .alert {
+            padding: .85rem 1.2rem;
+            border-radius: 8px;
+            margin-bottom: 1.2rem;
+            font-size: .9rem;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #F0FDF4;
+            color: #166534;
+            border-left: 4px solid var(--success);
+        }
+
+        /* Hero */
+        .user-hero {
+            background: linear-gradient(135deg, #4F46E5, #7C3AED);
+            border-radius: var(--radius);
+            padding: 2rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, .4);
+            background: rgba(255, 255, 255, .2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .user-hero-info h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .user-hero-info p {
+            opacity: .8;
+            font-size: .9rem;
+            margin-top: .2rem;
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: .5rem;
+            margin-top: .6rem;
+            flex-wrap: wrap;
+        }
+
+        .hbadge {
+            padding: .25rem .7rem;
+            border-radius: 999px;
+            font-size: .75rem;
+            font-weight: 700;
+            background: rgba(255, 255, 255, .2);
+        }
+
+        .hbadge.active {
+            background: #10B981;
+        }
+
+        .hbadge.inactive {
+            background: #EF4444;
+        }
+
+        /* Card */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 1.2rem;
+        }
+
+        /* Detail grid */
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.2rem;
+        }
+
+        @media(max-width:600px) {
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .detail-item label {
+            font-size: .78rem;
+            color: var(--muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .detail-item p {
+            margin-top: .25rem;
+            font-weight: 500;
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: .2rem .6rem;
+            border-radius: 999px;
+            font-size: .72rem;
+            font-weight: 700;
+        }
+
+        .badge-admin {
+            background: #EDE9FE;
+            color: #5B21B6;
+        }
+
+        .badge-customer {
+            background: #DBEAFE;
+            color: #1D4ED8;
+        }
+
+        .badge-driver {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .badge-premium {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .badge-standard {
+            background: #F1F5F9;
+            color: var(--muted);
+        }
+
+        .badge-pending {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .badge-approved {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .badge-rejected {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .55rem 1.1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: .875rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all .2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            opacity: .9;
+        }
+
+        .btn-warning {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--border);
+            color: var(--muted);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: .75rem;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+
+<body>
+    <nav th:replace="~{layout/base :: navbar}"></nav>
+
+    <main class="main">
+        <div class="breadcrumb">
+            <a th:href="@{/admin/users}">Quản lý Users</a>
+            <span th:text="${target.email}">Chi tiết</span>
+        </div>
+
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+        <!-- Hero -->
+        <div class="user-hero">
+            <div class="avatar">
+                <img th:if="${target.avatarUrl != null}" th:src="${target.avatarUrl}" alt="Avatar">
+                <span th:unless="${target.avatarUrl != null}">👤</span>
+            </div>
+            <div class="user-hero-info">
+                <h2 th:text="${customer?.fullName ?: driver?.fullName ?: target.email}">Tên</h2>
+                <p th:text="${target.email}">email</p>
+                <div class="hero-badges">
+                    <span class="hbadge" th:text="${target.role}">ROLE</span>
+                    <span class="hbadge active" th:if="${target.isActive}">Hoạt động</span>
+                    <span class="hbadge inactive" th:unless="${target.isActive}">Bị khoá</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Info -->
+        <div class="card">
+            <div class="card-title">Thông tin tài khoản</div>
+            <div class="detail-grid">
+                <div class="detail-item"><label>ID</label>
+                    <p th:text="${target.id}">—</p>
+                </div>
+                <div class="detail-item"><label>Email</label>
+                    <p th:text="${target.email}">—</p>
+                </div>
+                <div class="detail-item"><label>Mật khẩu (đã mã hoá)</label>
+                    <p style="display:flex;align-items:center;gap:.5rem;">
+                        <code id="pwdDisplay" style="font-size:.8rem;word-break:break-all;">••••••••••••</code>
+                        <button type="button" onclick="togglePwd()" style="background:none;border:none;cursor:pointer;font-size:1rem;" title="Hiện/ẩn">👁️</button>
+                    </p>
+                    <input type="hidden" id="pwdHash" th:value="${target.password}" />
+                </div>
+                <div class="detail-item"><label>Số điện thoại</label>
+                    <p th:text="${target.phone}">—</p>
+                </div>
+                <div class="detail-item"><label>Vai trò</label>
+                    <p><span class="badge"
+                            th:classappend="${target.role.name() == 'ADMIN' ? 'badge-admin' : (target.role.name() == 'CUSTOMER' ? 'badge-customer' : 'badge-driver')}"
+                            th:text="${target.role}">—</span></p>
+                </div>
+                <div class="detail-item"><label>Trạng thái</label>
+                    <p th:text="${target.isActive ? 'Đang hoạt động' : 'Đã bị khoá'}">—</p>
+                </div>
+                <div class="detail-item"><label>Ngày tạo</label>
+                    <p th:text="${#temporals.format(target.createdAt,'dd/MM/yyyy HH:mm')}">—</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Profile -->
+        <div class="card" th:if="${customer != null}">
+            <div class="card-title">Hồ sơ Khách hàng</div>
+            <div class="detail-grid">
+                <div class="detail-item"><label>Họ tên</label>
+                    <p th:text="${customer.fullName}">—</p>
+                </div>
+                <div class="detail-item"><label>Địa chỉ</label>
+                    <p th:text="${customer.address ?: '—'}">—</p>
+                </div>
+                <div class="detail-item"><label>Gói</label>
+                    <p><span class="badge"
+                            th:classappend="${customer.membership.name() == 'PREMIUM' ? 'badge-premium' : 'badge-standard'}"
+                            th:text="${customer.membership}">—</span></p>
+                </div>
+                <div class="detail-item" th:if="${customer.premiumExp != null}">
+                    <label>Hết hạn Premium</label>
+                    <p th:text="${#temporals.format(customer.premiumExp,'dd/MM/yyyy')}">—</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Driver Profile -->
+        <div class="card" th:if="${driver != null}">
+            <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+                <span>Hồ sơ Tài xế</span>
+                <div style="display:flex; gap:.5rem;" th:if="${driver.verificationStatus.name() == 'PENDING'}">
+                    <form th:action="@{/admin/users/{id}/verify-driver(id=${target.id})}" method="post">
+                        <input type="hidden" name="status" value="APPROVED">
+                        <button type="submit" class="btn btn-success btn-sm">✔ Duyệt</button>
+                    </form>
+                    <form th:action="@{/admin/users/{id}/verify-driver(id=${target.id})}" method="post" id="rejectForm">
+                        <input type="hidden" name="status" value="REJECTED">
+                        <input type="hidden" name="reason" id="rejectReasonInput" value="">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="promptReject()">✖ Từ chối</button>
+                    </form>
+                </div>
+            </div>
+            <div class="detail-grid">
+                <div class="detail-item"><label>Họ tên</label>
+                    <p th:text="${driver.fullName}">—</p>
+                </div>
+                <div class="detail-item"><label>CCCD</label>
+                    <p th:text="${driver.cccd}">—</p>
+                </div>
+                <div class="detail-item" style="grid-column:1/-1;" th:if="${licenses != null && !licenses.isEmpty()}">
+                    <label>🪪 Danh sách Bằng lái</label>
+                    <table style="width:100%;border-collapse:collapse;margin-top:.5rem;font-size:.88rem;">
+                        <thead>
+                            <tr style="background:#F1F5F9;text-align:left;">
+                                <th style="padding:.5rem .7rem;border:1px solid var(--border);">#</th>
+                                <th style="padding:.5rem .7rem;border:1px solid var(--border);">Số bằng lái</th>
+                                <th style="padding:.5rem .7rem;border:1px solid var(--border);">Hạng</th>
+                                <th style="padding:.5rem .7rem;border:1px solid var(--border);">Hạn</th>
+                                <th style="padding:.5rem .7rem;border:1px solid var(--border);">Loại xe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="lic, iter : ${licenses}">
+                                <td style="padding:.5rem .7rem;border:1px solid var(--border);" th:text="${iter.count}">1</td>
+                                <td style="padding:.5rem .7rem;border:1px solid var(--border);" th:text="${lic.licenseNumber}">—</td>
+                                <td style="padding:.5rem .7rem;border:1px solid var(--border);" th:text="${lic.licenseClass}">—</td>
+                                <td style="padding:.5rem .7rem;border:1px solid var(--border);" th:text="${#temporals.format(lic.licenseExpiry,'dd/MM/yyyy')}">—</td>
+                                <td style="padding:.5rem .7rem;border:1px solid var(--border);">
+                                    <th:block th:each="vt, stat : ${#strings.arraySplit(lic.vehicleTypes, ',')}">
+                                        <span th:if="${stat.index > 0}">, </span>
+                                        <span th:switch="${#strings.trim(vt)}">
+                                            <span th:case="'MOTORCYCLE'">Xe máy</span>
+                                            <span th:case="'CAR_4'">Xe 4 chỗ</span>
+                                            <span th:case="'CAR_7'">Xe 7 chỗ</span>
+                                            <span th:case="'CAR_16'">Xe 16 chỗ</span>
+                                            <span th:case="'CAR_29'">Xe 29 chỗ</span>
+                                            <span th:case="'CAR_45'">Xe 45 chỗ</span>
+                                            <span th:case="'TRUCK_SMALL'">Xe tải nhỏ</span>
+                                            <span th:case="'TRUCK_MEDIUM'">Xe tải trung</span>
+                                            <span th:case="'TRUCK_LARGE'">Xe tải lớn</span>
+                                            <span th:case="*" th:text="${#strings.trim(vt)}">—</span>
+                                        </span>
+                                    </th:block>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <th:block th:if="${licenses == null || licenses.isEmpty()}">
+                    <div class="detail-item"><label>Bằng lái</label>
+                        <p th:text="${driver.driverLicense}">—</p></div>
+                    <div class="detail-item"><label>Hết hạn bằng</label>
+                        <p th:text="${#temporals.format(driver.licenseExpiry,'dd/MM/yyyy')}">—</p></div>
+                    <div class="detail-item"><label>Loại xe</label>
+                        <p th:text="${driver.vehicleTypes}">—</p></div>
+                </th:block>
+                <div class="detail-item" th:if="${driver.verificationStatus.name() != 'APPROVED'}"><label>Xét
+                        duyệt</label>
+                    <p><span class="badge"
+                            th:classappend="${driver.verificationStatus.name() == 'REJECTED' ? 'badge-rejected' : 'badge-pending'}"
+                            th:text="${driver.verificationStatus.name() == 'REJECTED' ? 'Từ chối' : 'Chờ duyệt'}">—</span>
+                    </p>
+                </div>
+                <div class="detail-item" th:if="${driver.approvedAt != null}"><label>Thời gian duyệt</label>
+                    <p th:text="${#temporals.format(driver.approvedAt,'dd/MM/yyyy HH:mm')}">—</p>
+                </div>
+                <div class="detail-item" th:if="${driver.approvedBy != null}"><label>Người duyệt</label>
+                    <p th:text="${approverName != null ? approverName : ('ID: ' + driver.approvedBy)}">—</p>
+                </div>
+                <div class="detail-item" th:if="${!target.isActive && driver.rejectionReason != null}"><label>Lý do bị khoá</label>
+                    <p th:text="${driver.rejectionReason}">—</p>
+                </div>
+                <div class="detail-item"><label>Đánh giá</label>
+                    <p>
+                        <span th:text="${avgRating}">0.0</span> ⭐
+                        (<a th:href="@{/ratings/driver/{id}(id=${driver.id})}" target="_blank"
+                            style="text-decoration: underline;" th:text="${totalRatings} + ' lượt đánh giá'">0 lượt đánh
+                            giá</a>)
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="btn-group">
+            <a class="btn btn-primary" th:href="@{/admin/users/{id}/edit(id=${target.id})}">✏️ Sửa</a>
+            <form th:action="@{/admin/users/{id}/toggle-active(id=${target.id})}" method="post" id="toggleActiveForm"
+                style="display:inline-block;">
+                <input type="hidden" name="reason" id="toggleReasonInput" value="">
+                <button th:if="${target.isActive && target.role.name() == 'DRIVER'}" type="button"
+                    class="btn btn-warning" onclick="promptLock()">🔒 Khoá tài khoản</button>
+                <button th:unless="${target.isActive && target.role.name() == 'DRIVER'}" type="submit"
+                    class="btn btn-warning"
+                    th:text="${target.isActive ? '🔒 Khoá tài khoản' : '🔓 Mở khoá'}">Khoá</button>
+            </form>
+            <form th:action="@{/admin/users/{id}/delete(id=${target.id})}" method="post"
+                th:if="${target.id != loggedUser.id}"
+                onsubmit="return confirm('Bạn có chắc muốn xoá tài khoản này không?')">
+                <button type="submit" class="btn btn-danger">🗑️ Xoá tài khoản</button>
+            </form>
+            <a class="btn btn-outline" th:href="@{/admin/users}">← Quay lại</a>
+        </div>
+    </main>
+</body>
+
+<script>
+    let pwdVisible = false;
+    function togglePwd() {
+        const display = document.getElementById('pwdDisplay');
+        const hash = document.getElementById('pwdHash').value;
+        pwdVisible = !pwdVisible;
+        display.textContent = pwdVisible ? hash : '••••••••••••';
+    }
+
+    function promptReject() {
+        const reason = prompt("Vui lòng nhập lý do từ chối hồ sơ này:");
+        if (reason !== null && reason.trim() !== "") {
+            document.getElementById('rejectReasonInput').value = reason;
+            document.getElementById('rejectForm').submit();
+        } else if (reason !== null) {
+            alert("Lý do từ chối không được để trống!");
+        }
+    }
+
+    function promptLock() {
+        const reason = prompt("Vui lòng nhập lý do khóa tài khoản tài xế này:");
+        if (reason !== null && reason.trim() !== "") {
+            document.getElementById('toggleReasonInput').value = reason;
+            document.getElementById('toggleActiveForm').submit();
+        } else if (reason !== null) {
+            alert("Lý do khóa không được để trống!");
+        }
+    }
+</script>
+
+</html>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>VehicleBook</title>
+    <meta http-equiv="refresh" th:if="${session?.loggedUser == null}" content="0; url=/auth/login">
+</head>
+
+<body>
+    <!-- Redirect based on role -->
+    <th:block th:with="u=${session?.loggedUser}">
+        <th:block th:if="${u != null}">
+            <script th:inline="javascript">
+                const role = /*[[${u.role.name()}]]*/ '';
+                if (role === 'ADMIN') window.location.href = '/admin/users';
+                else window.location.href = '/profile';
+            </script>
+        </th:block>
+    </th:block>
+</body>
+
+</html>

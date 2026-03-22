@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Điểm đón phổ biến</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background:#f8fafc; color:#1e293b; margin:0; }
+        .main { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+        .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
+        .page-title { font-size:1.5rem; font-weight:700; }
+        .card { background:#fff; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; }
+        table { width:100%; border-collapse:collapse; font-size:.92rem; }
+        th { background:#f8fafc; color:#64748b; font-weight:600; text-align:left; padding:.75rem 1rem; border-bottom:2px solid #e2e8f0; }
+        td { padding:.75rem 1rem; border-bottom:1px solid #e2e8f0; vertical-align:top; }
+        .muted { color:#64748b; }
+    </style>
+</head>
+<body>
+<nav th:replace="~{layout/base :: navbar}"></nav>
+
+<main class="main">
+    <div class="page-header">
+        <h1 class="page-title">📍 Điểm đón phổ biến</h1>
+    </div>
+    <div class="card">
+        <table>
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Tên điểm đón</th>
+                <th>Địa chỉ</th>
+                <th>Tọa độ</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="p,iter : ${points}">
+                <td th:text="${iter.count}">1</td>
+                <td th:text="${p.name}">Tên</td>
+                <td th:text="${p.address}">Địa chỉ</td>
+                <td class="muted" th:text="${(p.latitude != null ? p.latitude : '—') + ' / ' + (p.longitude != null ? p.longitude : '—')}">—</td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(points)}">
+                <td colspan="4" style="text-align:center; padding:1.2rem;" class="muted">Chưa có dữ liệu điểm đón.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

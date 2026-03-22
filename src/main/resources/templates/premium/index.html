@@ -1,0 +1,436 @@
+﻿<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Premium – VehicleBook</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #3730A3;
+            --accent: #F59E0B;
+            --danger: #EF4444;
+            --success: #10B981;
+            --bg: #F8FAFC;
+            --surface: #fff;
+            --border: #E2E8F0;
+            --text: #1E293B;
+            --muted: #64748B;
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .navbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .navbar-brand::before {
+            content: '🚗 ';
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: .25rem;
+            margin-left: auto;
+            list-style: none;
+        }
+
+        .nav-link {
+            padding: .5rem .85rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--muted);
+            font-size: .9rem;
+            font-weight: 500;
+            transition: all .2s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .main {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .alert {
+            padding: .85rem 1.2rem;
+            border-radius: 8px;
+            margin-bottom: 1.2rem;
+            font-size: .9rem;
+            font-weight: 500;
+        }
+
+        .alert-danger {
+            background: #FEF2F2;
+            color: #991B1B;
+            border-left: 4px solid var(--danger);
+        }
+
+        .alert-success {
+            background: #F0FDF4;
+            color: #166534;
+            border-left: 4px solid var(--success);
+        }
+
+        /* Hero */
+        .premium-hero {
+            background: linear-gradient(135deg, #4F46E5, #7C3AED);
+            border-radius: var(--radius);
+            padding: 3rem 2rem;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .premium-hero h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: .5rem;
+        }
+
+        .premium-hero p {
+            opacity: .85;
+            font-size: 1.05rem;
+            max-width: 540px;
+            margin: 0 auto 1.5rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: .4rem 1.2rem;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: .9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .status-premium {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .status-standard {
+            background: rgba(255, 255, 255, .2);
+            color: #fff;
+        }
+
+        /* Plan cards */
+        .plan-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 1.2rem;
+            margin-bottom: 2rem;
+        }
+
+        .plan-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem 1rem;
+            text-align: center;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .plan-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 20px rgba(79, 70, 229, .12);
+        }
+
+        .plan-card .emoji {
+            font-size: 2rem;
+            margin-bottom: .5rem;
+        }
+
+        .plan-card .plan-name {
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: .25rem;
+        }
+
+        .plan-card .price {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: .25rem 0;
+        }
+
+        .plan-card .months {
+            font-size: .8rem;
+            color: var(--muted);
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .4rem;
+            padding: .6rem 1.3rem;
+            border: none;
+            border-radius: 8px;
+            font-size: .9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all .2s;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            opacity: .9;
+        }
+
+        /* Benefits */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .benefit-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: .75rem;
+        }
+
+        .benefit-list li {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            font-size: .95rem;
+        }
+
+        .benefit-list li::before {
+            content: '✅';
+            flex-shrink: 0;
+        }
+
+        /* Current status */
+        .status-card {
+            background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+            border-radius: var(--radius);
+            padding: 1.5rem 1.75rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .status-card .label {
+            font-size: .85rem;
+            color: #92400E;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .status-card .value {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #78350F;
+        }
+
+        .cancel-section {
+            text-align: center;
+        }
+
+        .cancel-section .cancel-link {
+            background: none;
+            border: none;
+            color: var(--danger);
+            font-size: .875rem;
+            cursor: pointer;
+            text-decoration: underline;
+            font-family: inherit;
+        }
+    </style>
+</head>
+
+<body>
+    <nav th:replace="~{layout/base :: navbar}"></nav>
+
+    <main class="main">
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+        <!-- Hero -->
+        <div class="premium-hero">
+            <div class="status-badge status-premium" th:if="${customer?.membership?.name() == 'PREMIUM'}">⭐ Tài khoản
+                Premium</div>
+            <div class="status-badge status-standard" th:unless="${customer?.membership?.name() == 'PREMIUM'}">Standard
+            </div>
+            <h1>VehicleBook Premium</h1>
+            <p>Nâng cấp tài khoản để tận hưởng ưu tiên đặt xe, giảm giá 10% và nhiều đặc quyền khác.</p>
+        </div>
+
+        <!-- Current Premium Status -->
+        <div class="status-card" th:if="${customer?.membership?.name() == 'PREMIUM'}">
+            <div>
+                <div class="label">Gói hiện tại</div>
+                <div class="value">⭐ Premium</div>
+            </div>
+            <div>
+                <div class="label">Hết hạn</div>
+                <div class="value" th:text="${#temporals.format(customer.premiumExp,'dd/MM/yyyy')}">—</div>
+            </div>
+            <div class="cancel-section">
+                <form th:action="@{/premium/cancel}" method="post"
+                    onsubmit="return confirm('Bạn có chắc muốn huỷ Premium?')">
+                    <button type="submit" class="cancel-link">Huỷ Premium</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Purchase Plans -->
+        <div
+            th:unless="${customer?.membership?.name() == 'PREMIUM' and customer.premiumExp != null and customer.premiumExp.isAfter(T(java.time.LocalDate).now())}">
+            <h2 style="font-size:1.15rem;font-weight:700;margin-bottom:1rem;">Chọn gói Premium</h2>
+            <div class="plan-grid">
+                <div class="plan-card">
+                    <div class="emoji">📅</div>
+                    <div class="plan-name">1 Tháng</div>
+                    <div class="price">99K</div>
+                    <div class="months">/ tháng</div>
+                    <form th:action="@{/premium/upgrade}" method="post">
+                        <input type="hidden" name="months" value="1">
+                        <button type="submit" class="btn btn-primary">Mua ngay</button>
+                    </form>
+                </div>
+                <div class="plan-card" style="border-color:var(--primary);">
+                    <div class="emoji">🔥</div>
+                    <div class="plan-name">3 Tháng</div>
+                    <div class="price">249K</div>
+                    <div class="months">tiết kiệm 17%</div>
+                    <form th:action="@{/premium/upgrade}" method="post">
+                        <input type="hidden" name="months" value="3">
+                        <button type="submit" class="btn btn-primary">Mua ngay</button>
+                    </form>
+                </div>
+                <div class="plan-card">
+                    <div class="emoji">💎</div>
+                    <div class="plan-name">6 Tháng</div>
+                    <div class="price">449K</div>
+                    <div class="months">tiết kiệm 25%</div>
+                    <form th:action="@{/premium/upgrade}" method="post">
+                        <input type="hidden" name="months" value="6">
+                        <button type="submit" class="btn btn-primary">Mua ngay</button>
+                    </form>
+                </div>
+                <div class="plan-card">
+                    <div class="emoji">👑</div>
+                    <div class="plan-name">12 Tháng</div>
+                    <div class="price">799K</div>
+                    <div class="months">tiết kiệm 33%</div>
+                    <form th:action="@{/premium/upgrade}" method="post">
+                        <input type="hidden" name="months" value="12">
+                        <button type="submit" class="btn btn-primary">Mua ngay</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Extend if already premium -->
+        <div th:if="${customer?.membership?.name() == 'PREMIUM'}">
+            <h2 style="font-size:1.15rem;font-weight:700;margin-bottom:1rem;">Gia hạn thêm</h2>
+            <div class="plan-grid">
+                <div class="plan-card">
+                    <div class="emoji">➕</div>
+                    <div class="plan-name">+1 Tháng</div>
+                    <div class="price">99K</div>
+                    <div class="months">&nbsp;</div>
+                    <form th:action="@{/premium/upgrade}" method="post">
+                        <input type="hidden" name="months" value="1">
+                        <button type="submit" class="btn btn-primary">Gia hạn</button>
+                    </form>
+                </div>
+                <div class="plan-card">
+                    <div class="emoji">➕➕</div>
+                    <div class="plan-name">+3 Tháng</div>
+                    <div class="price">249K</div>
+                    <div class="months">&nbsp;</div>
+                    <form th:action="@{/premium/upgrade}" method="post">
+                        <input type="hidden" name="months" value="3">
+                        <button type="submit" class="btn btn-primary">Gia hạn</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Benefits -->
+        <div class="card">
+            <div class="card-title">🎁 Đặc quyền Premium</div>
+            <ul class="benefit-list">
+                <li>Giảm giá <strong>10%</strong> cho tất cả đơn đặt xe</li>
+                <li>Ưu tiên ghép tài xế (xử lý trước tài khoản Standard)</li>
+                <li>Hỗ trợ 24/7 qua chat trực tiếp</li>
+                <li>Xem lịch sử chuyến đi không giới hạn</li>
+                <li>Huy hiệu ⭐ Premium hiển thị trên hồ sơ</li>
+            </ul>
+        </div>
+    </main>
+</body>
+
+</html>

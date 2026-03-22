@@ -1,0 +1,279 @@
+﻿<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đánh giá xe – VehicleBook</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #4F46E5;
+            --accent: #F59E0B;
+            --border: #E2E8F0;
+            --bg: #F8FAFC;
+            --surface: #fff;
+            --muted: #64748B;
+            --text: #1E293B;
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .navbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .navbar-brand::before {
+            content: '🚗 ';
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: .25rem;
+            margin-left: auto;
+            list-style: none;
+        }
+
+        .nav-link {
+            padding: .5rem .85rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--muted);
+            font-size: .9rem;
+            font-weight: 500;
+            transition: all .2s;
+        }
+
+        .nav-link:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .main {
+            max-width: 720px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .vehicle-hero {
+            background: linear-gradient(135deg, #1E293B, #334155);
+            color: #fff;
+            border-radius: var(--radius);
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .vehicle-hero h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: .25rem;
+        }
+
+        .vehicle-hero .plate {
+            font-size: .9rem;
+            opacity: .7;
+            margin-bottom: .75rem;
+        }
+
+        .vehicle-hero .avg {
+            font-size: 2.8rem;
+            font-weight: 800;
+            line-height: 1;
+            margin: .5rem 0 .25rem;
+        }
+
+        .vehicle-hero .count {
+            font-size: .9rem;
+            opacity: .8;
+        }
+
+        .stars-display {
+            font-size: 1.5rem;
+            color: var(--accent);
+            letter-spacing: 2px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .review-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: .5rem;
+        }
+
+        .reviewer-name {
+            font-weight: 600;
+            font-size: .95rem;
+        }
+
+        .review-stars {
+            color: var(--accent);
+            font-size: 1rem;
+        }
+
+        .review-date {
+            font-size: .78rem;
+            color: var(--muted);
+        }
+
+        .review-comment {
+            font-size: .9rem;
+            color: var(--text);
+            margin-top: .5rem;
+            line-height: 1.6;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2.5rem;
+            color: var(--muted);
+        }
+
+        .empty-state .big-icon {
+            font-size: 3rem;
+            margin-bottom: .75rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .55rem 1.1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: .875rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all .2s;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--border);
+            color: var(--muted);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .back-link {
+            margin-bottom: 1.5rem;
+            display: inline-block;
+        }
+
+        .alert-success {
+            background: #F0FDF4;
+            color: #166534;
+            border-left: 4px solid #10B981;
+            padding: .85rem 1.2rem;
+            border-radius: 8px;
+            margin-bottom: 1.2rem;
+            font-size: .9rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body>
+    <nav th:replace="~{layout/base :: navbar}"></nav>
+
+    <main class="main">
+        <div th:if="${success}" class="alert-success" th:text="${success}"></div>
+        <div th:if="${error}"
+            style="background:#FEF2F2;color:#991B1B;border-left:4px solid #EF4444;padding:.85rem 1.2rem;border-radius:8px;margin-bottom:1.2rem;font-size:.9rem;font-weight:500;"
+            th:text="${error}"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem;">
+            <a class="btn btn-outline" style="margin-bottom:0;" onclick="history.back()">← Quay lại</a>
+            <a th:if="${vehicle != null and (loggedUser == null or loggedUser.role.name() != 'DRIVER' or vehicle.driver == null or vehicle.driver.userId != loggedUser.id)}"
+                th:href="@{/ratings/rate(targetType='VEHICLE', targetId=${vehicle.id})}" class="btn btn-primary"
+                style="margin-bottom:0;">⭐ Viết đánh giá</a>
+        </div>
+
+        <!-- Vehicle summary hero -->
+        <div class="vehicle-hero" th:if="${vehicle != null}">
+            <div style="font-size:3rem;margin-bottom:.75rem;" th:text="${vehicle.category.name() == 'MOTORCYCLE' ? '🏍️' : 
+                        (vehicle.category.name().startsWith('CAR_') ? (vehicle.category.name() == 'CAR_29' or vehicle.category.name() == 'CAR_45' ? '🚌' : '🚗') : 
+                        (vehicle.category.name() == 'TRUCK_LARGE' ? '🚛' : '🚚'))}">🚗</div>
+            <h1 th:text="${vehicle.name}">—</h1>
+            <div class="plate" th:text="${vehicle.licensePlate}">—</div>
+            <div class="avg" th:text="${#numbers.formatDecimal(avgRating, 1, 'COMMA', 1, 'POINT')}">0.0</div>
+            <div class="stars-display">
+                <span th:each="i : ${#numbers.sequence(1, 5)}"
+                    th:text="${i <= avgRating.intValue() ? '★' : '☆'}">★</span>
+            </div>
+            <div class="count" th:text="${ratings.size() + ' lượt đánh giá'}">0 lượt</div>
+        </div>
+
+        <!-- Rating list -->
+        <div th:if="${!#lists.isEmpty(ratings)}">
+            <div class="card" th:each="r : ${ratings}">
+                <div class="review-header">
+                    <div class="reviewer-name"
+                        th:text="${r.reviewer != null ? r.reviewer.email : 'Người dùng #' + r.reviewerId}">—</div>
+                    <div>
+                        <span class="review-stars">
+                            <span th:each="i : ${#numbers.sequence(1, 5)}"
+                                th:text="${i <= r.stars ? '★' : '☆'}">★</span>
+                        </span>
+                        <span style="font-size:.78rem;font-weight:700;color:var(--muted);margin-left:.25rem;"
+                            th:text="${r.stars + '/5'}">—</span>
+                    </div>
+                </div>
+                <div class="review-date" th:text="${#temporals.format(r.createdAt, 'dd/MM/yyyy HH:mm')}">—</div>
+                <div class="review-comment" th:if="${r.comment != null and !r.comment.isBlank()}"
+                    th:text="${r.comment}">—</div>
+                <div style="font-size:.78rem;color:var(--muted);margin-top:.4rem;font-style:italic;"
+                    th:unless="${r.comment != null and !r.comment.isBlank()}">(Không có nhận xét)</div>
+            </div>
+        </div>
+
+        <div class="empty-state" th:if="${#lists.isEmpty(ratings)}">
+            <div class="big-icon">⭐</div>
+            <p>Xe này chưa có đánh giá nào.</p>
+        </div>
+    </main>
+</body>
+
+</html>
