@@ -37,6 +37,12 @@ public class SoberBooking {
     @Column(length = 100)
     private String ward;
 
+    @Column(name = "pickup_lat")
+    private Double pickupLat;
+
+    @Column(name = "pickup_lng")
+    private Double pickupLng;
+
     @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;
 
@@ -132,6 +138,11 @@ public class SoberBooking {
 
     public String getWard() { return ward; }
     public void setWard(String ward) { this.ward = ward; }
+
+    public Double getPickupLat() { return pickupLat; }
+    public void setPickupLat(Double pickupLat) { this.pickupLat = pickupLat; }
+    public Double getPickupLng() { return pickupLng; }
+    public void setPickupLng(Double pickupLng) { this.pickupLng = pickupLng; }
 
     public LocalDateTime getStartTime() { return startTime; }
     public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }

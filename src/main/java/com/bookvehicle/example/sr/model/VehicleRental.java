@@ -18,7 +18,7 @@ public class VehicleRental {
     @Column(name = "vehicle_id", nullable = false)
     private Long vehicleId;
 
-    @Column(name = "driver_id", nullable = false)
+    @Column(name = "driver_id")
     private Long driverId;
 
     @Column(name = "pickup_point_id")
@@ -27,9 +27,19 @@ public class VehicleRental {
     @Column(name = "pickup_address", nullable = false, length = 300)
     private String pickupAddress;
 
+    @Column(name = "pickup_lat")
+    private Double pickupLat;
+
+    @Column(name = "pickup_lng")
+    private Double pickupLng;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "rental_type", nullable = false)
     private RentalType rentalType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "rental_mode", nullable = false)
+    private RentalMode rentalMode = RentalMode.WITH_DRIVER;
 
     @Column(name = "planned_start", nullable = false)
     private LocalDateTime plannedStart;
@@ -104,6 +114,9 @@ public class VehicleRental {
         HOURLY, DAILY
     }
 
+    public enum RentalMode {
+        VEHICLE_ONLY, WITH_DRIVER
+    }
     public enum RentalStatus {
         PENDING, CONFIRMED, ACTIVE, COMPLETED, CANCELLED
     }
@@ -158,12 +171,36 @@ public class VehicleRental {
         this.pickupAddress = pickupAddress;
     }
 
+    public Double getPickupLat() {
+        return pickupLat;
+    }
+
+    public void setPickupLat(Double pickupLat) {
+        this.pickupLat = pickupLat;
+    }
+
+    public Double getPickupLng() {
+        return pickupLng;
+    }
+
+    public void setPickupLng(Double pickupLng) {
+        this.pickupLng = pickupLng;
+    }
+
     public RentalType getRentalType() {
         return rentalType;
     }
 
     public void setRentalType(RentalType rentalType) {
         this.rentalType = rentalType;
+    }
+
+    public RentalMode getRentalMode() {
+        return rentalMode;
+    }
+
+    public void setRentalMode(RentalMode rentalMode) {
+        this.rentalMode = rentalMode;
     }
 
     public LocalDateTime getPlannedStart() {

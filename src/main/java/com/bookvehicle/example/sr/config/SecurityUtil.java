@@ -2,6 +2,7 @@ package com.bookvehicle.example.sr.config;
 
 import com.bookvehicle.example.sr.model.User;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Tiện ích lấy User đang đăng nhập từ HttpSession.
@@ -13,7 +14,18 @@ public class SecurityUtil {
     private SecurityUtil() {}
 
     public static User getLoggedUser(HttpSession session) {
+        if (session == null) return null;
         return (User) session.getAttribute(SESSION_KEY);
+    }
+
+    public static User getLoggedUser(HttpSession session, HttpServletRequest request) {
+        User u = getLoggedUser(session);
+        if (u != null) return u;
+        Object attr = request.getAttribute(SESSION_KEY);
+        if (attr instanceof User user) {
+            return user;
+        }
+        return null;
     }
 
     public static boolean isLoggedIn(HttpSession session) {

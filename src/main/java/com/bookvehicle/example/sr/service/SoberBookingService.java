@@ -31,6 +31,15 @@ public class SoberBookingService {
 
     @Autowired
     private CustomerRepository customerRepository;
+    
+    @Autowired
+    private PushNotificationService pushNotificationService;
+
+    @Autowired
+    private BookingRealtimeService bookingRealtimeService;
+
+    @Autowired
+    private GeocodingService geocodingService;
 
 
     @Transactional
@@ -64,60 +73,46 @@ public class SoberBookingService {
         booking.setStatus(SoberBooking.SoberBookingStatus.PENDING);
         booking.setPaymentStatus(PaymentStatus.PENDING);
 
-        // Advanced Driver Selection
-        List<Driver> availableDrivers = driverRepository.findAvailableByVehicleType(booking.getVehicleCategory().name());
-        
-        // Strict Constraint: Must be in the same province
-        final String province = booking.getProvince() != null ? booking.getProvince() : "";
-        availableDrivers = availableDrivers.stream()
-                .filter(d -> province.equalsIgnoreCase(d.getProvince()))
-                .collect(java.util.stream.Collectors.toList());
-
-        if (!availableDrivers.isEmpty()) {
-            final String ward = booking.getWard() != null ? booking.getWard() : "";
-            final String district = booking.getDistrict() != null ? booking.getDistrict() : "";
-            // province variable already declared above
-
-            availableDrivers.sort((d1, d2) -> {
-                // 1. Ward Match
-                boolean d1Ward = ward.equalsIgnoreCase(d1.getWard());
-                boolean d2Ward = ward.equalsIgnoreCase(d2.getWard());
-                if (d1Ward != d2Ward) return d1Ward ? -1 : 1;
-
-                // 2. District Match
-                boolean d1Dist = district.equalsIgnoreCase(d1.getDistrict());
-                boolean d2Dist = district.equalsIgnoreCase(d2.getDistrict());
-                if (d1Dist != d2Dist) return d1Dist ? -1 : 1;
-
-                // 3. Province Match
-                boolean d1Prov = province.equalsIgnoreCase(d1.getProvince());
-                boolean d2Prov = province.equalsIgnoreCase(d2.getProvince());
-                if (d1Prov != d2Prov) return d1Prov ? -1 : 1;
-
-                // 4. Last Completed At (earliest first)
-                if (d1.getLastCompletedAt() == null && d2.getLastCompletedAt() == null) return 0;
-                if (d1.getLastCompletedAt() == null) return -1;
-                if (d2.getLastCompletedAt() == null) return 1;
-                return d1.getLastCompletedAt().compareTo(d2.getLastCompletedAt());
-            });
-
-            Driver assignedDriver = availableDrivers.get(0);
-            
-            // Re-verify availability to prevent race conditions
-            Driver latestDriverState = driverRepository.findById(assignedDriver.getId()).orElse(null);
-            if (latestDriverState != null && Boolean.TRUE.equals(latestDriverState.getIsAvailable())) {
-                booking.setDriverId(assignedDriver.getId());
-                booking.setStatus(SoberBooking.SoberBookingStatus.ACCEPTED);
-                
-                latestDriverState.setIsAvailable(false);
-                driverRepository.save(latestDriverState);
-            } else {
-                // Driver became unavailable in the split second, booking stays PENDING
-                booking.setStatus(SoberBooking.SoberBookingStatus.PENDING);
+        // Use form-selected coordinates first, then fallback to geocoding.
+        if (booking.getPickupLat() == null || booking.getPickupLng() == null) {
+            try {
+                GeocodingService.LatLng coords = geocodingService.geocode(
+                        booking.getPickupAddress(),
+                        booking.getWard(),
+                        booking.getDistrict(),
+                        booking.getProvince()
+                );
+                if (coords != null) {
+                    booking.setPickupLat(coords.lat());
+                    booking.setPickupLng(coords.lng());
+                }
+            } catch (Exception ignored) {
             }
         }
 
+        // No auto-assign: tai xe se tu nhan don
+        notifyAvailableDrivers(booking);
         return soberBookingRepository.save(booking);
+    }
+
+    private void notifyAvailableDrivers(SoberBooking booking) {
+        try {
+            List<Driver> drivers = driverRepository.findAvailableByVehicleType(booking.getVehicleCategory().name());
+            String province = booking.getProvince() != null ? booking.getProvince().trim() : "";
+            if (!province.isBlank()) {
+                drivers = drivers.stream()
+                        .filter(d -> province.equalsIgnoreCase(d.getProvince()))
+                        .toList();
+            }
+            List<Long> userIds = drivers.stream().map(Driver::getUserId).toList();
+            pushNotificationService.notifyUsers(
+                    userIds,
+                    "Co don thue tai xe moi",
+                    "Khach hang dang can tai xe. Bam de nhan don.",
+                    java.util.Map.of("tripType", "SOBER", "tripId", String.valueOf(booking.getId()))
+            );
+        } catch (Exception ignored) {
+        }
     }
 
     private BigDecimal calculateRate(SoberBooking booking) {
@@ -155,7 +150,13 @@ public class SoberBookingService {
         driver.setIsAvailable(false);
         driverRepository.save(driver);
         
-        return soberBookingRepository.save(booking);
+        SoberBooking saved = soberBookingRepository.save(booking);
+        bookingRealtimeService.publishSoberUpdate(
+                saved,
+                "DRIVER_ACCEPTED",
+                "Tai xe da nhan don cua ban. Ban co the mo trang theo doi de doi vi tri."
+        );
+        return saved;
     }
 
     @Transactional
@@ -167,7 +168,13 @@ public class SoberBookingService {
         }
 
         booking.setStatus(SoberBooking.SoberBookingStatus.ARRIVED);
-        return soberBookingRepository.save(booking);
+        SoberBooking saved = soberBookingRepository.save(booking);
+        bookingRealtimeService.publishSoberUpdate(
+                saved,
+                "DRIVER_ARRIVED",
+                "Tai xe da toi diem don."
+        );
+        return saved;
     }
 
     @Transactional
@@ -180,7 +187,13 @@ public class SoberBookingService {
 
         booking.setStatus(SoberBooking.SoberBookingStatus.IN_PROGRESS);
         booking.setActualStart(LocalDateTime.now());
-        return soberBookingRepository.save(booking);
+        SoberBooking saved = soberBookingRepository.save(booking);
+        bookingRealtimeService.publishSoberUpdate(
+                saved,
+                "TRIP_STARTED",
+                "Chuyen di da bat dau."
+        );
+        return saved;
     }
 
     @Transactional
@@ -202,7 +215,13 @@ public class SoberBookingService {
             driverRepository.save(driver);
         }
         
-        return soberBookingRepository.save(booking);
+        SoberBooking saved = soberBookingRepository.save(booking);
+        bookingRealtimeService.publishSoberUpdate(
+                saved,
+                "TRIP_COMPLETED",
+                "Chuyen di da hoan thanh."
+        );
+        return saved;
     }
 
     @Transactional
@@ -294,7 +313,13 @@ public class SoberBookingService {
             driverRepository.save(driver);
         }
 
-        return soberBookingRepository.save(booking);
+        SoberBooking saved = soberBookingRepository.save(booking);
+        bookingRealtimeService.publishSoberUpdate(
+                saved,
+                "TRIP_CANCELLED",
+                "Tai xe da huy don. Vui long dat lai hoac lien he ho tro."
+        );
+        return saved;
     }
 
     @Transactional
@@ -316,7 +341,13 @@ public class SoberBookingService {
         booking.setStatus(SoberBooking.SoberBookingStatus.CANCELLED);
         booking.setCancelReason("Khách hàng chủ động hủy đơn trước khi tài xế nhận.");
 
-        return soberBookingRepository.save(booking);
+        SoberBooking saved = soberBookingRepository.save(booking);
+        bookingRealtimeService.publishSoberUpdate(
+                saved,
+                "TRIP_CANCELLED",
+                "Don cua ban da duoc huy."
+        );
+        return saved;
     }
 
     private SoberBooking getAndVerifyDriver(Long bookingId, Long driverUserId) {

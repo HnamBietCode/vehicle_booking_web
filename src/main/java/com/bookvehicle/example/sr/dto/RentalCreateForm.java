@@ -9,7 +9,10 @@ public class RentalCreateForm {
     private Long vehicleId;
     private Long pickupPointId;
     private String pickupAddress;
+    private Double pickupLat;
+    private Double pickupLng;
     private VehicleRental.RentalType rentalType = VehicleRental.RentalType.HOURLY;
+    private VehicleRental.RentalMode rentalMode = VehicleRental.RentalMode.WITH_DRIVER;
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime plannedStart;
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
@@ -32,6 +35,22 @@ public class RentalCreateForm {
         this.pickupAddress = pickupAddress;
     }
 
+    public Double getPickupLat() {
+        return pickupLat;
+    }
+
+    public void setPickupLat(Double pickupLat) {
+        this.pickupLat = pickupLat;
+    }
+
+    public Double getPickupLng() {
+        return pickupLng;
+    }
+
+    public void setPickupLng(Double pickupLng) {
+        this.pickupLng = pickupLng;
+    }
+
     public Long getPickupPointId() {
         return pickupPointId;
     }
@@ -46,6 +65,14 @@ public class RentalCreateForm {
 
     public void setRentalType(VehicleRental.RentalType rentalType) {
         this.rentalType = rentalType;
+    }
+
+    public VehicleRental.RentalMode getRentalMode() {
+        return rentalMode;
+    }
+
+    public void setRentalMode(VehicleRental.RentalMode rentalMode) {
+        this.rentalMode = rentalMode;
     }
 
     public LocalDateTime getPlannedStart() {

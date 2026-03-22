@@ -5,9 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thuê tài xế lái xe hộ</title>
     <style th:replace="~{layout/base :: head}"></style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
         .form-grid .full { grid-column: 1 / -1; }
+        .address-wrapper { position: relative; }
+        #addressSuggestions {
+            box-shadow: 0 10px 28px rgba(15, 23, 42, .10);
+            position: relative;
+            z-index: 10;
+        }
+        #map-preview {
+            display: none;
+            margin-top: .75rem;
+            height: 260px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            background: #eef2f7;
+        }
         .estimate-box {
             margin-top: .5rem;
             padding: .9rem 1rem;
@@ -58,7 +74,7 @@
 
                 <div class="form-group full">
                     <label class="form-label">Địa điểm đón (Tỉnh/Thành phố)</label>
-                    <select id="province" class="form-control" required>
+                    <input type="text" id="pickupAddressInput" class="form-control" placeholder="Nhap dia chi nhu ben admin" required>
                         <option value="">-- Chọn Tỉnh/Thành phố --</option>
                     </select>
                 </div>
@@ -77,13 +93,17 @@
                     </select>
                 </div>
 
-                <div class="form-group full">
+                <div class="form-group full address-wrapper">
                     <label class="form-label">Số nhà / Tên đường</label>
                     <input type="text" id="streetAddress" class="form-control" placeholder="Ví dụ: 123 Nguyễn Huệ" required>
+                    <div id="addressSuggestions" style="display:none; margin-top:.5rem; border:1px solid #dbe3ef; border-radius:12px; background:#fff; overflow:hidden;"></div>
+                    <div id="map-preview"></div>
                     <input type="hidden" th:field="*{pickupAddress}" id="pickupAddress">
                     <input type="hidden" th:field="*{province}" id="provinceName">
                     <input type="hidden" th:field="*{district}" id="districtName">
                     <input type="hidden" th:field="*{ward}" id="wardName">
+                    <input type="hidden" th:field="*{pickupLat}" id="pickupLat">
+                    <input type="hidden" th:field="*{pickupLng}" id="pickupLng">
                 </div>
 
                 <div class="form-group">
@@ -124,6 +144,7 @@
     </div>
 </main>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script th:inline="javascript">
     (function() {
         // --- Estimation Logic ---
@@ -154,8 +175,33 @@
         const provinceSel = document.getElementById('province');
         const districtSel = document.getElementById('district');
         const wardSel = document.getElementById('ward');
-        const streetInp = document.getElementById('streetAddress');
+        const hiddenManualInput = document.getElementById('pickupAddressInput');
+        const addressInput = document.getElementById('streetAddress');
         const finalAddr = document.getElementById('pickupAddress');
+        const pickupLatInput = document.getElementById('pickupLat');
+        const pickupLngInput = document.getElementById('pickupLng');
+        const suggestionBox = document.getElementById('addressSuggestions');
+        const mapPreview = document.getElementById('map-preview');
+        let suggestionTimer = null;
+        let selectedSuggestedAddress = '';
+        let selectedAddressParts = null;
+        let map = null;
+        let marker = null;
+
+        [provinceSel, districtSel, wardSel, hiddenManualInput].forEach((element) => {
+            const wrapper = element?.closest('.form-group');
+            if (wrapper) wrapper.style.display = 'none';
+            if (element) {
+                element.required = false;
+                element.disabled = true;
+            }
+        });
+
+        if (addressInput) {
+            addressInput.placeholder = 'Nhap dia chi nhu ben admin';
+            const label = addressInput.closest('.form-group')?.querySelector('.form-label');
+            if (label) label.textContent = 'Dia diem don';
+        }
 
         async function fetchProvinces() {
             try {
@@ -171,6 +217,7 @@
         }
 
         provinceSel.addEventListener('change', async () => {
+            selectedSuggestedAddress = '';
             districtSel.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
             wardSel.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
             districtSel.disabled = true;
@@ -190,9 +237,11 @@
                 } catch (e) { console.error("Error fetching districts", e); }
             }
             updateFinalAddress();
+            fetchAddressSuggestions();
         });
 
         districtSel.addEventListener('change', async () => {
+            selectedSuggestedAddress = '';
             wardSel.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
             wardSel.disabled = true;
 
@@ -210,29 +259,149 @@
                 } catch (e) { console.error("Error fetching wards", e); }
             }
             updateFinalAddress();
+            fetchAddressSuggestions();
         });
 
-        wardSel.addEventListener('change', updateFinalAddress);
-        streetInp.addEventListener('input', updateFinalAddress);
+        wardSel.addEventListener('change', () => {
+            selectedSuggestedAddress = '';
+            updateFinalAddress();
+            fetchAddressSuggestions();
+        });
+        addressInput.addEventListener('input', () => {
+            selectedSuggestedAddress = '';
+            selectedAddressParts = null;
+            updateFinalAddress();
+            hideMap();
+            if (suggestionTimer) window.clearTimeout(suggestionTimer);
+            suggestionTimer = window.setTimeout(() => searchAddress(addressInput.value.trim()), 350);
+        });
 
         function updateFinalAddress() {
-            const p = provinceSel.options[provinceSel.selectedIndex]?.text || '';
-            const d = districtSel.options[districtSel.selectedIndex]?.text || '';
-            const w = wardSel.options[wardSel.selectedIndex]?.text || '';
-            const s = streetInp.value.trim();
-
-            document.getElementById('provinceName').value = p;
-            document.getElementById('districtName').value = d;
-            document.getElementById('wardName').value = w;
-
-            if (provinceSel.value && districtSel.value && wardSel.value && s) {
-                finalAddr.value = `${s}, ${w}, ${d}, ${p}`;
-            } else {
-                finalAddr.value = '';
+            finalAddr.value = selectedSuggestedAddress || addressInput.value.trim();
+            document.getElementById('provinceName').value = selectedAddressParts?.province || '';
+            document.getElementById('districtName').value = selectedAddressParts?.district || '';
+            document.getElementById('wardName').value = selectedAddressParts?.ward || '';
+            if (!selectedSuggestedAddress && pickupLatInput && pickupLngInput) {
+                pickupLatInput.value = '';
+                pickupLngInput.value = '';
             }
         }
 
-        fetchProvinces();
+        function clearSuggestions() {
+            if (!suggestionBox) return;
+            suggestionBox.innerHTML = '';
+            suggestionBox.style.display = 'none';
+        }
+
+        function renderSuggestions(items) {
+            if (!suggestionBox) return;
+            if (!items.length) {
+                clearSuggestions();
+                return;
+            }
+
+            suggestionBox.innerHTML = items.map((item, index) => `
+                <button
+                    type="button"
+                    data-index="${index}"
+                    style="display:block;width:100%;text-align:left;padding:.75rem .9rem;border:none;border-bottom:${index === items.length - 1 ? 'none' : '1px solid #eef2f7'};background:#fff;cursor:pointer;">
+                    ${item.display_name}
+                </button>
+            `).join('');
+            suggestionBox.style.display = 'block';
+
+            suggestionBox.querySelectorAll('button[data-index]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const picked = items[Number(btn.dataset.index)];
+                    const address = picked.address || {};
+                    selectedSuggestedAddress = picked.display_name;
+                    selectedAddressParts = {
+                        province: address.state || address.city || address.region || '',
+                        district: address.county || address.state_district || address.city_district || address.town || '',
+                        ward: address.suburb || address.quarter || address.neighbourhood || address.village || ''
+                    };
+                    addressInput.value = picked.display_name;
+                    if (pickupLatInput && pickupLngInput) {
+                        pickupLatInput.value = picked.lat;
+                        pickupLngInput.value = picked.lon;
+                    }
+                    updateFinalAddress();
+                    clearSuggestions();
+                    showMap(parseFloat(picked.lat), parseFloat(picked.lon), picked.display_name);
+                });
+            });
+        }
+
+        function hideMap() {
+            if (!mapPreview) return;
+            mapPreview.style.display = 'none';
+            if (map) {
+                map.remove();
+                map = null;
+                marker = null;
+            }
+        }
+
+        function showMap(lat, lng, label) {
+            if (!mapPreview || Number.isNaN(lat) || Number.isNaN(lng)) return;
+            mapPreview.style.display = 'block';
+
+            if (map) {
+                map.remove();
+                map = null;
+                marker = null;
+            }
+
+            map = L.map('map-preview').setView([lat, lng], 16);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
+            marker = L.marker([lat, lng]).addTo(map).bindPopup(label).openPopup();
+            setTimeout(() => map.invalidateSize(), 250);
+        }
+
+        async function searchAddress(query) {
+            if (!query || query.length < 1) {
+                clearSuggestions();
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    'https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&countrycodes=vn&accept-language=vi&q='
+                    + encodeURIComponent(query),
+                    { headers: { Accept: 'application/json' } }
+                );
+                if (!response.ok) {
+                    clearSuggestions();
+                    return;
+                }
+                const data = await response.json();
+                renderSuggestions(Array.isArray(data) ? data : []);
+            } catch (e) {
+                console.error('Error fetching address suggestions', e);
+                clearSuggestions();
+            }
+        }
+
+        function fetchAddressSuggestions() {
+            return searchAddress(addressInput.value.trim());
+        }
+
+        addressInput.addEventListener('focus', () => {
+            const query = addressInput.value.trim();
+            if (query.length >= 1 && suggestionBox.children.length === 0) {
+                searchAddress(query);
+            } else if (suggestionBox.children.length > 0) {
+                suggestionBox.style.display = 'block';
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.address-wrapper')) {
+                clearSuggestions();
+            }
+        });
     })();
 </script>
 </body>

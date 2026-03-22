@@ -484,6 +484,15 @@
                             <option value="MAINTENANCE" th:selected="*{status == 'MAINTENANCE'}">🔧 Bảo trì</option>
                         </select>
                     </div>
+                    <div class="form-group">
+                        <label class="form-label" for="assignedDriverId">Tài xế gán (tùy chọn)</label>
+                        <select id="assignedDriverId" class="form-control" th:field="*{assignedDriverId}">
+                            <option value="">-- Không gán tài xế --</option>
+                            <option th:each="d : ${eligibleDrivers}" th:value="${d.id}"
+                                    th:text="${d.fullName + ' (CCCD: ' + d.cccd + ')'}"></option>
+                        </select>
+                        <p class="form-hint">Có thể để trống, tài xế sẽ nhận đơn sau.</p>
+                    </div>
                 </div>
 
                 <div class="form-group">

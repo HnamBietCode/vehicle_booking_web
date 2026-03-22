@@ -38,6 +38,7 @@ public class RentalController {
     @GetMapping("/new")
     public String showCreateForm(
             @RequestParam(required = false) Long vehicleId,
+            @RequestParam(name = "mode", required = false, defaultValue = "WITH_DRIVER") VehicleRental.RentalMode mode,
             HttpSession session,
             Model model,
             RedirectAttributes ra) {
@@ -52,8 +53,9 @@ public class RentalController {
 
         RentalCreateForm form = new RentalCreateForm();
         form.setVehicleId(vehicleId);
+        form.setRentalMode(mode);
         model.addAttribute("form", form);
-        populateCreateFormModel(model, loggedUser);
+        populateCreateFormModel(model, loggedUser, mode);
         return "rentals/new";
     }
 
@@ -76,7 +78,7 @@ public class RentalController {
         if (!result.ok()) {
             model.addAttribute("error", result.message());
             model.addAttribute("form", form);
-            populateCreateFormModel(model, loggedUser);
+            populateCreateFormModel(model, loggedUser, form.getRentalMode());
             return "rentals/new";
         }
 
@@ -148,11 +150,13 @@ public class RentalController {
         return "redirect:/rentals/my";
     }
 
-    private void populateCreateFormModel(Model model, User loggedUser) {
-        List<Vehicle> vehicles = vehicleService.searchAvailable(null, null, null, true);
+    private void populateCreateFormModel(Model model, User loggedUser, VehicleRental.RentalMode mode) {
+        boolean requireFreeDriver = (mode == VehicleRental.RentalMode.WITH_DRIVER);
+        List<Vehicle> vehicles = vehicleService.searchAvailable(null, null, null, requireFreeDriver);
         model.addAttribute("vehicles", vehicles);
         model.addAttribute("pickupPoints", pickupPointRepository.findDistinctActivePickupPoints());
         model.addAttribute("rentalTypes", VehicleRental.RentalType.values());
+        model.addAttribute("rentalMode", mode);
         model.addAttribute("loggedUser", loggedUser);
     }
 }

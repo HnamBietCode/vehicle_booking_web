@@ -37,4 +37,20 @@ public interface VehicleRentalRepository extends JpaRepository<VehicleRental, Lo
     List<VehicleRental> findByCustomerIdOrderByCreatedAtDesc(Long customerId);
 
     List<VehicleRental> findByDriverIdOrderByCreatedAtDesc(Long driverId);
+
+    @Query("SELECT vr FROM VehicleRental vr " +
+           "WHERE vr.status = 'PENDING' " +
+           "AND vr.rentalMode = 'VEHICLE_ONLY' " +
+           "AND vr.driverId IS NULL")
+    List<VehicleRental> findPendingVehicleOnly();
+
+    @Query("SELECT COUNT(vr) FROM VehicleRental vr " +
+           "WHERE vr.status = 'PENDING' " +
+           "AND vr.rentalMode = 'VEHICLE_ONLY' " +
+           "AND vr.driverId IS NULL")
+    long countPendingVehicleOnly();
+
+    @Query("SELECT vr FROM VehicleRental vr " +
+           "WHERE vr.status = 'PENDING'")
+    List<VehicleRental> findAllPending();
 }
