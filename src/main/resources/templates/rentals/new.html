@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <title>Dat thue xe co tai xe</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <title th:text="${rentalMode == T(com.bookvehicle.example.sr.model.VehicleRental.RentalMode).VEHICLE_ONLY ? 'Dat thue xe' : 'Dat thue xe co tai xe'}">Dat thue xe</title>
     <style>
         *,
         *::before,
@@ -195,6 +196,21 @@
 
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
         .form-grid .full { grid-column: 1 / -1; }
+        .address-wrapper { position: relative; }
+        #addressSuggestions {
+            box-shadow: 0 10px 28px rgba(15, 23, 42, .10);
+            position: relative;
+            z-index: 10;
+        }
+        #map-preview {
+            display: none;
+            margin-top: .75rem;
+            height: 260px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            background: #eef2f7;
+        }
         .estimate-box {
             margin-top: .5rem;
             padding: .9rem 1rem;
@@ -217,7 +233,7 @@
 
 <main class="main">
     <div class="page-header">
-        <h1 class="page-title">Dat thue xe co tai xe</h1>
+        <h1 class="page-title" th:text="${rentalMode == T(com.bookvehicle.example.sr.model.VehicleRental.RentalMode).VEHICLE_ONLY ? 'Dat thue xe (Giao xe boi tai xe bat ky)' : 'Dat thue xe co tai xe'}">Dat thue xe</h1>
         <a class="btn btn-outline" th:href="@{/vehicles/search}">Quay lai</a>
     </div>
 
@@ -227,6 +243,7 @@
     <div class="card">
         <h3 class="card-title">Thong tin don thue</h3>
         <form th:action="@{/rentals}" method="post" th:object="${form}">
+            <input type="hidden" th:field="*{rentalMode}">
             <div class="form-grid">
                 <div class="form-group full">
                     <label class="form-label" for="vehicleId">Xe</label>
@@ -267,34 +284,15 @@
                     </select>
 
                     <div id="manualAddressFields" style="margin-top:.5rem; display:none;">
-                        <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap:1rem;">
-                            <div class="form-group full">
-                                <label class="form-label">Dia diem don (Tinh/Thanh pho)</label>
-                                <select id="province" class="form-control">
-                                    <option value="">-- Chon Tinh/Thanh pho --</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label">Quan/Huyen</label>
-                                <select id="district" class="form-control" disabled>
-                                    <option value="">-- Chon Quan/Huyen --</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label">Phuong/Xa</label>
-                                <select id="ward" class="form-control" disabled>
-                                    <option value="">-- Chon Phuong/Xa --</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group full">
-                                <label class="form-label">So nha / Ten duong</label>
-                                <input type="text" id="streetAddress" class="form-control" placeholder="Vi du: 123 Nguyen Hue">
-                            </div>
+                        <div class="form-group address-wrapper">
+                            <label class="form-label">Dia diem don</label>
+                            <input type="text" id="manualPickupAddress" class="form-control" placeholder="Nhap dia chi nhu ben admin">
+                            <div id="addressSuggestions" style="display:none; margin-top:.5rem; border:1px solid #dbe3ef; border-radius:12px; background:#fff; overflow:hidden;"></div>
+                            <div id="map-preview"></div>
                         </div>
                         <input type="hidden" id="pickupAddress" th:field="*{pickupAddress}">
+                        <input type="hidden" id="pickupLat" th:field="*{pickupLat}">
+                        <input type="hidden" id="pickupLng" th:field="*{pickupLng}">
                     </div>
                 </div>
 
@@ -328,16 +326,22 @@
         </form>
     </div>
 </main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     (function () {
         const pickupModeRadios = document.querySelectorAll('input[name=\"pickupMode\"]');
         const pickupPoint = document.getElementById('pickupPointId');
         const pickupAddress = document.getElementById('pickupAddress');
+        const pickupLat = document.getElementById('pickupLat');
+        const pickupLng = document.getElementById('pickupLng');
         const manualAddressFields = document.getElementById('manualAddressFields');
-        const provinceSel = document.getElementById('province');
-        const districtSel = document.getElementById('district');
-        const wardSel = document.getElementById('ward');
-        const streetInp = document.getElementById('streetAddress');
+        const addressInput = document.getElementById('manualPickupAddress');
+        const suggestionBox = document.getElementById('addressSuggestions');
+        const mapPreview = document.getElementById('map-preview');
+        let suggestionTimer = null;
+        let selectedSuggestedAddress = '';
+        let map = null;
+        let marker = null;
 
         const rentalType = document.getElementById('rentalType');
         const vehicle = document.getElementById('vehicleId');
@@ -349,33 +353,101 @@
 
         function updateFinalAddress() {
             if (!pickupAddress) return;
-            const parts = [];
-            const street = (streetInp && streetInp.value || '').trim();
-            const ward = wardSel && wardSel.selectedOptions.length ? wardSel.selectedOptions[0].text : '';
-            const district = districtSel && districtSel.selectedOptions.length ? districtSel.selectedOptions[0].text : '';
-            const province = provinceSel && provinceSel.selectedOptions.length ? provinceSel.selectedOptions[0].text : '';
-
-            if (street) parts.push(street);
-            if (ward && ward.indexOf('Chon') !== 0) parts.push(ward);
-            if (district && district.indexOf('Chon') !== 0) parts.push(district);
-            if (province && province.indexOf('Chon') !== 0) parts.push(province);
-
-            pickupAddress.value = parts.join(', ');
+            pickupAddress.value = selectedSuggestedAddress || (addressInput?.value || '').trim();
+            if (!selectedSuggestedAddress && pickupLat && pickupLng) {
+                pickupLat.value = '';
+                pickupLng.value = '';
+            }
         }
 
-        async function fetchProvinces() {
-            if (!provinceSel) return;
-            try {
-                const res = await fetch('https://provinces.open-api.vn/api/p/');
-                const data = await res.json();
-                data.forEach(p => {
-                    const opt = document.createElement('option');
-                    opt.value = p.code;
-                    opt.text = p.name;
-                    provinceSel.add(opt);
+        function clearSuggestions() {
+            if (!suggestionBox) return;
+            suggestionBox.innerHTML = '';
+            suggestionBox.style.display = 'none';
+        }
+
+        function renderSuggestions(items) {
+            if (!suggestionBox) return;
+            if (!items.length) {
+                clearSuggestions();
+                return;
+            }
+
+            suggestionBox.innerHTML = items.map((item, index) => `
+                <button
+                    type="button"
+                    data-index="${index}"
+                    style="display:block;width:100%;text-align:left;padding:.75rem .9rem;border:none;border-bottom:${index === items.length - 1 ? 'none' : '1px solid #eef2f7'};background:#fff;cursor:pointer;">
+                    ${item.display_name}
+                </button>
+            `).join('');
+            suggestionBox.style.display = 'block';
+
+            suggestionBox.querySelectorAll('button[data-index]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const picked = items[Number(btn.dataset.index)];
+                    selectedSuggestedAddress = picked.display_name;
+                    addressInput.value = picked.display_name;
+                    pickupAddress.value = picked.display_name;
+                    if (pickupLat && pickupLng) {
+                        pickupLat.value = picked.lat;
+                        pickupLng.value = picked.lon;
+                    }
+                    clearSuggestions();
+                    showMap(parseFloat(picked.lat), parseFloat(picked.lon), picked.display_name);
                 });
+            });
+        }
+
+        function hideMap() {
+            if (!mapPreview) return;
+            mapPreview.style.display = 'none';
+            if (map) {
+                map.remove();
+                map = null;
+                marker = null;
+            }
+        }
+
+        function showMap(lat, lng, label) {
+            if (!mapPreview || Number.isNaN(lat) || Number.isNaN(lng)) return;
+            mapPreview.style.display = 'block';
+
+            if (map) {
+                map.remove();
+                map = null;
+                marker = null;
+            }
+
+            map = L.map('map-preview').setView([lat, lng], 16);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
+            marker = L.marker([lat, lng]).addTo(map).bindPopup(label).openPopup();
+            setTimeout(() => map.invalidateSize(), 250);
+        }
+
+        async function searchAddress(query) {
+            if (!query || query.length < 1) {
+                clearSuggestions();
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    'https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&countrycodes=vn&accept-language=vi&q='
+                    + encodeURIComponent(query),
+                    { headers: { Accept: 'application/json' } }
+                );
+                if (!response.ok) {
+                    clearSuggestions();
+                    return;
+                }
+                const data = await response.json();
+                renderSuggestions(Array.isArray(data) ? data : []);
             } catch (e) {
-                console.error('Error fetching provinces', e);
+                console.error('Error fetching address suggestions', e);
+                clearSuggestions();
             }
         }
 
@@ -387,13 +459,18 @@
             if (manualAddressFields) manualAddressFields.style.display = usePoint ? 'none' : 'block';
 
             pickupPoint.required = usePoint;
-            if (provinceSel) provinceSel.required = !usePoint;
-            if (districtSel) districtSel.required = !usePoint;
-            if (wardSel) wardSel.required = !usePoint;
-            if (streetInp) streetInp.required = !usePoint;
+            if (addressInput) addressInput.required = !usePoint;
 
             if (usePoint) {
+                selectedSuggestedAddress = '';
                 pickupAddress.value = '';
+                if (pickupLat && pickupLng) {
+                    pickupLat.value = '';
+                    pickupLng.value = '';
+                }
+                if (addressInput) addressInput.value = '';
+                clearSuggestions();
+                hideMap();
             } else {
                 pickupPoint.value = '';
             }
@@ -428,64 +505,35 @@
             estimateValue.textContent = fmtVnd(estimate);
         }
 
-        if (provinceSel) {
-            provinceSel.addEventListener('change', async () => {
-                districtSel.innerHTML = '<option value=\"\">-- Chon Quan/Huyen --</option>';
-                wardSel.innerHTML = '<option value=\"\">-- Chon Phuong/Xa --</option>';
-                districtSel.disabled = true;
-                wardSel.disabled = true;
-
-                if (provinceSel.value) {
-                    try {
-                        const res = await fetch(`https://provinces.open-api.vn/api/p/${provinceSel.value}?depth=2`);
-                        const data = await res.json();
-                        data.districts.forEach(d => {
-                            const opt = document.createElement('option');
-                            opt.value = d.code;
-                            opt.text = d.name;
-                            districtSel.add(opt);
-                        });
-                        districtSel.disabled = false;
-                    } catch (e) {
-                        console.error('Error fetching districts', e);
-                    }
-                }
+        if (addressInput) {
+            addressInput.addEventListener('input', () => {
+                selectedSuggestedAddress = '';
                 updateFinalAddress();
+                hideMap();
+                if (suggestionTimer) window.clearTimeout(suggestionTimer);
+                suggestionTimer = window.setTimeout(() => searchAddress(addressInput.value.trim()), 350);
+            });
+
+            addressInput.addEventListener('focus', () => {
+                const query = addressInput.value.trim();
+                if (query.length >= 1 && suggestionBox.children.length === 0) {
+                    searchAddress(query);
+                } else if (suggestionBox.children.length > 0) {
+                    suggestionBox.style.display = 'block';
+                }
             });
         }
 
-        if (districtSel) {
-            districtSel.addEventListener('change', async () => {
-                wardSel.innerHTML = '<option value=\"\">-- Chon Phuong/Xa --</option>';
-                wardSel.disabled = true;
-
-                if (districtSel.value) {
-                    try {
-                        const res = await fetch(`https://provinces.open-api.vn/api/d/${districtSel.value}?depth=2`);
-                        const data = await res.json();
-                        data.wards.forEach(w => {
-                            const opt = document.createElement('option');
-                            opt.value = w.code;
-                            opt.text = w.name;
-                            wardSel.add(opt);
-                        });
-                        wardSel.disabled = false;
-                    } catch (e) {
-                        console.error('Error fetching wards', e);
-                    }
-                }
-                updateFinalAddress();
-            });
-        }
-
-        if (wardSel) wardSel.addEventListener('change', updateFinalAddress);
-        if (streetInp) streetInp.addEventListener('input', updateFinalAddress);
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.address-wrapper')) {
+                clearSuggestions();
+            }
+        });
 
         pickupModeRadios.forEach(r => r.addEventListener('change', syncPickupMode));
         [rentalType, vehicle, start, end].forEach(el => el.addEventListener('change', updateEstimate));
         [start, end].forEach(el => el.addEventListener('input', updateEstimate));
 
-        fetchProvinces();
         syncPickupMode();
         updateEstimate();
     })();

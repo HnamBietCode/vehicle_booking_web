@@ -30,11 +30,19 @@ public class VehicleSearchController {
                          @RequestParam(name = "maxPrice", required = false) BigDecimal maxPrice,
                          @RequestParam(name = "location", required = false) String location,
                          @RequestParam(name = "freeDriver", required = false, defaultValue = "false") boolean freeDriver,
+                         @RequestParam(name = "mode", required = false, defaultValue = "ALL") String mode,
                          Model model,
                          HttpSession session) {
 
+        boolean requireFreeDriver = freeDriver;
+        if ("WITH_DRIVER".equalsIgnoreCase(mode)) {
+            requireFreeDriver = true;
+        } else if ("VEHICLE_ONLY".equalsIgnoreCase(mode)) {
+            requireFreeDriver = false;
+        }
+
         // Luôn tìm kiếm - mặc định hiển thị tất cả xe khả dụng
-        List<Vehicle> results = vehicleService.searchAvailable(category, maxPrice, location, freeDriver);
+        List<Vehicle> results = vehicleService.searchAvailable(category, maxPrice, location, requireFreeDriver);
         boolean searched = true;
 
         model.addAttribute("results", results);
@@ -42,9 +50,10 @@ public class VehicleSearchController {
         model.addAttribute("selectedCategory", category);
         model.addAttribute("maxPrice", maxPrice);
         model.addAttribute("location", location);
-        model.addAttribute("freeDriver", freeDriver);
+        model.addAttribute("freeDriver", requireFreeDriver);
+        model.addAttribute("mode", mode);
         model.addAttribute("searched", searched);
-        model.addAttribute("hasFilter", category != null || maxPrice != null || location != null || freeDriver);
+        model.addAttribute("hasFilter", category != null || maxPrice != null || location != null || requireFreeDriver);
         model.addAttribute("loggedUser", SecurityUtil.getLoggedUser(session));
         return "vehicles/search";
     }

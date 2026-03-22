@@ -24,7 +24,8 @@ public class SessionInterceptor implements HandlerInterceptor {
         if (path.startsWith("/auth") || path.startsWith("/css") ||
                 path.startsWith("/js") || path.startsWith("/images") ||
                 path.equals("/") || path.startsWith("/favicon") ||
-                path.startsWith("/vehicles")) {   // trang tìm xe là công khai
+                path.startsWith("/vehicles") ||
+                path.startsWith("/api/")) {   // API dùng token, không kiểm tra session
             return true;
         }
 

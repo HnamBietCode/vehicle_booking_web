@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realtime Dashboard</title>
+    <style th:replace="~{layout/base :: head}"></style>
+    <style>
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 1.2rem;
+        }
+        .stat-label {
+            color: var(--muted);
+            font-size: .85rem;
+            margin-bottom: .35rem;
+        }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+<nav th:replace="~{layout/base :: navbar}"></nav>
+<main class="main">
+    <div class="page-header">
+        <h1 class="page-title">Realtime & Push Dashboard</h1>
+    </div>
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-label">FCM Device Tokens</div>
+            <div class="stat-value" th:text="${deviceTokenCount}">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Tai xe online</div>
+            <div class="stat-value" th:text="${driverOnlineCount}">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Don thue tai xe (Pending)</div>
+            <div class="stat-value" th:text="${pendingSoberCount}">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Don giao xe (Pending)</div>
+            <div class="stat-value" th:text="${pendingVehicleOnlyCount}">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Active Driver Locations (Redis)</div>
+            <div class="stat-value" th:text="${activeLocationCount}">0</div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

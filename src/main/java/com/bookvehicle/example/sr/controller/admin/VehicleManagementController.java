@@ -70,6 +70,7 @@ public class VehicleManagementController {
         model.addAttribute("form", new VehicleForm());
         model.addAttribute("categories", Arrays.asList(VehicleCategory.values()));
         model.addAttribute("statuses", Arrays.asList(VehicleStatus.values()));
+        model.addAttribute("eligibleDrivers", vehicleService.findApprovedDrivers());
         model.addAttribute("loggedUser", SecurityUtil.getLoggedUser(session));
         return "admin/vehicles/add";
     }
@@ -89,6 +90,7 @@ public class VehicleManagementController {
             model.addAttribute("error", "Lỗi upload ảnh: " + e.getMessage());
             model.addAttribute("categories", Arrays.asList(VehicleCategory.values()));
             model.addAttribute("statuses", Arrays.asList(VehicleStatus.values()));
+            model.addAttribute("eligibleDrivers", vehicleService.findApprovedDrivers());
             model.addAttribute("loggedUser", SecurityUtil.getLoggedUser(session));
             return "admin/vehicles/add";
         }
@@ -98,6 +100,7 @@ public class VehicleManagementController {
             model.addAttribute("error", error);
             model.addAttribute("categories", Arrays.asList(VehicleCategory.values()));
             model.addAttribute("statuses", Arrays.asList(VehicleStatus.values()));
+            model.addAttribute("eligibleDrivers", vehicleService.findApprovedDrivers());
             model.addAttribute("loggedUser", SecurityUtil.getLoggedUser(session));
             return "admin/vehicles/add";
         }
@@ -131,6 +134,7 @@ public class VehicleManagementController {
         model.addAttribute("vehicle", v);
         model.addAttribute("categories", Arrays.asList(VehicleCategory.values()));
         model.addAttribute("statuses", Arrays.asList(VehicleStatus.values()));
+        model.addAttribute("eligibleDrivers", vehicleService.findApprovedDrivers());
         model.addAttribute("loggedUser", SecurityUtil.getLoggedUser(session));
         return "admin/vehicles/edit";
     }

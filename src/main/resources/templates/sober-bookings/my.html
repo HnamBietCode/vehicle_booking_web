@@ -3,16 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đơn thuê tài xế của tôi</title>
+    <title>Don thue tai xe cua toi</title>
     <style th:replace="~{layout/base :: head}"></style>
+    <style>
+        .live-note {
+            margin-top: .4rem;
+            font-size: .8rem;
+            color: var(--muted);
+            line-height: 1.45;
+        }
+
+        .toast-stack {
+            position: fixed;
+            right: 1rem;
+            bottom: 1rem;
+            z-index: 1200;
+            display: flex;
+            flex-direction: column;
+            gap: .75rem;
+            width: min(360px, calc(100vw - 2rem));
+        }
+
+        .live-toast {
+            background: rgba(15, 23, 42, .96);
+            color: #fff;
+            border-radius: 14px;
+            padding: 1rem 1rem .95rem;
+            box-shadow: 0 18px 42px rgba(15, 23, 42, .28);
+        }
+
+        .live-toast strong {
+            display: block;
+            margin-bottom: .35rem;
+            font-size: .95rem;
+        }
+
+        .live-toast p {
+            margin: 0;
+            color: rgba(255, 255, 255, .82);
+            line-height: 1.45;
+            font-size: .88rem;
+        }
+
+        .live-toast a {
+            display: inline-flex;
+            margin-top: .75rem;
+            color: #fff;
+            font-weight: 700;
+            text-decoration: none;
+        }
+    </style>
 </head>
 <body>
 <nav th:replace="~{layout/base :: navbar}"></nav>
 
 <main class="main">
     <div class="page-header">
-        <h1 class="page-title">Đơn thuê tài xế của tôi</h1>
-        <a class="btn btn-primary" th:href="@{/sober-bookings/new}">+ Thuê tài xế mới</a>
+        <h1 class="page-title">Don thue tai xe cua toi</h1>
+        <a class="btn btn-primary" th:href="@{/sober-bookings/new}">+ Thue tai xe moi</a>
     </div>
 
     <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
@@ -21,89 +69,103 @@
     <div class="card">
         <div class="table-wrap">
             <div th:if="${#lists.isEmpty(bookings)}" style="padding: 2rem; text-align: center; color: var(--muted);">
-                Bạn chưa có yêu cầu thuê tài xế nào.
+                Ban chua co yeu cau thue tai xe nao.
             </div>
             <table th:if="${!#lists.isEmpty(bookings)}">
                 <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Thông tin xe</th>
-                        <th>Thời gian thuê</th>
-                        <th>Trạng thái</th>
-                        <th>Thanh toán</th>
-                        <th>Tổng tiền</th>
-                        <th>Thao tác</th>
-                    </tr>
+                <tr>
+                    <th>ID</th>
+                    <th>Thong tin xe</th>
+                    <th>Thoi gian thue</th>
+                    <th>Trang thai</th>
+                    <th>Thanh toan</th>
+                    <th>Tong tien</th>
+                    <th>Thao tac</th>
+                </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="b : ${bookings}">
-                        <td th:text="'#' + ${b.id}"></td>
-                        <td>
-                            <div style="font-weight: 600;" th:text="${b.customerVehicle}"></div>
-                            <small class="badge badge-standard">
-                                <span th:if="${b.vehicleCategory.name() == 'MOTORCYCLE'}">Xe máy</span>
-                                <span th:if="${b.vehicleCategory.name() == 'CAR_4'}">Xe hơi 4 chỗ</span>
-                                <span th:if="${b.vehicleCategory.name() == 'CAR_7'}">Xe hơi 7 chỗ</span>
-                                <span th:if="${!#lists.contains({'MOTORCYCLE', 'CAR_4', 'CAR_7'}, b.vehicleCategory.name())}" th:text="${b.vehicleCategory}"></span>
-                            </small>
-                        </td>
-                        <td>
-                            <div th:text="${#temporals.format(b.startTime, 'dd/MM HH:mm')}"></div>
-                            <small th:text="'(' + ${b.duration} + ' ' + (${b.durationUnit == 'HOURLY' ? 'giờ' : 'ngày'}) + ')'"></small>
-                        </td>
-                        <td>
-                            <span class="badge" 
-                                  th:classappend="${b.status.name() == 'PENDING' ? 'badge-pending' : 
-                                                   b.status.name() == 'ACCEPTED' ? 'badge-approved' : 
-                                                   b.status.name() == 'COMPLETED' ? 'badge-active' : 
-                                                   b.status.name() == 'CANCELLED' ? 'badge-inactive' : 'badge-inactive'}"
-                                  th:text="${b.status.name() == 'CANCELLED' ? 'ĐÃ HỦY' : b.status}"></span>
-                            <div th:if="${b.cancelReason}" style="font-size: .75rem; color: #dc2626; margin-top: .2rem; max-width: 150px;" th:text="'Lý do hủy: ' + ${b.cancelReason}"></div>
-                        </td>
-                        <td>
-                            <span class="badge" 
-                                  th:classappend="${b.paymentStatus.name() == 'PAID' ? 'badge-approved' : 'badge-pending'}"
-                                  th:text="${b.paymentStatus}"></span>
-                        </td>
-                        <td style="font-weight: 700; color: var(--primary);" th:text="${#numbers.formatDecimal(b.totalPrice, 0, 'COMMA', 0, 'POINT')} + 'đ'"></td>
-                        <td>
-                            <div th:if="${b.status.name() == 'COMPLETED' && b.paymentStatus.name() != 'PAID'}">
-                                <button type="button" class="btn btn-warning btn-sm" 
-                                        th:onclick="'confirmPayment(' + ${b.id} + ', ' + ${b.totalPrice} + ', ' + ${wallet.balance} + ')'">
-                                    Thanh toán
-                                </button>
-                                <form th:id="'payForm-' + ${b.id}" th:action="@{/sober-bookings/{id}/pay(id=${b.id})}" method="post" style="display:none;"></form>
-                            </div>
-                            <div th:if="${b.status.name() == 'PENDING'}">
-                                <form th:action="@{/sober-bookings/{id}/cancel(id=${b.id})}" method="post" 
-                                      onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn này không?')">
-                                    <button type="submit" class="btn btn-outline btn-sm" style="color: #dc2626; border-color: #fca5a5;">Hủy đơn</button>
-                                </form>
-                            </div>
-                            <span th:if="${b.status.name() != 'COMPLETED' && b.status.name() != 'PENDING' && b.status.name() != 'CANCELLED'}" 
-                                  style="color: var(--muted); font-size: .8rem;">Đang xử lý...</span>
-                            <span th:if="${b.status.name() == 'COMPLETED' && b.paymentStatus.name() == 'PAID'}" style="color: var(--success); font-weight: 600;">✓ Hoàn tất</span>
-                        </td>
-                    </tr>
+                <tr th:each="b : ${bookings}" th:attr="data-booking-id=${b.id},data-track-url=@{/tracking/sober/{id}(id=${b.id})}">
+                    <td th:text="'#' + ${b.id}"></td>
+                    <td>
+                        <div style="font-weight: 600;" th:text="${b.customerVehicle}"></div>
+                        <small class="badge badge-standard">
+                            <span th:if="${b.vehicleCategory.name() == 'MOTORCYCLE'}">Xe may</span>
+                            <span th:if="${b.vehicleCategory.name() == 'CAR_4'}">Xe hoi 4 cho</span>
+                            <span th:if="${b.vehicleCategory.name() == 'CAR_7'}">Xe hoi 7 cho</span>
+                            <span th:if="${!#lists.contains({'MOTORCYCLE', 'CAR_4', 'CAR_7'}, b.vehicleCategory.name())}" th:text="${b.vehicleCategory}"></span>
+                        </small>
+                    </td>
+                    <td>
+                        <div th:text="${#temporals.format(b.startTime, 'dd/MM HH:mm')}"></div>
+                        <small th:text="'(' + ${b.duration} + ' ' + (${b.durationUnit == 'HOURLY' ? 'gio' : 'ngay'}) + ')'"></small>
+                    </td>
+                    <td>
+                        <span
+                                data-booking-status
+                                class="badge"
+                                th:classappend="${b.status.name() == 'PENDING' ? 'badge-pending' :
+                                                 (b.status.name() == 'ACCEPTED' or b.status.name() == 'ARRIVED' or b.status.name() == 'IN_PROGRESS') ? 'badge-approved' :
+                                                 b.status.name() == 'COMPLETED' ? 'badge-active' :
+                                                 'badge-inactive'}"
+                                th:text="${b.status}">
+                        </span>
+                        <div th:if="${b.cancelReason}" style="font-size: .75rem; color: #dc2626; margin-top: .2rem; max-width: 180px;" th:text="'Ly do huy: ' + ${b.cancelReason}"></div>
+                    </td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${b.paymentStatus.name() == 'PAID' ? 'badge-approved' : 'badge-pending'}"
+                              th:text="${b.paymentStatus}"></span>
+                    </td>
+                    <td style="font-weight: 700; color: var(--primary);" th:text="${#numbers.formatDecimal(b.totalPrice, 0, 'COMMA', 0, 'POINT')} + 'd'"></td>
+                    <td>
+                        <div th:if="${b.status.name() == 'COMPLETED' && b.paymentStatus.name() != 'PAID'}">
+                            <button type="button" class="btn btn-warning btn-sm"
+                                    th:onclick="'confirmPayment(' + ${b.id} + ', ' + ${b.totalPrice} + ', ' + ${wallet.balance} + ')'">
+                                Thanh toan
+                            </button>
+                            <form th:id="'payForm-' + ${b.id}" th:action="@{/sober-bookings/{id}/pay(id=${b.id})}" method="post" style="display:none;"></form>
+                        </div>
+
+                        <div data-cancel-form th:if="${b.status.name() == 'PENDING'}">
+                            <form th:action="@{/sober-bookings/{id}/cancel(id=${b.id})}" method="post"
+                                  onsubmit="return confirm('Ban co chac chan muon huy don nay khong?')">
+                                <button type="submit" class="btn btn-outline btn-sm" style="color: #dc2626; border-color: #fca5a5;">Huy don</button>
+                            </form>
+                        </div>
+
+                        <span th:if="${b.status.name() == 'COMPLETED' && b.paymentStatus.name() == 'PAID'}" style="color: var(--success); font-weight: 600;">Hoan tat</span>
+
+                        <div data-track-slot style="margin-top:.35rem;" th:if="${b.status.name() == 'ACCEPTED' || b.status.name() == 'ARRIVED' || b.status.name() == 'IN_PROGRESS'}">
+                            <a class="btn btn-primary btn-sm" th:href="@{/tracking/sober/{id}(id=${b.id})}">Theo doi</a>
+                        </div>
+
+                        <div class="live-note" data-booking-live-note></div>
+                    </td>
+                </tr>
                 </tbody>
             </table>
         </div>
     </div>
 </main>
+
+<div id="toastStack" class="toast-stack"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 <script th:inline="javascript">
+    const soberBookingIds = /*[[${bookings.![id]}]]*/ [];
+
     function confirmPayment(id, amount, balance) {
-        const fmt = (n) => new Intl.NumberFormat('vi-VN').format(n) + 'đ';
+        const fmt = (n) => new Intl.NumberFormat('vi-VN').format(n) + 'd';
         const remaining = balance - amount;
-        
-        const msg = `Xác nhận thanh toán cho đơn #${id}:\n\n` +
-                    `• Số dư hiện tại: ${fmt(balance)}\n` +
-                    `• Số tiền cần trả: ${fmt(amount)}\n` +
-                    `---------------------------\n` +
-                    `• Số dư sau thanh toán: ${fmt(remaining)}\n\n` +
-                    `Bạn có muốn tiếp tục thanh toán không?`;
-        
+        const msg = `Xac nhan thanh toan cho don #${id}:\n\n`
+            + `So du hien tai: ${fmt(balance)}\n`
+            + `So tien can tra: ${fmt(amount)}\n`
+            + `So du sau thanh toan: ${fmt(remaining)}\n\n`
+            + `Ban co muon tiep tuc thanh toan khong?`;
+
         if (remaining < 0) {
-            alert('Số dư ví không đủ để thanh toán. Vui lòng nạp thêm tiền!');
+            alert('So du vi khong du de thanh toan. Vui long nap them tien.');
             return;
         }
 
@@ -111,6 +173,86 @@
             document.getElementById('payForm-' + id).submit();
         }
     }
+
+    function buildBadgeClass(status) {
+        if (status === 'PENDING') return 'badge badge-pending';
+        if (status === 'ACCEPTED' || status === 'ARRIVED' || status === 'IN_PROGRESS') return 'badge badge-approved';
+        if (status === 'COMPLETED') return 'badge badge-active';
+        return 'badge badge-inactive';
+    }
+
+    function showToast(title, message, trackingUrl) {
+        const stack = document.getElementById('toastStack');
+        const toast = document.createElement('div');
+        toast.className = 'live-toast';
+        toast.innerHTML =
+            `<strong>${title}</strong>` +
+            `<p>${message}</p>` +
+            (trackingUrl ? `<a href="${trackingUrl}">Mo trang theo doi</a>` : '');
+        stack.appendChild(toast);
+        window.setTimeout(() => toast.remove(), 9000);
+    }
+
+    function handleBookingEvent(event) {
+        const row = document.querySelector(`[data-booking-id="${event.tripId}"]`);
+        if (!row) {
+            return;
+        }
+
+        const statusBadge = row.querySelector('[data-booking-status]');
+        if (statusBadge && event.status) {
+            statusBadge.className = buildBadgeClass(event.status);
+            statusBadge.textContent = event.status;
+        }
+
+        const cancelForm = row.querySelector('[data-cancel-form]');
+        if (cancelForm && event.status && event.status !== 'PENDING') {
+            cancelForm.remove();
+        }
+
+        const trackSlot = row.querySelector('[data-track-slot]');
+        const trackingUrl = event.trackingUrl || row.dataset.trackUrl;
+        if (trackingUrl && ['ACCEPTED', 'ARRIVED', 'IN_PROGRESS'].includes(event.status || '')) {
+            const html = `<a class="btn btn-primary btn-sm" href="${trackingUrl}">Theo doi</a>`;
+            if (trackSlot) {
+                trackSlot.innerHTML = html;
+            } else {
+                const targetCell = row.lastElementChild;
+                const wrapper = document.createElement('div');
+                wrapper.setAttribute('data-track-slot', '');
+                wrapper.style.marginTop = '.35rem';
+                wrapper.innerHTML = html;
+                targetCell.appendChild(wrapper);
+            }
+        }
+
+        const liveNote = row.querySelector('[data-booking-live-note]');
+        if (liveNote && event.message) {
+            liveNote.textContent = event.message;
+        }
+
+        showToast('Cap nhat don thue tai xe', event.message || 'Don cua ban vua duoc cap nhat.', trackingUrl);
+    }
+
+    function connectRealtime() {
+        if (!Array.isArray(soberBookingIds) || !soberBookingIds.length) {
+            return;
+        }
+
+        const socket = new SockJS('/ws');
+        const stompClient = Stomp.over(socket);
+        stompClient.debug = () => {};
+
+        stompClient.connect({}, () => {
+            soberBookingIds.forEach((id) => {
+                stompClient.subscribe(`/topic/bookings/SOBER/${id}`, (message) => {
+                    handleBookingEvent(JSON.parse(message.body));
+                });
+            });
+        });
+    }
+
+    window.addEventListener('load', connectRealtime);
 </script>
 </body>
 </html>

@@ -14,4 +14,7 @@ public interface DriverRepository extends JpaRepository<Driver, Long> {
 
     @Query("SELECT d FROM Driver d WHERE d.isAvailable = true AND d.verificationStatus = com.bookvehicle.example.sr.model.VerificationStatus.APPROVED AND d.vehicleTypes LIKE %:vehicleType%")
     List<Driver> findAvailableByVehicleType(@Param("vehicleType") String vehicleType);
+
+    @Query("SELECT COUNT(d) FROM Driver d WHERE d.isAvailable = true AND d.verificationStatus = com.bookvehicle.example.sr.model.VerificationStatus.APPROVED")
+    long countOnlineApproved();
 }

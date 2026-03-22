@@ -83,6 +83,18 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     INDEX idx_sessions_expires (expires_at)
 );
 
+CREATE TABLE IF NOT EXISTS device_tokens (
+    id          BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id     BIGINT NOT NULL,
+    token       VARCHAR(500) NOT NULL,
+    platform    VARCHAR(50),
+    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_seen   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_device_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT uq_device_user_token UNIQUE (user_id, token),
+    INDEX idx_device_user (user_id)
+);
+
 CREATE TABLE IF NOT EXISTS pickup_points (
     id          BIGINT PRIMARY KEY AUTO_INCREMENT,
     name        VARCHAR(150) NOT NULL,
@@ -156,10 +168,11 @@ CREATE TABLE IF NOT EXISTS vehicle_rentals (
     id               BIGINT PRIMARY KEY AUTO_INCREMENT,
     customer_id      BIGINT         NOT NULL,
     vehicle_id       BIGINT         NOT NULL,
-    driver_id        BIGINT         NOT NULL,
+    driver_id        BIGINT,
     pickup_point_id  BIGINT,
     pickup_address   VARCHAR(300)   NOT NULL,
     rental_type      ENUM('HOURLY', 'DAILY') NOT NULL,
+    rental_mode      ENUM('VEHICLE_ONLY', 'WITH_DRIVER') NOT NULL DEFAULT 'WITH_DRIVER',
     planned_start    DATETIME NOT NULL,
     planned_end      DATETIME NOT NULL,
     actual_start     DATETIME,
@@ -426,3 +439,17 @@ CREATE TABLE IF NOT EXISTS withdrawal_requests (
 
 -- Expand transactions.reference_type ENUM to include WITHDRAWAL
 ALTER TABLE transactions MODIFY COLUMN reference_type ENUM('RENTAL','BOOKING','MANUAL','WITHDRAWAL') NOT NULL;
+
+-- Vehicle rentals: allow driver_id NULL and add rental_mode if missing
+SET @s = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'vehicle_rentals' AND COLUMN_NAME = 'rental_mode' AND TABLE_SCHEMA = DATABASE()) = 0, 'ALTER TABLE vehicle_rentals ADD COLUMN rental_mode ENUM(''VEHICLE_ONLY'',''WITH_DRIVER'') NOT NULL DEFAULT ''WITH_DRIVER'' AFTER rental_type', 'SELECT 1'));
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+ALTER TABLE vehicle_rentals MODIFY COLUMN driver_id BIGINT NULL;
+
+-- Add pickup_lat/pickup_lng to sober_bookings for geocoded pickup location
+SET @s = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'sober_bookings' AND COLUMN_NAME = 'pickup_lat' AND TABLE_SCHEMA = DATABASE()) = 0, 'ALTER TABLE sober_bookings ADD COLUMN pickup_lat DOUBLE, ADD COLUMN pickup_lng DOUBLE', 'SELECT 1'));
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- Add pickup_lat/pickup_lng to vehicle_rentals for geocoded pickup location
+SET @s = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'vehicle_rentals' AND COLUMN_NAME = 'pickup_lat' AND TABLE_SCHEMA = DATABASE()) = 0, 'ALTER TABLE vehicle_rentals ADD COLUMN pickup_lat DOUBLE, ADD COLUMN pickup_lng DOUBLE', 'SELECT 1'));
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;

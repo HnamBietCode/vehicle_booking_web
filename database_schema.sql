@@ -100,6 +100,18 @@ CREATE TABLE user_sessions (
     INDEX idx_sessions_expires (expires_at)
 );
 
+CREATE TABLE device_tokens (
+    id          BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id     BIGINT NOT NULL,
+    token       VARCHAR(500) NOT NULL,
+    platform    VARCHAR(50),
+    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_seen   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_device_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT uq_device_user_token UNIQUE (user_id, token),
+    INDEX idx_device_user (user_id)
+);
+
 -- ============================================================
 -- MODULE 2: ĐỊA ĐIỂM
 -- ============================================================
@@ -210,10 +222,11 @@ CREATE TABLE vehicle_rentals (
     id                  BIGINT PRIMARY KEY AUTO_INCREMENT,
     customer_id         BIGINT         NOT NULL,
     vehicle_id          BIGINT         NOT NULL,
-    driver_id           BIGINT         NOT NULL,
+    driver_id           BIGINT,
     pickup_point_id     BIGINT,                                 -- Điểm đón (có thể NULL nếu nhập thủ công)
     pickup_address      VARCHAR(300)   NOT NULL,                -- Địa chỉ đón cụ thể
     rental_type         ENUM('HOURLY', 'DAILY') NOT NULL,
+    rental_mode         ENUM('VEHICLE_ONLY', 'WITH_DRIVER') NOT NULL DEFAULT 'WITH_DRIVER',
     planned_start       DATETIME NOT NULL,
     planned_end         DATETIME NOT NULL,
     actual_start        DATETIME,
