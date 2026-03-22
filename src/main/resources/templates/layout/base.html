@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${pageTitle != null ? pageTitle + ' â€“ VehicleBook' : 'VehicleBook'}">VehicleBook</title>
+    <title th:text="${pageTitle != null ? pageTitle + ' - VehicleBook' : 'VehicleBook'}">VehicleBook</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -62,7 +62,7 @@
         }
 
         .navbar-brand::before {
-            content: 'ðŸš—';
+            content: '🚗';
             font-size: 1.4rem;
         }
 
@@ -437,11 +437,12 @@
                 <li th:if="${u?.role?.name() == 'DRIVER'}"><a class="nav-link" th:href="@{/driver/rentals}">🧾 Đơn thuê</a></li>
                 <li th:if="${u?.role?.name() == 'DRIVER'}"><a class="nav-link" th:href="@{/driver/sober-bookings}">🚗 Xử lý lái hộ</a></li>
                 <li th:if="${u?.role?.name() == 'CUSTOMER'}"><a class="nav-link" th:href="@{/rentals/my}">🧾 Đơn thuê</a></li>
-                <li th:if="${u?.role?.name() == 'CUSTOMER'}"><a class="nav-link" th:href="@{/sober-bookings/new}">🚗 Thuê tài xế</a></li>
+                <li th:if="${u?.role?.name() == 'CUSTOMER'}"><a class="nav-link" th:href="@{/bookings/options}">Đặt dịch vụ</a></li>
                 <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/vehicles}">🚗 Quản lý xe</a></li>
                 <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/pickup-points}">📍 Điểm đón</a></li>
                 <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/sober-bookings}">🚗 Quản lý lái hộ</a></li>
                 <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/withdrawals}">💸 Rút tiền</a></li>
+                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/realtime}">Realtime</a></li>
                 <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/dashboard}">📊 Báo cáo</a></li>
                 <li th:if="${u?.role?.name() != 'ADMIN'}"><a class="nav-link" th:href="@{/profile}">👤 Hồ sơ</a></li>
                 <li th:if="${u?.role?.name() == 'CUSTOMER'}">

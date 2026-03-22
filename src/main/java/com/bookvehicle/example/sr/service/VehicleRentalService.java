@@ -24,6 +24,9 @@ public class VehicleRentalService {
     private final CustomerRepository customerRepository;
     private final UserRepository userRepository;
     private final WalletService walletService;
+    private final PushNotificationService pushNotificationService;
+    private final BookingRealtimeService bookingRealtimeService;
+    private final GeocodingService geocodingService;
 
     public VehicleRentalService(
             VehicleRentalRepository vehicleRentalRepository,
@@ -32,7 +35,10 @@ public class VehicleRentalService {
             PickupPointRepository pickupPointRepository,
             CustomerRepository customerRepository,
             UserRepository userRepository,
-            WalletService walletService) {
+            WalletService walletService,
+            PushNotificationService pushNotificationService,
+            BookingRealtimeService bookingRealtimeService,
+            GeocodingService geocodingService) {
         this.vehicleRentalRepository = vehicleRentalRepository;
         this.vehicleRepository = vehicleRepository;
         this.driverRepository = driverRepository;
@@ -40,6 +46,9 @@ public class VehicleRentalService {
         this.customerRepository = customerRepository;
         this.userRepository = userRepository;
         this.walletService = walletService;
+        this.pushNotificationService = pushNotificationService;
+        this.bookingRealtimeService = bookingRealtimeService;
+        this.geocodingService = geocodingService;
     }
 
     @Transactional(readOnly = true)
@@ -59,6 +68,16 @@ public class VehicleRentalService {
     @Transactional(readOnly = true)
     public Optional<VehicleRental> findById(Long rentalId) {
         return vehicleRentalRepository.findById(rentalId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<VehicleRental> findPendingVehicleOnly() {
+        return vehicleRentalRepository.findPendingVehicleOnly();
+    }
+
+    @Transactional(readOnly = true)
+    public List<VehicleRental> findAllPending() {
+        return vehicleRentalRepository.findAllPending();
     }
 
     public ServiceResult createRental(Long customerUserId, RentalCreateForm form) {
@@ -96,12 +115,17 @@ public class VehicleRentalService {
             return ServiceResult.error("Xe da co lich trong khoang thoi gian nay.");
         }
 
-        Optional<Driver> assignedDriver = pickDriverForVehicle(vehicle, form.getPlannedStart(), form.getPlannedEnd(), busyStatuses);
-        if (assignedDriver.isEmpty()) {
-            return ServiceResult.error("Khong tim thay tai xe phu hop cho lich nay.");
-        }
+        VehicleRental.RentalMode mode = form.getRentalMode() == null
+                ? VehicleRental.RentalMode.WITH_DRIVER
+                : form.getRentalMode();
 
-        Driver driver = assignedDriver.get();
+        Optional<Driver> assignedDriver = Optional.empty();
+        if (mode == VehicleRental.RentalMode.WITH_DRIVER) {
+            assignedDriver = getAssignedDriverForVehicle(vehicle, form.getPlannedStart(), form.getPlannedEnd(), busyStatuses);
+            if (assignedDriver.isEmpty()) {
+                return ServiceResult.error("Xe chua co tai xe ranh phu hop.");
+            }
+        }
         BigDecimal basePrice = calculateBasePrice(vehicle, form.getRentalType(), form.getPlannedStart(), form.getPlannedEnd());
 
         Long pickupPointId = null;
@@ -120,13 +144,44 @@ public class VehicleRentalService {
             pickupAddress = form.getPickupAddress().trim();
         }
 
+        // Geocode pickup address to lat/lng for map display
+        Double pickupLat = null;
+        Double pickupLng = null;
+        if (pickupPointId != null) {
+            // Use PickupPoint coordinates if available
+            PickupPoint point = pickupPointRepository.findById(pickupPointId).orElse(null);
+            if (point != null && point.getLatitude() != null && point.getLongitude() != null) {
+                pickupLat = point.getLatitude().doubleValue();
+                pickupLng = point.getLongitude().doubleValue();
+            }
+        }
+        if (pickupLat == null) {
+            if (form.getPickupLat() != null && form.getPickupLng() != null) {
+                pickupLat = form.getPickupLat();
+                pickupLng = form.getPickupLng();
+            } else {
+                // Geocode manual address
+                try {
+                    GeocodingService.LatLng coords = geocodingService.geocode(pickupAddress, null, null, null);
+                    if (coords != null) {
+                        pickupLat = coords.lat();
+                        pickupLng = coords.lng();
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        }
+
         VehicleRental rental = new VehicleRental();
         rental.setCustomerId(customerOpt.get().getId());
         rental.setVehicleId(vehicle.getId());
-        rental.setDriverId(driver.getId());
+        rental.setDriverId(assignedDriver.map(Driver::getId).orElse(null));
         rental.setPickupPointId(pickupPointId);
         rental.setPickupAddress(pickupAddress);
+        rental.setPickupLat(pickupLat);
+        rental.setPickupLng(pickupLng);
         rental.setRentalType(form.getRentalType());
+        rental.setRentalMode(mode);
         rental.setPlannedStart(form.getPlannedStart());
         rental.setPlannedEnd(form.getPlannedEnd());
         rental.setBasePrice(basePrice);
@@ -138,7 +193,24 @@ public class VehicleRentalService {
         rental.setNotes(form.getNotes());
 
         vehicleRentalRepository.save(rental);
+        if (mode == VehicleRental.RentalMode.VEHICLE_ONLY) {
+            notifyAvailableDriversForVehicleOnly(rental, vehicle);
+        }
         return ServiceResult.success("Dat xe thanh cong. Cho tai xe xac nhan.", rental.getId());
+    }
+
+    private void notifyAvailableDriversForVehicleOnly(VehicleRental rental, Vehicle vehicle) {
+        try {
+            List<Driver> drivers = driverRepository.findAvailableByVehicleType(vehicle.getCategory().name());
+            List<Long> userIds = drivers.stream().map(Driver::getUserId).toList();
+            pushNotificationService.notifyUsers(
+                    userIds,
+                    "Co don giao xe moi",
+                    "Khach hang can giao xe. Bam de nhan don.",
+                    java.util.Map.of("tripType", "RENTAL", "tripId", String.valueOf(rental.getId()))
+            );
+        } catch (Exception ignored) {
+        }
     }
 
     public ServiceResult acceptRental(Long rentalId, Long driverUserId) {
@@ -152,7 +224,7 @@ public class VehicleRentalService {
         }
 
         Optional<Driver> actorDriver = driverRepository.findByUserId(driverUserId);
-        if (actorDriver.isEmpty() || !actorDriver.get().getId().equals(rental.getDriverId())) {
+        if (actorDriver.isEmpty()) {
             return ServiceResult.error("Ban khong co quyen nhan don nay.");
         }
 
@@ -161,11 +233,36 @@ public class VehicleRentalService {
             return ServiceResult.error("Tai xe dang ban, khong the nhan don.");
         }
 
+        if (rental.getRentalMode() == VehicleRental.RentalMode.WITH_DRIVER) {
+            if (rental.getDriverId() == null || !driver.getId().equals(rental.getDriverId())) {
+                return ServiceResult.error("Ban khong co quyen nhan don nay.");
+            }
+        } else {
+            Optional<Vehicle> vehicleOpt = vehicleRepository.findById(rental.getVehicleId());
+            if (vehicleOpt.isEmpty()) {
+                return ServiceResult.error("Khong tim thay xe.");
+            }
+            if (!isDriverEligible(driver, vehicleOpt.get().getCategory())) {
+                return ServiceResult.error("Tai xe khong phu hop loai xe.");
+            }
+            if (vehicleRentalRepository.hasDriverOverlap(driver.getId(),
+                    rental.getPlannedStart(), rental.getPlannedEnd(),
+                    List.of(VehicleRental.RentalStatus.PENDING, VehicleRental.RentalStatus.CONFIRMED, VehicleRental.RentalStatus.ACTIVE))) {
+                return ServiceResult.error("Tai xe da co lich trong khoang thoi gian nay.");
+            }
+            rental.setDriverId(driver.getId());
+        }
+
         rental.setStatus(VehicleRental.RentalStatus.CONFIRMED);
         vehicleRentalRepository.save(rental);
 
         driver.setIsAvailable(false);
         driverRepository.save(driver);
+        bookingRealtimeService.publishRentalUpdate(
+                rental,
+                "DRIVER_ACCEPTED",
+                "Tai xe da nhan don cua ban. Ban co the bat dau theo doi ngay khi tai xe chia se vi tri."
+        );
         return ServiceResult.success("Da nhan don thue.", rental.getId());
     }
 
@@ -180,7 +277,7 @@ public class VehicleRentalService {
         }
 
         Optional<Driver> actorDriver = driverRepository.findByUserId(driverUserId);
-        if (actorDriver.isEmpty() || !actorDriver.get().getId().equals(rental.getDriverId())) {
+        if (actorDriver.isEmpty() || rental.getDriverId() == null || !actorDriver.get().getId().equals(rental.getDriverId())) {
             return ServiceResult.error("Ban khong co quyen tu choi don nay.");
         }
 
@@ -199,6 +296,11 @@ public class VehicleRentalService {
             vehicleRepository.save(v);
         });
 
+        bookingRealtimeService.publishRentalUpdate(
+                rental,
+                "TRIP_CANCELLED",
+                "Tai xe da tu choi don thue. Vui long dat lai hoac chon xe khac."
+        );
         return ServiceResult.success("Da tu choi don thue.", rental.getId());
     }
 
@@ -213,7 +315,7 @@ public class VehicleRentalService {
         }
 
         Optional<Driver> actorDriver = driverRepository.findByUserId(driverUserId);
-        if (actorDriver.isEmpty() || !actorDriver.get().getId().equals(rental.getDriverId())) {
+        if (actorDriver.isEmpty() || rental.getDriverId() == null || !actorDriver.get().getId().equals(rental.getDriverId())) {
             return ServiceResult.error("Ban khong co quyen bat dau chuyen.");
         }
 
@@ -225,6 +327,11 @@ public class VehicleRentalService {
             v.setStatus(VehicleStatus.ON_TRIP);
             vehicleRepository.save(v);
         });
+        bookingRealtimeService.publishRentalUpdate(
+                rental,
+                "TRIP_STARTED",
+                "Tai xe da bat dau chuyen."
+        );
         return ServiceResult.success("Da bat dau chuyen.", rental.getId());
     }
 
@@ -240,7 +347,7 @@ public class VehicleRentalService {
         }
         if (driverUserId != null) {
             Optional<Driver> actorDriver = driverRepository.findByUserId(driverUserId);
-            if (actorDriver.isEmpty() || !actorDriver.get().getId().equals(rental.getDriverId())) {
+            if (actorDriver.isEmpty() || rental.getDriverId() == null || !actorDriver.get().getId().equals(rental.getDriverId())) {
                 return ServiceResult.error("Ban khong co quyen hoan thanh don nay.");
             }
         }
@@ -258,7 +365,7 @@ public class VehicleRentalService {
         }
         totalPrice = totalPrice.setScale(2, RoundingMode.HALF_UP);
 
-        Driver driver = driverRepository.findById(rental.getDriverId()).orElse(null);
+        Driver driver = rental.getDriverId() == null ? null : driverRepository.findById(rental.getDriverId()).orElse(null);
         if (driver == null) {
             return ServiceResult.error("Khong the cap nhat don do thieu du lieu tai xe.");
         }
@@ -284,6 +391,11 @@ public class VehicleRentalService {
         driver.setIsAvailable(true);
         driverRepository.save(driver);
 
+        bookingRealtimeService.publishRentalUpdate(
+                rental,
+                "TRIP_COMPLETED",
+                "Chuyen di da hoan thanh."
+        );
         return ServiceResult.success("Da hoan thanh chuyen. Cho khach hang thanh toan.", rental.getId());
     }
 
@@ -394,37 +506,46 @@ public class VehicleRentalService {
             }
             vehicleRepository.save(v);
         });
-        driverRepository.findById(rental.getDriverId()).ifPresent(d -> {
-            d.setIsAvailable(true);
-            driverRepository.save(d);
-        });
-
+        if (rental.getDriverId() != null) {
+            driverRepository.findById(rental.getDriverId()).ifPresent(d -> {
+                d.setIsAvailable(true);
+                driverRepository.save(d);
+            });
+        }
+        bookingRealtimeService.publishRentalUpdate(
+                rental,
+                "TRIP_CANCELLED",
+                "Don cua ban da duoc huy."
+        );
         return ServiceResult.success("Huy don thanh cong.", rental.getId());
     }
 
-    private Optional<Driver> pickDriverForVehicle(
+    private Optional<Driver> getAssignedDriverForVehicle(
             Vehicle vehicle,
             LocalDateTime plannedStart,
             LocalDateTime plannedEnd,
             List<VehicleRental.RentalStatus> busyStatuses) {
-        if (vehicle.getAssignedDriver() != null) {
-            Optional<Driver> assignedOpt = driverRepository.findById(vehicle.getAssignedDriver());
-            if (assignedOpt.isPresent()) {
-                Driver assigned = assignedOpt.get();
-                if (isDriverEligible(assigned, vehicle.getCategory()) &&
-                        !vehicleRentalRepository.hasDriverOverlap(assigned.getId(), plannedStart, plannedEnd, busyStatuses)) {
-                    return Optional.of(assigned);
-                }
-            }
+        if (vehicle.getAssignedDriver() == null) {
+            return Optional.empty();
         }
-
-        return driverRepository.findAll().stream()
-                .filter(d -> isDriverEligible(d, vehicle.getCategory()))
-                .filter(d -> !vehicleRentalRepository.hasDriverOverlap(d.getId(), plannedStart, plannedEnd, busyStatuses))
-                .findFirst();
+        Optional<Driver> assignedOpt = driverRepository.findById(vehicle.getAssignedDriver());
+        if (assignedOpt.isEmpty()) {
+            return Optional.empty();
+        }
+        Driver assigned = assignedOpt.get();
+        if (!isDriverEligible(assigned, vehicle.getCategory())) {
+            return Optional.empty();
+        }
+        if (vehicleRentalRepository.hasDriverOverlap(assigned.getId(), plannedStart, plannedEnd, busyStatuses)) {
+            return Optional.empty();
+        }
+        return Optional.of(assigned);
     }
 
     private boolean isDriverEligible(Driver driver, VehicleCategory category) {
+        if (category == null) {
+            return false;
+        }
         return driver.getVerificationStatus() == VerificationStatus.APPROVED
                 && Boolean.TRUE.equals(driver.getIsAvailable())
                 && supportsCategory(driver.getVehicleTypes(), category);

@@ -169,6 +169,36 @@
     <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
     <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
 
+    <div class="card" th:if="${pendingVehicleOnly != null and !#lists.isEmpty(pendingVehicleOnly)}">
+        <h3 class="card-title">Don giao xe dang cho tai xe nhan</h3>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>Ma don</th>
+                    <th>Khach</th>
+                    <th>Thoi gian</th>
+                    <th>Gia co ban</th>
+                    <th>Thao tac</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="r : ${pendingVehicleOnly}">
+                    <td th:text="${'#' + r.id}"></td>
+                    <td th:text="${r.customer != null ? r.customer.fullName : r.customerId}"></td>
+                    <td th:text="${#temporals.format(r.plannedStart, 'dd/MM/yyyy HH:mm') + ' - ' + #temporals.format(r.plannedEnd, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td th:text="${#numbers.formatDecimal(r.basePrice, 0, 'COMMA', 0, 'POINT') + 'd'}"></td>
+                    <td>
+                        <form th:action="@{/driver/rentals/{id}/accept(id=${r.id})}" method="post">
+                            <button type="submit" class="btn btn-primary btn-sm">Nhan don</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <div class="card" th:if="${#lists.isEmpty(rentals)}">
         <div style="color:var(--muted);">Chua co don thue nao.</div>
     </div>

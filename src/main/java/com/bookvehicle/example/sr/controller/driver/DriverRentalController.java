@@ -41,7 +41,9 @@ public class DriverRentalController {
         }
 
         List<VehicleRental> rentals = vehicleRentalService.findByDriverUserId(loggedUser.getId());
+        List<VehicleRental> pendingVehicleOnly = vehicleRentalService.findPendingVehicleOnly();
         model.addAttribute("rentals", rentals);
+        model.addAttribute("pendingVehicleOnly", pendingVehicleOnly);
         model.addAttribute("completeForm", new RentalCompleteForm());
         model.addAttribute("loggedUser", loggedUser);
         return "driver/rentals";

@@ -396,14 +396,15 @@
 
     <!-- Hero -->
     <div class="hero">
-        <h1>🔍 Tìm xe khả dụng</h1>
-        <p>Lọc theo loại xe, giá và tìm xe có tài xế sẵn sàng</p>
+        <h1 th:text="${mode == 'VEHICLE_ONLY' ? '🔍 Chọn xe (giao xe bởi tài xế bất kỳ)' : (mode == 'WITH_DRIVER' ? '🔍 Chọn xe có tài xế' : '🔍 Tìm xe khả dụng')}">🔍 Tìm xe khả dụng</h1>
+        <p th:text="${mode == 'VEHICLE_ONLY' ? 'Xe trống, tài xế sẽ nhận đơn giao xe sau khi đặt' : (mode == 'WITH_DRIVER' ? 'Chỉ hiển thị xe có tài xế đang online' : 'Lọc theo loại xe, giá và tìm xe phù hợp')}">Lọc theo loại xe, giá và tìm xe có tài xế sẵn sàng</p>
     </div>
 
     <div class="main">
         <!-- Filter -->
         <div class="filter-card">
             <form th:action="@{/vehicles/search}" method="get">
+                <input type="hidden" name="mode" th:value="${mode}">
                 <div class="filter-row">
                     <div class="filter-group">
                         <label class="filter-label" for="category">Loại xe</label>
@@ -434,13 +435,14 @@
                         <input type="text" id="location" name="location" class="filter-control" th:value="${location}"
                             placeholder="Nhập phường, quận, tỉnh thành...">
                     </div>
-                    <div class="filter-group" style="flex:0 0 auto;">
+                    <div class="filter-group" style="flex:0 0 auto;" th:if="${mode != 'VEHICLE_ONLY'}">
                         <label class="filter-label">Bộ lọc thêm</label>
                         <div class="filter-check">
                             <input type="checkbox" id="freeDriver" name="freeDriver" value="true"
-                                th:checked="${freeDriver}">
+                                th:checked="${freeDriver}" th:disabled="${mode == 'WITH_DRIVER'}">
                             <label for="freeDriver">Chỉ xe có tài xế rảnh</label>
                         </div>
+                        <input type="hidden" name="freeDriver" value="true" th:if="${mode == 'WITH_DRIVER'}">
                     </div>
                     <div class="filter-group" style="flex:0 0 140px;">
                         <label class="filter-label">&nbsp;</label>
@@ -539,7 +541,9 @@
                         </div>
 
                         <div class="vehicle-actions" th:if="${loggedUser?.role?.name() == 'CUSTOMER'}">
-                            <a class="btn btn-primary" th:href="@{/rentals/new(vehicleId=${v.id})}">Đặt thuê</a>
+                            <a class="btn btn-primary"
+                               th:href="@{/rentals/new(vehicleId=${v.id},mode=${(mode == 'VEHICLE_ONLY' or mode == 'WITH_DRIVER') ? mode : 'WITH_DRIVER'})}"
+                               th:text="${mode == 'VEHICLE_ONLY' ? 'Đặt xe' : 'Đặt xe + tài xế'}">Đặt thuê</a>
                         </div>
                         <div class="vehicle-actions" th:if="${loggedUser == null}">
                             <a class="btn btn-outline" th:href="@{/auth/login}">Đăng nhập để đặt xe</a>

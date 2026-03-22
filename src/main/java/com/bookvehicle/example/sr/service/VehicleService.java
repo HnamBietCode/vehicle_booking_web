@@ -116,6 +116,12 @@ public class VehicleService {
         Vehicle v = new Vehicle();
         fillFrom(v, form);
         vehicleRepository.save(v);
+        if (form.getAssignedDriverId() != null) {
+            String assignErr = assignDriver(v.getId(), form.getAssignedDriverId());
+            if (assignErr != null) {
+                return assignErr;
+            }
+        }
         return null;
     }
 
@@ -128,6 +134,14 @@ public class VehicleService {
         if (err != null) return err;
         fillFrom(opt.get(), form);
         vehicleRepository.save(opt.get());
+        if (form.getAssignedDriverId() == null) {
+            unassignDriver(id);
+        } else {
+            String assignErr = assignDriver(id, form.getAssignedDriverId());
+            if (assignErr != null) {
+                return assignErr;
+            }
+        }
         return null;
     }
 

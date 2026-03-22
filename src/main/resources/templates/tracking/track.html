@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theo doi tai xe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --border: #dbe3ef;
+            --bg: #f6f8fc;
+            --surface: #ffffff;
+            --text: #0f172a;
+            --muted: #64748b;
+            --success: #16a34a;
+            --warning: #f97316;
+            --route: #0f766e;
+            --radius: 14px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Inter", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .main {
+            max-width: 1120px;
+            margin: 2rem auto;
+            padding: 0 1.25rem 2rem;
+        }
+
+        .page-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .page-title {
+            margin: 0 0 .35rem;
+            font-size: 1.55rem;
+            font-weight: 700;
+        }
+
+        .page-subtitle {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            background: rgba(37, 99, 235, .08);
+            color: var(--primary-dark);
+            border: 1px solid rgba(37, 99, 235, .16);
+            border-radius: 999px;
+            padding: .65rem .9rem;
+            font-size: .92rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--success);
+            box-shadow: 0 0 0 4px rgba(22, 163, 74, .14);
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 16px 40px rgba(15, 23, 42, .06);
+        }
+
+        .map-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 1.1rem;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(135deg, rgba(37, 99, 235, .05), rgba(14, 165, 233, .03));
+        }
+
+        .map-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem 1rem;
+            color: var(--muted);
+            font-size: .92rem;
+        }
+
+        .map-meta strong {
+            color: var(--text);
+        }
+
+        .coord-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: .75rem 1rem;
+            padding: .95rem 1.1rem;
+            border-bottom: 1px solid var(--border);
+            background: #fcfdff;
+        }
+
+        .coord-card {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: .85rem .95rem;
+        }
+
+        .coord-card h3 {
+            margin: 0 0 .35rem;
+            font-size: .92rem;
+        }
+
+        .coord-card p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.45;
+        }
+
+        #map {
+            height: 520px;
+            width: 100%;
+        }
+
+        .map-foot {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .75rem 1rem;
+            align-items: center;
+            justify-content: space-between;
+            padding: .9rem 1.1rem 1.05rem;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: .9rem;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+        }
+
+        .legend-swatch {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .swatch-driver {
+            background: #2563eb;
+        }
+
+        .swatch-pickup {
+            background: #f97316;
+        }
+
+        .swatch-route {
+            background: var(--route);
+        }
+
+        .driver-pin,
+        .pickup-pin {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 3px solid #ffffff;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, .24);
+        }
+
+        .driver-pin {
+            background: #2563eb;
+        }
+
+        .pickup-pin {
+            background: #f97316;
+        }
+
+        @media (max-width: 768px) {
+            .main {
+                margin-top: 1rem;
+                padding: 0 .9rem 1.25rem;
+            }
+
+            .page-head,
+            .map-head,
+            .map-foot {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .coord-grid {
+                grid-template-columns: 1fr;
+            }
+
+            #map {
+                height: 420px;
+            }
+        }
+    </style>
+</head>
+<body>
+<nav th:replace="~{layout/base :: navbar}"></nav>
+
+<main class="main">
+    <div class="page-head">
+        <div>
+            <h1 class="page-title">Theo doi tai xe</h1>
+            <p class="page-subtitle">Ban do tu cap nhat vi tri tai xe moi 10 giay mot lan va tu ket noi lai khi mang khong on dinh.</p>
+        </div>
+        <div class="status-pill">
+            <span class="status-dot"></span>
+            <span id="trackingStatus">Dang khoi tao ket noi realtime...</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="map-head">
+            <div class="map-meta">
+                <span>Chuyen: <strong th:text="${tripType + ' #' + tripId}">RENTAL #1</strong></span>
+                <span th:if="${pickupAddress != null and !pickupAddress.isBlank()}">
+                    Diem don: <strong th:text="${pickupAddress}">123 Nguyen Hue</strong>
+                </span>
+            </div>
+        </div>
+
+        <div class="coord-grid">
+            <div class="coord-card">
+                <h3>Vi tri tai xe hien tai</h3>
+                <p id="driverCoordText">Dang cho app tai xe gui vi tri moi...</p>
+            </div>
+            <div class="coord-card">
+                <h3>Vi tri diem don</h3>
+                <p id="pickupCoordText">Dang xac dinh toa do diem don...</p>
+            </div>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="map-foot">
+            <div class="legend">
+                <span class="legend-item">
+                    <span class="legend-swatch swatch-driver"></span>
+                    <span>Tai xe</span>
+                </span>
+                <span class="legend-item">
+                    <span class="legend-swatch swatch-pickup"></span>
+                    <span>Diem don</span>
+                </span>
+                <span class="legend-item">
+                    <span class="legend-swatch swatch-route"></span>
+                    <span>Tuyen duong ngan nhat</span>
+                </span>
+            </div>
+            <div id="lastUpdateText">Chua nhan duoc vi tri tu tai xe.</div>
+        </div>
+    </div>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script th:inline="javascript">
+    const tripType = /*[[${tripType}]]*/ "RENTAL";
+    const tripId = /*[[${tripId}]]*/ 0;
+    const pickupAddress = /*[[${pickupAddress}]]*/ "";
+    const pickupLat = /*[[${pickupLat}]]*/ null;
+    const pickupLng = /*[[${pickupLng}]]*/ null;
+    const pickupProvince = /*[[${pickupProvince}]]*/ "";
+    const pickupDistrict = /*[[${pickupDistrict}]]*/ "";
+    const pickupWard = /*[[${pickupWard}]]*/ "";
+
+    const statusEl = document.getElementById("trackingStatus");
+    const lastUpdateEl = document.getElementById("lastUpdateText");
+    const driverCoordEl = document.getElementById("driverCoordText");
+    const pickupCoordEl = document.getElementById("pickupCoordText");
+
+    const driverIcon = L.divIcon({ className: "", html: '<div class="driver-pin"></div>', iconSize: [18, 18], iconAnchor: [9, 9] });
+    const pickupIcon = L.divIcon({ className: "", html: '<div class="pickup-pin"></div>', iconSize: [18, 18], iconAnchor: [9, 9] });
+
+    let map;
+    let driverMarker = null;
+    let pickupMarker = null;
+    let pickupCoords = null;
+    let routeLine = null;
+    let stompClient = null;
+    let reconnectTimer = null;
+    let pollTimer = null;
+    let lastLocationEpoch = null;
+    let routeAbortController = null;
+    let hasFittedMap = false;
+    let tripCompleted = false;
+
+    function setTrackingStatus(message) {
+        statusEl.textContent = message;
+    }
+
+    function handleBookingEvent(event) {
+        if (!event || typeof event !== "object") {
+            return;
+        }
+
+        if (event.status === "COMPLETED" || event.eventType === "TRIP_COMPLETED") {
+            tripCompleted = true;
+            setTrackingStatus("Chuyen di da hoan thanh");
+            lastUpdateEl.textContent = event.message || "Tai xe da hoan thanh chuyen di.";
+            return;
+        }
+
+        if (event.status === "CANCELLED" || event.eventType === "TRIP_CANCELLED") {
+            tripCompleted = true;
+            setTrackingStatus("Don da bi huy");
+            lastUpdateEl.textContent = event.message || "Don hang da bi huy.";
+            return;
+        }
+
+        if (event.eventType === "DRIVER_ACCEPTED") {
+            setTrackingStatus("Tai xe da nhan don, dang cho vi tri moi");
+            return;
+        }
+
+        if (event.eventType === "LOCATION_AVAILABLE" || event.eventType === "TRIP_STARTED") {
+            setTrackingStatus(driverMarker ? "Da ket noi realtime" : "Tai xe dang chia se vi tri");
+        }
+    }
+
+    function formatCoords(lat, lng) {
+        return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    }
+
+    function setLastUpdate(recordedAt) {
+        if (!recordedAt) {
+            lastUpdateEl.textContent = "Da nhan vi tri moi tu tai xe.";
+            return;
+        }
+
+        const date = new Date(recordedAt);
+        if (Number.isNaN(date.getTime())) {
+            lastUpdateEl.textContent = "Da nhan vi tri moi tu tai xe.";
+            return;
+        }
+
+        lastUpdateEl.textContent = "Cap nhat luc " + date.toLocaleString("vi-VN");
+    }
+
+    function fitMapToContent(force) {
+        const bounds = [];
+
+        if (routeLine) {
+            const routeBounds = routeLine.getBounds();
+            if (routeBounds.isValid()) {
+                map.fitBounds(routeBounds, { padding: [40, 40] });
+                hasFittedMap = true;
+                return;
+            }
+        }
+
+        if (driverMarker) {
+            bounds.push(driverMarker.getLatLng());
+        }
+        if (pickupMarker) {
+            bounds.push(pickupMarker.getLatLng());
+        }
+
+        if (!bounds.length) {
+            return;
+        }
+
+        if (bounds.length === 1) {
+            map.setView(bounds[0], Math.max(map.getZoom(), 15));
+            hasFittedMap = true;
+            return;
+        }
+
+        if (!hasFittedMap || force) {
+            map.fitBounds(L.latLngBounds(bounds), { padding: [40, 40] });
+            hasFittedMap = true;
+        }
+    }
+
+    async function updateRouteLine() {
+        if (!pickupCoords || !driverMarker) {
+            return;
+        }
+
+        if (routeAbortController) {
+            routeAbortController.abort();
+        }
+        routeAbortController = new AbortController();
+
+        const driver = driverMarker.getLatLng();
+        const url =
+            "https://router.project-osrm.org/route/v1/driving/"
+            + `${driver.lng},${driver.lat};${pickupCoords.lng},${pickupCoords.lat}`
+            + "?overview=full&geometries=geojson";
+
+        try {
+            const response = await fetch(url, { signal: routeAbortController.signal });
+            if (!response.ok) {
+                throw new Error("Route request failed");
+            }
+
+            const data = await response.json();
+            const coordinates = data.routes?.[0]?.geometry?.coordinates;
+            if (!Array.isArray(coordinates) || !coordinates.length) {
+                throw new Error("No route geometry");
+            }
+
+            const latLngs = coordinates.map(([lng, lat]) => [lat, lng]);
+            if (routeLine) {
+                routeLine.remove();
+            }
+            routeLine = L.polyline(latLngs, {
+                color: "#0f766e",
+                weight: 5,
+                opacity: 0.78
+            }).addTo(map);
+            fitMapToContent(true);
+        } catch (error) {
+            if (error.name === "AbortError") {
+                return;
+            }
+
+            if (routeLine) {
+                routeLine.remove();
+            }
+            routeLine = L.polyline(
+                [
+                    [driver.lat, driver.lng],
+                    [pickupCoords.lat, pickupCoords.lng]
+                ],
+                {
+                    color: "#0f766e",
+                    weight: 4,
+                    opacity: 0.55,
+                    dashArray: "8, 8"
+                }
+            ).addTo(map);
+            fitMapToContent(true);
+        }
+    }
+
+    function updateDriverMarker(data) {
+        if (typeof data?.lat !== "number" || typeof data?.lng !== "number") {
+            return;
+        }
+
+        const position = [data.lat, data.lng];
+
+        if (!driverMarker) {
+            driverMarker = L.marker(position, { icon: driverIcon }).addTo(map);
+            driverMarker.bindPopup("Vi tri hien tai cua tai xe");
+        } else {
+            driverMarker.setLatLng(position);
+        }
+
+        lastLocationEpoch = Date.now();
+        driverCoordEl.textContent = formatCoords(data.lat, data.lng);
+        setTrackingStatus("Da ket noi realtime");
+        setLastUpdate(data.recordedAt);
+        fitMapToContent(false);
+        updateRouteLine();
+    }
+
+    async function geocodePickupAddress() {
+        if (typeof pickupLat === "number" && typeof pickupLng === "number") {
+            pickupCoords = { lat: pickupLat, lng: pickupLng };
+            pickupCoordEl.textContent = formatCoords(pickupLat, pickupLng);
+            pickupMarker = L.marker([pickupLat, pickupLng], { icon: pickupIcon }).addTo(map);
+            pickupMarker.bindPopup("Diem don cua khach hang");
+            fitMapToContent(false);
+            updateRouteLine();
+            return;
+        }
+
+        if (!pickupAddress) {
+            pickupCoordEl.textContent = "Khong co dia chi diem don.";
+            return;
+        }
+
+        const normalizedAddress = pickupAddress.trim();
+        const locationParts = [pickupWard, pickupDistrict, pickupProvince]
+            .filter(part => typeof part === "string" && part.trim().length > 0)
+            .map(part => part.trim());
+
+        const rawQueries = [
+            normalizedAddress,
+            `${normalizedAddress}, Viet Nam`,
+            locationParts.length ? `${normalizedAddress}, ${locationParts.join(", ")}, Viet Nam` : "",
+            locationParts.length ? `${locationParts.join(", ")}, Viet Nam` : "",
+            pickupDistrict && pickupProvince ? `${pickupDistrict}, ${pickupProvince}, Viet Nam` : "",
+            pickupProvince ? `${pickupProvince}, Viet Nam` : ""
+        ];
+        const queries = [...new Set(rawQueries.filter(query => query && query.trim().length > 0))];
+
+        try {
+            for (const query of queries) {
+                const url =
+                    "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=vn&q="
+                    + encodeURIComponent(query);
+                const response = await fetch(url, {
+                    headers: {
+                        Accept: "application/json"
+                    }
+                });
+
+                if (!response.ok) {
+                    continue;
+                }
+
+                const data = await response.json();
+                if (!Array.isArray(data) || !data.length) {
+                    continue;
+                }
+
+                const lat = Number(data[0].lat);
+                const lng = Number(data[0].lon);
+                if (Number.isNaN(lat) || Number.isNaN(lng)) {
+                    continue;
+                }
+
+                pickupCoords = { lat, lng };
+                pickupCoordEl.textContent = formatCoords(lat, lng);
+
+                pickupMarker = L.marker([lat, lng], { icon: pickupIcon }).addTo(map);
+                pickupMarker.bindPopup("Diem don cua khach hang");
+                fitMapToContent(false);
+                updateRouteLine();
+                return;
+            }
+            throw new Error("No pickup result");
+        } catch (error) {
+            pickupCoordEl.textContent = "Khong xac dinh duoc toa do diem don tu dia chi hien tai.";
+            console.error("Geocode pickup failed", error);
+        }
+    }
+
+    async function fetchLatestLocation() {
+        if (tripCompleted) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/trips/${tripType}/${tripId}/driver-location`, {
+                cache: "no-store"
+            });
+
+            if (response.status === 200) {
+                const data = await response.json();
+                updateDriverMarker(data);
+                return;
+            }
+
+            if (response.status === 204) {
+                if (!driverMarker) {
+                    setTrackingStatus("Dang cho tai xe bat chia se vi tri");
+                }
+                return;
+            }
+
+            setTrackingStatus("Khong lay duoc vi tri tai xe luc nay");
+        } catch (error) {
+            console.error("Load latest location failed", error);
+            setTrackingStatus("Dang thu tai ket noi lai realtime...");
+        }
+    }
+
+    function scheduleReconnect() {
+        if (reconnectTimer) {
+            return;
+        }
+
+        reconnectTimer = window.setTimeout(() => {
+            reconnectTimer = null;
+            connectRealtime();
+        }, 5000);
+    }
+
+    function connectRealtime() {
+        if (stompClient && stompClient.connected) {
+            return;
+        }
+
+        const socket = new SockJS("/ws");
+        stompClient = Stomp.over(socket);
+        stompClient.debug = () => {};
+        stompClient.heartbeat.outgoing = 10000;
+        stompClient.heartbeat.incoming = 10000;
+
+        stompClient.connect(
+            {},
+            () => {
+                setTrackingStatus(driverMarker ? "Da ket noi realtime" : "Dang cho tai xe bat chia se vi tri");
+                stompClient.subscribe(`/topic/bookings/${tripType}/${tripId}`, (message) => {
+                    const event = JSON.parse(message.body);
+                    handleBookingEvent(event);
+                });
+                stompClient.subscribe(`/topic/trips/${tripType}/${tripId}`, (message) => {
+                    const data = JSON.parse(message.body);
+                    updateDriverMarker(data);
+                });
+            },
+            () => {
+                setTrackingStatus("Mat ket noi realtime, dang thu ket noi lai...");
+                scheduleReconnect();
+            }
+        );
+
+        socket.onclose = () => {
+            if (!stompClient?.connected) {
+                setTrackingStatus("Mat ket noi realtime, dang thu ket noi lai...");
+                scheduleReconnect();
+            }
+        };
+    }
+
+    function startPolling() {
+        if (pollTimer) {
+            window.clearInterval(pollTimer);
+        }
+        pollTimer = window.setInterval(() => {
+            fetchLatestLocation();
+
+            if (!tripCompleted && lastLocationEpoch && Date.now() - lastLocationEpoch > 25000) {
+                setTrackingStatus("Dang cho vi tri moi tu tai xe...");
+            }
+
+            if (!tripCompleted && (!stompClient || !stompClient.connected)) {
+                connectRealtime();
+            }
+        }, 10000);
+    }
+
+    function initMap() {
+        map = L.map("map", {
+            zoomControl: true
+        }).setView([10.7769, 106.7009], 13);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
+
+        geocodePickupAddress();
+        fetchLatestLocation();
+        connectRealtime();
+        startPolling();
+
+        document.addEventListener("visibilitychange", () => {
+            if (!document.hidden) {
+                fetchLatestLocation();
+                connectRealtime();
+            }
+        });
+
+        window.addEventListener("beforeunload", () => {
+            if (pollTimer) {
+                window.clearInterval(pollTimer);
+            }
+            if (reconnectTimer) {
+                window.clearTimeout(reconnectTimer);
+            }
+            if (stompClient && stompClient.connected) {
+                stompClient.disconnect(() => {});
+            }
+        });
+    }
+
+    window.addEventListener("load", initMap);
+</script>
+</body>
+</html>
