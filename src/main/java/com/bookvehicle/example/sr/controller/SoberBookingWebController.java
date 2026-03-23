@@ -80,12 +80,17 @@ public class SoberBookingWebController {
         User loggedUser = SecurityUtil.getLoggedUser(session);
         if (loggedUser == null) return "redirect:/auth/login";
 
+        if (loggedUser.getRole() == Role.DRIVER) {
+            return "redirect:/driver/sober-bookings";
+        }
+
         Customer customer = customerRepository.findByUserId(loggedUser.getId())
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
 
         List<SoberBooking> bookings = soberBookingRepository.findByCustomerId(customer.getId());
         model.addAttribute("bookings", bookings);
         model.addAttribute("wallet", walletService.getOrCreateWallet(loggedUser.getId()));
+        model.addAttribute("customer", customer);
         model.addAttribute("loggedUser", loggedUser);
         return "sober-bookings/my";
     }

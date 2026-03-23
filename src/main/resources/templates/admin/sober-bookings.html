@@ -1,76 +1,182 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Thuê tài xế | Admin</title>
-    <style th:replace="~{layout/base :: head}"></style>
+    <title>Quản lý Lái hộ – SR-Booking Admin</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Be Vietnam Pro', sans-serif; background: #f5f3f9; color: #1b1b20; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .sidebar-link { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 12px; color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 600; transition: all .2s; }
+        .sidebar-link:hover { background: rgba(255,255,255,.1); color: white; }
+        .sidebar-link.active { background: #FE6A34; color: white; transform: scale(1.02); }
+        .badge { display: inline-block; padding: .22rem .7rem; border-radius: 999px; font-size: .68rem; font-weight: 700; white-space: nowrap; text-transform: uppercase; letter-spacing: .04em; }
+        .status-pending    { background: #FEF3C7; color: #92400E; }
+        .status-accepted   { background: #DBEAFE; color: #1D4ED8; }
+        .status-in_progress{ background: #FED7AA; color: #9A3412; }
+        .status-completed  { background: #D1FAE5; color: #065F46; }
+        .status-cancelled  { background: #F1F5F9; color: #64748B; }
+        .status-rejected   { background: #FEE2E2; color: #991B1B; }
+        .cat-badge { display: inline-block; padding: .15rem .5rem; border-radius: 6px; font-size: .68rem; font-weight: 700; background: #f1f5f9; color: #475569; }
+        table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+        th { background: #f8f7fc; font-weight: 700; color: #64748b; padding: .7rem 1.1rem; text-align: left; border-bottom: 1px solid #e9e7ed; white-space: nowrap; font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; }
+        td { padding: .8rem 1.1rem; border-bottom: 1px solid #f0eef5; vertical-align: middle; }
+        tr:hover td { background: #faf9ff; }
+        .alert { padding: .8rem 1.1rem; border-radius: 10px; margin-bottom: 16px; font-size: .875rem; font-weight: 500; }
+        .alert-danger  { background: #FEF2F2; color: #991B1B; border-left: 3px solid #EF4444; }
+        .alert-success { background: #F0FDF4; color: #166534; border-left: 3px solid #10B981; }
+        .btn { display: inline-flex; align-items: center; gap: .35rem; padding: .4rem .9rem; border: none; border-radius: 8px; font-size: .8rem; font-weight: 600; cursor: pointer; text-decoration: none; transition: all .2s; font-family: inherit; }
+        .btn-outline { background: transparent; border: 1.5px solid #e9e7ed; color: #64748b; }
+        .btn-outline:hover { border-color: #0A2463; color: #0A2463; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    </style>
 </head>
 <body>
-<nav th:replace="~{layout/base :: navbar}"></nav>
 
-<main class="main">
-    <div class="page-header">
-        <h1 class="page-title">Quản lý Thuê tài xế</h1>
-        <a class="btn btn-primary" th:href="@{/admin/sober-bookings/rates}">⚙️ Cấu hình giá</a>
+<!-- Sidebar -->
+<aside style="position:fixed;left:0;top:0;height:100%;width:256px;background:#0A2463;display:flex;flex-direction:column;padding:24px 0;z-index:50;box-shadow:4px 0 24px rgba(0,16,62,.15);">
+    <div style="padding:0 24px;margin-bottom:32px;">
+        <h1 style="color:white;font-size:1.4rem;font-weight:800;font-style:italic;letter-spacing:-.02em;">SR-Booking</h1>
+        <p style="color:#93c5fd;font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;opacity:.7;">Mobility Admin</p>
     </div>
+    <nav style="flex:1;padding:0 8px;display:flex;flex-direction:column;gap:2px;">
+        <a class="sidebar-link" href="/admin/dashboard"><span class="material-symbols-outlined" style="font-size:20px;">dashboard</span>Dashboard</a>
+        <a class="sidebar-link" href="/admin/users"><span class="material-symbols-outlined" style="font-size:20px;">group</span>Quản lý Users</a>
+        <a class="sidebar-link" href="/admin/vehicles"><span class="material-symbols-outlined" style="font-size:20px;">directions_car</span>Quản lý Xe</a>
+        <a class="sidebar-link active" href="/admin/sober-bookings"><span class="material-symbols-outlined" style="font-size:20px;">assignment</span>Quản lý Lái hộ</a>
+        <a class="sidebar-link" href="/admin/withdrawals"><span class="material-symbols-outlined" style="font-size:20px;">payments</span>Rút tiền</a>
+        <a class="sidebar-link" href="/admin/pickup-points"><span class="material-symbols-outlined" style="font-size:20px;">location_on</span>Điểm đón</a>
+        <a class="sidebar-link" href="/admin/realtime">
+            <span class="material-symbols-outlined" style="font-size:20px;">monitoring</span>Realtime
+            <span style="margin-left:auto;width:8px;height:8px;background:#4ade80;border-radius:50%;animation:pulse 1.5s infinite;"></span>
+        </a>
+    </nav>
+    <div style="padding:0 8px;border-top:1px solid rgba(255,255,255,.1);padding-top:12px;margin-top:8px;">
+        <a class="sidebar-link" href="/auth/logout" style="color:#fca5a5;">
+            <span class="material-symbols-outlined" style="font-size:18px;">logout</span>Đăng xuất
+        </a>
+    </div>
+</aside>
+
+<!-- Top Header -->
+<header style="position:fixed;top:0;right:0;width:calc(100% - 256px);height:64px;background:rgba(255,255,255,.85);backdrop-filter:blur(16px);display:flex;justify-content:space-between;align-items:center;padding:0 32px;z-index:40;border-bottom:1px solid #f0eef5;">
+    <h2 style="font-weight:800;color:#0A2463;font-size:.95rem;">Quản lý Lái hộ</h2>
+    <div style="display:flex;align-items:center;gap:10px;">
+        <a href="/admin/sober-bookings/rates" class="btn" style="background:#0A2463;color:white;border-radius:20px;font-size:.8rem;">
+            <span class="material-symbols-outlined" style="font-size:15px;">settings</span>Cấu hình giá
+        </a>
+        <div style="width:34px;height:34px;border-radius:50%;background:#0A2463;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:12px;">AD</div>
+    </div>
+</header>
+
+<!-- Main -->
+<main style="margin-left:256px;padding:88px 32px 48px;">
 
     <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
     <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
 
-    <div class="card">
-        <div class="table-wrap">
-            <div th:if="${#lists.isEmpty(bookings)}" style="padding: 2rem; text-align: center; color: var(--muted);">
-                Chưa có dữ liệu thuê tài xế.
+    <div style="margin-bottom:24px;">
+        <h1 style="font-size:1.6rem;font-weight:800;color:#0A2463;margin-bottom:4px;">🚗 Đơn Lái hộ</h1>
+        <p style="color:#64748b;font-size:.875rem;">Toàn bộ yêu cầu thuê tài xế lái hộ trong hệ thống</p>
+    </div>
+
+    <!-- Empty state -->
+    <div th:if="${#lists.isEmpty(bookings)}" style="background:white;border-radius:20px;padding:4rem;text-align:center;border:1px solid #f0eef5;box-shadow:0 4px 16px rgba(0,16,62,.05);">
+        <div style="font-size:3rem;margin-bottom:12px;">🔍</div>
+        <p style="color:#64748b;font-size:.95rem;font-weight:500;">Chưa có dữ liệu lái hộ nào.</p>
+    </div>
+
+    <!-- Table -->
+    <div th:if="${!#lists.isEmpty(bookings)}" style="background:white;border-radius:20px;overflow:hidden;border:1px solid #f0eef5;box-shadow:0 4px 16px rgba(0,16,62,.05);">
+        <!-- Search toolbar -->
+        <div style="padding:16px 20px;border-bottom:1px solid #f0eef5;display:flex;align-items:center;gap:12px;">
+            <div style="position:relative;flex:1;max-width:400px;">
+                <span class="material-symbols-outlined" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:18px;color:#94a3b8;">search</span>
+                <input type="text" placeholder="Tìm kiếm mã đơn, khách hàng…" oninput="filterTable(this.value)"
+                    style="width:100%;padding:.5rem .9rem .5rem 2.4rem;border:1.5px solid #e9e7ed;border-radius:10px;font-size:.875rem;font-family:inherit;outline:none;"
+                    onfocus="this.style.borderColor='#0A2463'" onblur="this.style.borderColor='#e9e7ed'">
             </div>
-            <table th:if="${!#lists.isEmpty(bookings)}">
+        </div>
+
+        <div style="overflow-x:auto;">
+            <table id="bookingsTable">
                 <thead>
                     <tr>
                         <th>ID</th>
                         <th>Khách hàng</th>
-                        <th>Loại xe/Thông tin</th>
+                        <th>Phương tiện</th>
                         <th>Thời gian thuê</th>
+                        <th>Tổng tiền</th>
                         <th>Trạng thái</th>
                         <th>Tài xế</th>
-                        <th>Tổng tiền</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr th:each="b : ${bookings}">
-                        <td th:text="'#' + ${b.id}"></td>
-                        <td th:text="${b.customerId}"></td> <!-- Could join to show name -->
+                        <td style="font-weight:700;color:#0A2463;font-size:.85rem;" th:text="'#' + ${b.id}"></td>
                         <td>
-                            <div th:text="${b.customerVehicle}"></div>
-                            <small class="badge badge-standard">
-                                <span th:if="${b.vehicleCategory.name() == 'MOTORCYCLE'}">Xe máy</span>
-                                <span th:if="${b.vehicleCategory.name() == 'CAR_4'}">Xe hơi 4 chỗ</span>
-                                <span th:if="${b.vehicleCategory.name() == 'CAR_7'}">Xe hơi 7 chỗ</span>
-                                <span th:if="${!#lists.contains({'MOTORCYCLE', 'CAR_4', 'CAR_7'}, b.vehicleCategory.name())}" th:text="${b.vehicleCategory}"></span>
-                            </small>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <div style="width:30px;height:30px;border-radius:50%;background:#DBEAFE;display:flex;align-items:center;justify-content:center;color:#1D4ED8;font-size:10px;font-weight:700;flex-shrink:0;">
+                                    KH
+                                </div>
+                                <span style="font-weight:600;" th:text="${b.customerId}">—</span>
+                            </div>
                         </td>
                         <td>
-                            <div th:text="${#temporals.format(b.startTime, 'dd/MM HH:mm')}"></div>
-                            <small th:text="${b.duration} + ' ' + (${b.durationUnit == 'HOURLY' ? 'giờ' : 'ngày'})"></small>
+                            <div style="font-weight:600;font-size:.85rem;" th:text="${b.customerVehicle}"></div>
+                            <div>
+                                <span class="cat-badge" th:if="${b.vehicleCategory.name() == 'MOTORCYCLE'}">🏍️ Xe máy</span>
+                                <span class="cat-badge" th:if="${b.vehicleCategory.name() == 'CAR_4'}">🚗 4 chỗ</span>
+                                <span class="cat-badge" th:if="${b.vehicleCategory.name() == 'CAR_7'}">🚐 7 chỗ</span>
+                                <span class="cat-badge" th:if="${!#lists.contains({'MOTORCYCLE','CAR_4','CAR_7'}, b.vehicleCategory.name())}" th:text="${b.vehicleCategory}"></span>
+                            </div>
                         </td>
                         <td>
-                            <span class="badge" 
-                                  th:classappend="${b.status.name() == 'PENDING' ? 'badge-pending' : 
-                                                   b.status.name() == 'ACCEPTED' ? 'badge-approved' : 
-                                                   b.status.name() == 'COMPLETED' ? 'badge-active' : 
-                                                   b.status.name() == 'CANCELLED' ? 'badge-inactive' : 'badge-inactive'}"
-                                  th:text="${b.status.name() == 'CANCELLED' ? 'ĐÃ HỦY' : b.status}"></span>
-                            <div th:if="${b.cancelReason}" style="font-size: .75rem; color: #dc2626; margin-top: .2rem; max-width: 150px;" th:text="'Lý do hủy: ' + ${b.cancelReason}"></div>
+                            <div style="font-weight:600;font-size:.85rem;" th:text="${#temporals.format(b.startTime, 'dd/MM HH:mm')}"></div>
+                            <div style="font-size:.75rem;color:#64748b;" th:text="${b.duration} + ' ' + (${b.durationUnit == 'HOURLY' ? 'giờ' : 'ngày'})"></div>
+                        </td>
+                        <td style="font-weight:700;color:#0A2463;" th:text="${#numbers.formatDecimal(b.totalPrice, 0, 'COMMA', 0, 'POINT')} + 'đ'"></td>
+                        <td>
+                            <span class="badge"
+                                th:classappend="${b.status.name() == 'PENDING' ? 'status-pending' :
+                                                 b.status.name() == 'ACCEPTED' ? 'status-accepted' :
+                                                 b.status.name() == 'IN_PROGRESS' ? 'status-in_progress' :
+                                                 b.status.name() == 'COMPLETED' ? 'status-completed' :
+                                                 b.status.name() == 'CANCELLED' ? 'status-cancelled' : 'status-rejected'}"
+                                th:text="${b.status.name() == 'PENDING' ? 'Chờ duyệt' :
+                                          b.status.name() == 'ACCEPTED' ? 'Đã nhận' :
+                                          b.status.name() == 'IN_PROGRESS' ? 'Đang thực hiện' :
+                                          b.status.name() == 'COMPLETED' ? 'Hoàn thành' :
+                                          b.status.name() == 'CANCELLED' ? 'Đã hủy' : b.status}">
+                            </span>
+                            <div th:if="${b.cancelReason}" style="font-size:.72rem;color:#dc2626;margin-top:3px;max-width:140px;" th:text="'Lý do: ' + ${b.cancelReason}"></div>
                         </td>
                         <td>
-                            <span th:if="${b.driverId == null}" style="color: var(--muted); font-style: italic;">Chưa gán</span>
-                            <span th:if="${b.driverId != null}" th:text="'Driver #' + ${b.driverId}"></span>
+                            <span th:if="${b.driverId == null}" style="color:#94a3b8;font-style:italic;font-size:.8rem;">⏳ Chưa gán</span>
+                            <div th:if="${b.driverId != null}" style="display:flex;align-items:center;gap:6px;">
+                                <div style="width:26px;height:26px;border-radius:50%;background:#D1FAE5;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#065F46;">TX</div>
+                                <span style="font-weight:600;font-size:.82rem;" th:text="'#' + ${b.driverId}"></span>
+                            </div>
                         </td>
-                        <td style="font-weight: 700; color: var(--primary);" th:text="${#numbers.formatDecimal(b.totalPrice, 0, 'COMMA', 0, 'POINT')} + 'đ'"></td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
 </main>
+
+<script>
+function filterTable(query) {
+    const q = query.toLowerCase();
+    document.querySelectorAll('#bookingsTable tbody tr').forEach(tr => {
+        tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+}
+</script>
 </body>
 </html>
+

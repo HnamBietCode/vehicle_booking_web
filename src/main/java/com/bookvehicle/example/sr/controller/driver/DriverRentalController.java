@@ -2,10 +2,13 @@ package com.bookvehicle.example.sr.controller.driver;
 
 import com.bookvehicle.example.sr.config.SecurityUtil;
 import com.bookvehicle.example.sr.dto.RentalCompleteForm;
+import com.bookvehicle.example.sr.dto.ReportDashboardDTO;
 import com.bookvehicle.example.sr.model.Role;
 import com.bookvehicle.example.sr.model.User;
 import com.bookvehicle.example.sr.model.VehicleRental;
+import com.bookvehicle.example.sr.service.DriverReportService;
 import com.bookvehicle.example.sr.service.VehicleRentalService;
+import com.bookvehicle.example.sr.repository.DriverRepository;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,9 +27,15 @@ import java.util.List;
 public class DriverRentalController {
 
     private final VehicleRentalService vehicleRentalService;
+    private final DriverReportService driverReportService;
+    private final DriverRepository driverRepository;
 
-    public DriverRentalController(VehicleRentalService vehicleRentalService) {
+    public DriverRentalController(VehicleRentalService vehicleRentalService, 
+                                  DriverReportService driverReportService,
+                                  DriverRepository driverRepository) {
         this.vehicleRentalService = vehicleRentalService;
+        this.driverReportService = driverReportService;
+        this.driverRepository = driverRepository;
     }
 
     @GetMapping
@@ -40,10 +49,20 @@ public class DriverRentalController {
             return "redirect:/";
         }
 
+        if (driverRepository.findByUserId(loggedUser.getId()).isEmpty()) {
+            ra.addFlashAttribute("error", "Không tìm thấy hồ sơ tài xế của bạn. Vui lòng liên hệ Admin.");
+            return "redirect:/profile";
+        }
+
         List<VehicleRental> rentals = vehicleRentalService.findByDriverUserId(loggedUser.getId());
         List<VehicleRental> pendingVehicleOnly = vehicleRentalService.findPendingVehicleOnly();
+        
+        // Add daily stats for the dashboard header
+        ReportDashboardDTO todayStats = driverReportService.getDashboardData(loggedUser.getId(), "daily");
+        
         model.addAttribute("rentals", rentals);
         model.addAttribute("pendingVehicleOnly", pendingVehicleOnly);
+        model.addAttribute("todayStats", todayStats);
         model.addAttribute("completeForm", new RentalCompleteForm());
         model.addAttribute("loggedUser", loggedUser);
         return "driver/rentals";

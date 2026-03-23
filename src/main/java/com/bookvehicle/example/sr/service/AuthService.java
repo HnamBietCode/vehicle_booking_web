@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Transactional
@@ -135,5 +137,70 @@ public class AuthService {
         if (!passwordEncoder.matches(rawPassword, user.getPassword()))
             return null;
         return user;
+    }
+
+    // ── Forgot Password Logic ───────────────────────────────────────
+    
+    private final Map<String, String> otpStorage = new ConcurrentHashMap<>();
+    private final Map<String, Long> otpExpiry = new ConcurrentHashMap<>();
+    
+    public String sendPasswordResetOtp(String email) {
+        if (!userRepository.existsByEmail(email.trim().toLowerCase())) {
+            return "Email không tồn tại trong hệ thống.";
+        }
+        
+        // Generate random 6-digit OTP
+        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
+        long expiryTime = System.currentTimeMillis() + (5 * 60 * 1000); // 5 minutes
+        
+        otpStorage.put(email.toLowerCase(), otp);
+        otpExpiry.put(email.toLowerCase(), expiryTime);
+        
+        System.out.println("==================================================");
+        System.out.println("OTP YÊU CẦU ĐẶT LẠI MẬT KHẨU CHO " + email + " LÀ: " + otp);
+        System.out.println("==================================================");
+        
+        return null; // Success
+    }
+
+    public String verifyPasswordResetOtp(String email, String otp) {
+        String storedOtp = otpStorage.get(email.toLowerCase());
+        Long expiryTime = otpExpiry.get(email.toLowerCase());
+        
+        if (storedOtp == null || expiryTime == null) {
+            return "Mã OTP không hợp lệ hoặc đã hết hạn.";
+        }
+        if (System.currentTimeMillis() > expiryTime) {
+            otpStorage.remove(email.toLowerCase());
+            otpExpiry.remove(email.toLowerCase());
+            return "Mã OTP đã hết hạn.";
+        }
+        if (!storedOtp.equals(otp)) {
+            return "Mã OTP không chính xác.";
+        }
+        
+        return null;
+    }
+
+    public String resetPassword(String email, String otp, String newPassword, String confirmPassword) {
+        String verifyErr = verifyPasswordResetOtp(email, otp);
+        if (verifyErr != null) return verifyErr;
+        
+        if (newPassword == null || newPassword.length() < 6)
+            return "Mật khẩu mới phải từ 6 ký tự trở lên.";
+        if (!newPassword.equals(confirmPassword))
+            return "Xác nhận mật khẩu không khớp.";
+            
+        Optional<User> optUser = userRepository.findByEmail(email.toLowerCase());
+        if (optUser.isEmpty()) return "Người dùng không tồn tại.";
+        
+        User user = optUser.get();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        
+        otpStorage.remove(email.toLowerCase());
+        otpExpiry.remove(email.toLowerCase());
+        
+        return null;
     }
 }

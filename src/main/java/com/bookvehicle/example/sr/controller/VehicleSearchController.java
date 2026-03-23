@@ -41,8 +41,8 @@ public class VehicleSearchController {
             requireFreeDriver = false;
         }
 
-        // Luôn tìm kiếm - mặc định hiển thị tất cả xe khả dụng
-        List<Vehicle> results = vehicleService.searchAvailable(category, maxPrice, location, requireFreeDriver);
+        // Luôn tìm kiếm - hiển thị tất cả xe (bao gồm cả xe đang ON_TRIP để hiện giao diện mờ)
+        List<Vehicle> results = vehicleService.searchAll(category, maxPrice, location, requireFreeDriver);
         boolean searched = true;
 
         model.addAttribute("results", results);
