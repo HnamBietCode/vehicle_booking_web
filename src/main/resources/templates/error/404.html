@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html class="light" lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>404 - Không tìm thấy trang | SR-Booking</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+        extend: {
+            colors: {
+                "primary-container": "#0a2463",
+                "secondary-container": "#fe6a34",
+                "surface": "#faf8ff",
+                "primary": "#00103e",
+                "on-surface-variant": "#444650",
+                "surface-container-low": "#f5f3f9"
+            },
+            fontFamily: {
+                "headline": ["Be Vietnam Pro"],
+                "body": ["Be Vietnam Pro"]
+            }
+        }
+    }
+}
+</script>
+<style>
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    display: inline-block;
+    line-height: 1;
+    vertical-align: middle;
+}
+.kinetic-gradient {
+    background: linear-gradient(135deg, #00103E 0%, #0A2463 100%);
+}
+.asymmetric-clip {
+    clip-path: polygon(0 0, 100% 0, 100% 85%, 0% 100%);
+}
+@media (min-width: 768px) {
+    .asymmetric-clip-md {
+        clip-path: none;
+    }
+}
+</style>
+</head>
+<body class="bg-surface font-body text-on-surface selection:bg-secondary-container selection:text-white">
+<main class="min-h-screen flex flex-col md:flex-row overflow-hidden relative">
+<section class="relative w-full md:w-1/2 kinetic-gradient flex items-center justify-center p-8 md:p-16 z-10 asymmetric-clip asymmetric-clip-md">
+<div class="absolute top-10 left-10">
+<span class="text-3xl font-extrabold tracking-tighter text-white cursor-pointer" onclick="window.location.href='/'">SR-Booking</span>
+</div>
+<div class="relative w-full max-w-lg aspect-square">
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="relative w-full h-full flex items-center justify-center">
+<div class="absolute w-[120%] h-2 bg-secondary-container/30 -rotate-12 blur-sm"></div>
+<div class="absolute w-[120%] h-2 bg-secondary-container/50 -rotate-12 translate-y-8 blur-md"></div>
+<div class="z-20 transform -rotate-12 transition-transform hover:rotate-0 duration-700">
+<img class="w-full h-auto rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-4 border-white/10 grayscale hover:grayscale-0 transition-all duration-500" data-alt="Modern high-end car driving on a glowing neon road" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCd3hJ_BAvuZ5zR1rI_flkk3N4ZKju9zIW59nuF03v5NBCw-dCW0C1i15Va_QISbCy1fMKGRxiNTauM0IOxUXxIBHn14GJqlmbtgHXnPRBmC4zBfnJ2ITTiJbsCOLOnQaNyz_3GRQLjCTQz6cmnIcudFscMmfdMXRuIh1QI0XgZZFP3K7DE2ThQF52Kd0MqWlDwaZjc4ZgxJi-7DrNegoVCXVJb6aj_yEqpCrxOEvGjhwigQc1TnfRVL4MLbr2s8ZoIROdkj_O4560"/>
+</div>
+<div class="absolute -bottom-4 -right-4 md:-bottom-12 md:-right-12">
+<span class="font-headline text-[8rem] md:text-[14rem] font-black text-white/10 leading-none select-none">404</span>
+</div>
+</div>
+</div>
+</div>
+<div class="absolute bottom-20 left-10 hidden md:block">
+<div class="flex items-center gap-4 text-white/40">
+<div class="h-px w-12 bg-white/40"></div>
+<span class="text-xs tracking-[0.2em] font-bold uppercase">Urban Mobility Excellence</span>
+</div>
+</div>
+</section>
+<section class="w-full md:w-1/2 flex items-center justify-center p-8 md:p-16 bg-surface">
+<div class="max-w-md w-full space-y-10">
+<header class="space-y-4">
+<div class="inline-flex items-center px-3 py-1 bg-secondary-container/10 rounded-full border border-secondary-container/20">
+<span class="material-symbols-outlined text-secondary-container text-sm mr-2" data-icon="error">error</span>
+<span class="text-secondary-container font-bold text-xs tracking-wider uppercase">Lỗi hệ thống</span>
+</div>
+<h1 class="font-headline text-4xl md:text-5xl font-bold text-primary leading-tight">
+                        Không tìm thấy trang <br/>
+<span class="text-on-surface-variant font-light text-2xl md:text-3xl">(Page Not Found)</span>
+</h1>
+<p class="text-on-surface-variant leading-relaxed opacity-80 mt-2">
+                        Chuyến đi của bạn đã rẽ nhầm hướng. Có vẻ như trang bạn đang tìm kiếm đã được di dời hoặc không còn tồn tại trên bản đồ của chúng tôi.
+                    </p>
+</header>
+<div class="grid grid-cols-1 gap-4">
+<a th:href="@{/}" class="group relative flex items-center justify-between bg-primary-container text-white px-8 py-5 rounded-xl shadow-[0_4px_24px_rgba(0,16,62,0.15)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 overflow-hidden">
+<div class="absolute inset-0 bg-secondary-container translate-x-[-101%] group-hover:translate-x-0 transition-transform duration-500 ease-out opacity-10"></div>
+<span class="font-bold tracking-tight">Trở về Trang chủ</span>
+<span class="material-symbols-outlined transition-transform group-hover:translate-x-1" data-icon="arrow_forward">arrow_forward</span>
+</a>
+<button class="flex items-center justify-center gap-3 px-8 py-4 text-on-surface-variant font-semibold hover:bg-surface-container-low rounded-xl transition-colors w-full border border-transparent hover:border-gray-200">
+<span class="material-symbols-outlined text-lg" data-icon="support_agent">support_agent</span>
+<span>Liên hệ hỗ trợ</span>
+</button>
+</div>
+<footer class="pt-12 border-t border-gray-200">
+<div class="grid grid-cols-2 gap-8">
+<div>
+<span class="text-xs text-gray-500 font-bold uppercase block mb-3 tracking-widest">Tìm kiếm nhanh</span>
+<ul class="space-y-2 text-primary font-medium text-sm">
+<li><a class="hover:text-secondary-container transition-colors" th:href="@{/vehicles/search}">Đặt xe ngay</a></li>
+<li><a class="hover:text-secondary-container transition-colors" href="#">Bảng giá dịch vụ</a></li>
+</ul>
+</div>
+<div>
+<span class="text-xs text-gray-500 font-bold uppercase block mb-3 tracking-widest">Trạng thái</span>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+<span class="text-sm font-medium text-on-surface-variant">Hệ thống ổn định</span>
+</div>
+</div>
+</div>
+</footer>
+</div>
+</section>
+<div class="absolute top-1/2 right-0 -translate-y-1/2 w-64 h-64 bg-secondary-container/5 blur-[120px] rounded-full pointer-events-none"></div>
+</main>
+</body>
+</html>

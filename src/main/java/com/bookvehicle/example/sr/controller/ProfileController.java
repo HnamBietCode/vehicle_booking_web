@@ -40,13 +40,23 @@ public class ProfileController {
     public String detail(Model model, HttpSession session) {
         User user = SecurityUtil.getLoggedUser(session);
         model.addAttribute("user", user);
+
+        ProfileEditForm form = new ProfileEditForm();
+        form.setPhone(user.getPhone());
+        form.setAvatarUrl(user.getAvatarUrl());
+
         if (user.getRole() == Role.CUSTOMER) {
             userService.findCustomerByUserId(user.getId())
-                       .ifPresent(c -> model.addAttribute("customer", c));
+                       .ifPresent(c -> {
+                           model.addAttribute("customer", c);
+                           form.setFullName(c.getFullName());
+                           form.setAddress(c.getAddress());
+                       });
         } else if (user.getRole() == Role.DRIVER) {
             userService.findDriverByUserId(user.getId())
                        .ifPresent(d -> {
                            model.addAttribute("driver", d);
+                           form.setFullName(d.getFullName());
                            
                            // Add Rating Stats
                            int totalRatings = ratingService.findDriverRatings(d.getId()).size();
@@ -59,34 +69,16 @@ public class ProfileController {
                                          .ifPresent(v -> model.addAttribute("assignedVehicle", v));
                        });
         }
+        
+        if (form.getFullName() == null) {
+            form.setFullName(user.getEmail());
+        }
+        model.addAttribute("form", form);
+
         return "profile/detail";
     }
 
     // ── Edit ──────────────────────────────────────────────────────
-
-    @GetMapping("/edit")
-    public String showEditForm(Model model, HttpSession session) {
-        User user = SecurityUtil.getLoggedUser(session);
-        ProfileEditForm form = new ProfileEditForm();
-        form.setPhone(user.getPhone());
-        form.setAvatarUrl(user.getAvatarUrl());
-
-        if (user.getRole() == Role.CUSTOMER) {
-            userService.findCustomerByUserId(user.getId()).ifPresent(c -> {
-                form.setFullName(c.getFullName());
-                form.setAddress(c.getAddress());
-            });
-        } else if (user.getRole() == Role.DRIVER) {
-            userService.findDriverByUserId(user.getId()).ifPresent(d ->
-                form.setFullName(d.getFullName()));
-        } else {
-            form.setFullName(user.getEmail()); // Admin không có fullName riêng
-        }
-
-        model.addAttribute("form", form);
-        model.addAttribute("user", user);
-        return "profile/edit";
-    }
 
     @PostMapping("/edit")
     public String handleEdit(@ModelAttribute("form") ProfileEditForm form,
@@ -96,9 +88,8 @@ public class ProfileController {
         User user = SecurityUtil.getLoggedUser(session);
         String error = userService.updateProfile(user.getId(), form);
         if (error != null) {
-            model.addAttribute("error", error);
-            model.addAttribute("user", user);
-            return "profile/edit";
+            ra.addFlashAttribute("error", error);
+            return "redirect:/profile";
         }
         // Refresh user in session
         userService.findById(user.getId())

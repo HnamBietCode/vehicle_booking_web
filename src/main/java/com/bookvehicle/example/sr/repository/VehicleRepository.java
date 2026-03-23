@@ -54,4 +54,26 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
             @Param("maxPricePerKm") BigDecimal maxPricePerKm,
             @Param("location") String location
     );
+
+    @Query("SELECT v FROM Vehicle v WHERE (:category IS NULL OR v.category = :category) " +
+           "AND (:maxPricePerKm IS NULL OR v.pricePerKm <= :maxPricePerKm) " +
+           "AND (:location IS NULL OR :location = '' OR LOWER(v.currentAddress) LIKE LOWER(CONCAT('%', :location, '%'))) " +
+           "ORDER BY CASE WHEN v.status = 'AVAILABLE' THEN 0 ELSE 1 END, v.avgRating DESC, v.pricePerKm ASC")
+    List<Vehicle> searchAll(
+            @Param("category") VehicleCategory category,
+            @Param("maxPricePerKm") BigDecimal maxPricePerKm,
+            @Param("location") String location
+    );
+
+    @Query("SELECT v FROM Vehicle v LEFT JOIN v.driver d WHERE " +
+           "(:category IS NULL OR v.category = :category) " +
+           "AND (:maxPricePerKm IS NULL OR v.pricePerKm <= :maxPricePerKm) " +
+           "AND (:location IS NULL OR :location = '' OR LOWER(v.currentAddress) LIKE LOWER(CONCAT('%', :location, '%'))) " +
+           "AND (v.driver IS NOT NULL AND d.verificationStatus = 'APPROVED') " +
+           "ORDER BY CASE WHEN v.status = 'AVAILABLE' THEN 0 ELSE 1 END, v.avgRating DESC, v.pricePerKm ASC")
+    List<Vehicle> searchAllWithDriverFilters(
+            @Param("category") VehicleCategory category,
+            @Param("maxPricePerKm") BigDecimal maxPricePerKm,
+            @Param("location") String location
+    );
 }

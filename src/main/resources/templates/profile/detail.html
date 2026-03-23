@@ -1,400 +1,349 @@
-﻿<!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-
+<!DOCTYPE html>
+<html class="light" lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hồ sơ cá nhân – VehicleBook</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        :root {
-            --primary: #4F46E5;
-            --primary-dark: #3730A3;
-            --accent: #F59E0B;
-            --danger: #EF4444;
-            --success: #10B981;
-            --bg: #F8FAFC;
-            --surface: #fff;
-            --border: #E2E8F0;
-            --text: #1E293B;
-            --muted: #64748B;
-            --radius: 12px;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-        }
-
-        /* Navbar */
-        .navbar {
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-            padding: 0 2rem;
-            display: flex;
-            align-items: center;
-            height: 64px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
-        }
-
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.3rem;
-            color: var(--primary);
-            text-decoration: none;
-        }
-
-        .navbar-brand::before {
-            content: '🚗 ';
-        }
-
-        .navbar-nav {
-            display: flex;
-            align-items: center;
-            gap: .25rem;
-            margin-left: auto;
-            list-style: none;
-        }
-
-        .nav-link {
-            padding: .5rem .85rem;
-            border-radius: 8px;
-            text-decoration: none;
-            color: var(--muted);
-            font-size: .9rem;
-            font-weight: 500;
-            transition: all .2s;
-        }
-
-        .nav-link:hover,
-        .nav-link.active {
-            background: var(--primary);
-            color: #fff;
-        }
-
-        /* Main */
-        .main {
-            max-width: 900px;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
-        }
-
-        /* Alerts */
-        .alert {
-            padding: .85rem 1.2rem;
-            border-radius: 8px;
-            margin-bottom: 1.2rem;
-            font-size: .9rem;
-            font-weight: 500;
-        }
-
-        .alert-success {
-            background: #F0FDF4;
-            color: #166534;
-            border-left: 4px solid var(--success);
-        }
-
-        /* Profile Hero */
-        .profile-hero {
-            background: linear-gradient(135deg, #4F46E5, #7C3AED);
-            border-radius: var(--radius);
-            padding: 2rem;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, .25);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            flex-shrink: 0;
-            overflow: hidden;
-            border: 3px solid rgba(255, 255, 255, .4);
-        }
-
-        .avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .profile-info h2 {
-            font-size: 1.4rem;
-            font-weight: 700;
-        }
-
-        .profile-info p {
-            opacity: .85;
-            margin-top: .25rem;
-            font-size: .9rem;
-        }
-
-        .profile-badges {
-            display: flex;
-            gap: .5rem;
-            margin-top: .6rem;
-            flex-wrap: wrap;
-        }
-
-        .pbadge {
-            padding: .25rem .7rem;
-            border-radius: 999px;
-            font-size: .75rem;
-            font-weight: 700;
-            background: rgba(255, 255, 255, .2);
-        }
-
-        .pbadge.premium {
-            background: var(--accent);
-            color: #fff;
-        }
-
-        /* Card */
-        .card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 1.75rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .card-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1.2rem;
-        }
-
-        .card-title {
-            font-size: 1.05rem;
-            font-weight: 700;
-        }
-
-        /* Detail grid */
-        .detail-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.2rem;
-        }
-
-        @media(max-width:600px) {
-            .detail-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .detail-item label {
-            font-size: .78rem;
-            color: var(--muted);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: .05em;
-        }
-
-        .detail-item p {
-            margin-top: .25rem;
-            font-weight: 500;
-        }
-
-        /* Buttons */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: .4rem;
-            padding: .55rem 1.2rem;
-            border: none;
-            border-radius: 8px;
-            font-size: .875rem;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all .2s;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: #fff;
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-dark);
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 1.5px solid var(--border);
-            color: var(--muted);
-        }
-
-        .btn-outline:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-
-        .btn-group {
-            display: flex;
-            gap: .75rem;
-            flex-wrap: wrap;
-        }
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hồ sơ cá nhân - SR-Booking</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-primary-fixed-variant": "#2e4382",
+              "on-background": "#1b1b20",
+              "background": "#faf8ff",
+              "on-primary-container": "#7a8ed2",
+              "secondary-container": "#fe6a34",
+              "on-error-container": "#93000a",
+              "inverse-surface": "#303035",
+              "on-secondary-fixed": "#390c00",
+              "outline": "#757681",
+              "surface-dim": "#dbd9df",
+              "outline-variant": "#c5c6d2",
+              "primary": "#00103e",
+              "on-error": "#ffffff",
+              "surface": "#faf8ff",
+              "on-tertiary-container": "#409f90",
+              "error-container": "#ffdad6",
+              "surface-container-high": "#e9e7ed",
+              "tertiary-container": "#002f29",
+              "surface-container-highest": "#e3e2e8",
+              "on-surface": "#1b1b20",
+              "primary-container": "#0a2463",
+              "tertiary-fixed": "#97f3e2",
+              "on-secondary-fixed-variant": "#832600",
+              "on-primary-fixed": "#00164d",
+              "surface-container-lowest": "#ffffff",
+              "surface-container": "#efedf3",
+              "secondary-fixed": "#ffdbd0",
+              "tertiary-fixed-dim": "#7ad7c6",
+              "tertiary": "#001814",
+              "primary-fixed-dim": "#b5c4ff",
+              "error": "#ba1a1a",
+              "on-surface-variant": "#444650",
+              "secondary-fixed-dim": "#ffb59d",
+              "surface-tint": "#475b9c",
+              "on-secondary-container": "#5d1900",
+              "on-tertiary-fixed-variant": "#005047",
+              "inverse-on-surface": "#f2f0f6",
+              "on-tertiary-fixed": "#00201b",
+              "secondary": "#ab3500",
+              "on-tertiary": "#ffffff",
+              "on-secondary": "#ffffff",
+              "surface-variant": "#e3e2e8",
+              "surface-bright": "#faf8ff",
+              "surface-container-low": "#f5f3f9",
+              "on-primary": "#ffffff",
+              "inverse-primary": "#b5c4ff",
+              "primary-fixed": "#dce1ff"
+            },
+            fontFamily: {
+              "headline": ["Be Vietnam Pro"],
+              "body": ["Be Vietnam Pro"],
+              "label": ["Be Vietnam Pro"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "3xl": "1.5rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      body { font-family: 'Be Vietnam Pro', sans-serif; }
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        vertical-align: middle;
+      }
+      .glass-card {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(20px);
+      }
+      .ambient-glow {
+        box-shadow: 0 4px 24px rgba(0, 16, 62, 0.08);
+      }
     </style>
 </head>
+<body class="bg-surface text-on-surface">
 
-<body>
-    <nav th:replace="~{layout/base :: navbar}"></nav>
+<header class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200/15 shadow-sm">
+<nav class="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
+<div class="flex items-center gap-8">
+<a class="text-2xl font-bold tracking-tighter text-[#0A2463] dark:text-white" th:href="@{/}">SR-Booking</a>
+<div class="hidden md:flex gap-6 items-center">
+<a class="text-slate-600 dark:text-slate-400 hover:text-[#0A2463] dark:hover:text-white transition-colors font-medium text-base" th:href="@{/}">Trang chủ</a>
+<a class="text-slate-600 dark:text-slate-400 hover:text-[#0A2463] dark:hover:text-white transition-colors font-medium text-base" th:href="@{/vehicles/search}">Thuê xe</a>
+<a class="text-slate-600 dark:text-slate-400 hover:text-[#0A2463] dark:hover:text-white transition-colors font-medium text-base" th:href="@{/sober-bookings/new}">Lái hộ</a>
+<a class="text-slate-600 dark:text-slate-400 hover:text-[#0A2463] dark:hover:text-white transition-colors font-medium text-base" th:href="@{/wallet}">Ví</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+    <div class="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden border-2 border-secondary-container">
+        <img th:if="${user.avatarUrl != null}" th:src="${user.avatarUrl}" alt="Avatar" class="w-full h-full object-cover">
+        <span th:unless="${user.avatarUrl != null}" class="material-symbols-outlined text-4xl text-slate-400 flex justify-center items-center mt-0.5">account_circle</span>
+    </div>
+    <a th:href="@{/auth/logout}" class="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-all"><span class="material-symbols-outlined">logout</span></a>
+</div>
+</nav>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-28 pb-24 px-6 max-w-7xl mx-auto">
+<!-- Header Section -->
+<header class="mb-10">
+<h1 class="text-4xl font-bold text-primary tracking-tight mb-2">Hồ sơ cá nhân</h1>
+<p class="text-on-surface-variant font-medium">Quản lý thông tin và tài khoản thành viên của bạn</p>
+</header>
 
-    <main class="main">
-        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+<div th:if="${success}" class="mb-6 bg-emerald-50 text-emerald-600 border border-emerald-200 px-4 py-3 rounded-xl shadow-sm flex items-start gap-3">
+    <span class="material-symbols-outlined shrink-0 text-emerald-500">check_circle</span>
+    <span th:text="${success}" class="font-semibold text-sm mt-0.5"></span>
+</div>
+<div th:if="${error}" class="mb-6 bg-red-50 text-red-600 border border-red-200 px-4 py-3 rounded-xl shadow-sm flex items-start gap-3">
+    <span class="material-symbols-outlined shrink-0 text-red-500">error</span>
+    <span th:text="${error}" class="font-semibold text-sm mt-0.5"></span>
+</div>
 
-        <!-- Profile Hero -->
-        <div class="profile-hero">
-            <div class="avatar">
-                <img th:if="${user.avatarUrl != null}" th:src="${user.avatarUrl}" alt="Avatar">
-                <span th:unless="${user.avatarUrl != null}">👤</span>
-            </div>
-            <div class="profile-info">
-                <h2 th:text="${customer?.fullName ?: driver?.fullName ?: user.email}">Tên người dùng</h2>
-                <p th:text="${user.email}">email@example.com</p>
-                <div class="profile-badges">
-                    <span class="pbadge" th:text="${user.role}">CUSTOMER</span>
-                    <span class="pbadge premium" th:if="${customer?.membership?.name() == 'PREMIUM'}">⭐ Premium</span>
-                    <span class="pbadge" th:if="${customer?.membership?.name() == 'STANDARD'}">Standard</span>
-                    <span class="pbadge" th:if="${driver?.verificationStatus != null}"
-                        th:text="${driver.verificationStatus}">PENDING</span>
-                </div>
-            </div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- Left Column: Identity & Membership -->
+<div class="lg:col-span-4 space-y-6">
+<!-- Profile Identity Card -->
+<section class="bg-surface-container-lowest p-8 rounded-3xl ambient-glow text-center relative overflow-hidden">
+<div th:unless="${user.isActive}" class="absolute top-0 left-0 w-full bg-red-500 text-white text-xs font-bold py-1 uppercase tracking-widest">Tài khoản bị khoá</div>
+<div class="relative inline-block mb-6 mt-4">
+<div class="w-32 h-32 rounded-3xl bg-surface-container overflow-hidden mx-auto shadow-xl rotate-3">
+<img th:if="${user.avatarUrl != null}" th:src="${user.avatarUrl}" alt="Avatar" class="w-full h-full object-cover -rotate-3 scale-110">
+<span th:unless="${user.avatarUrl != null}" class="material-symbols-outlined text-[100px] text-slate-300 -rotate-3 mt-4 ml-4">account_circle</span>
+</div>
+<div class="absolute -bottom-2 -right-2 bg-secondary-container text-white p-2 rounded-xl shadow-lg">
+<span class="material-symbols-outlined text-sm">verified</span>
+</div>
+</div>
+<h2 class="text-2xl font-bold text-primary mb-1" th:text="${customer?.fullName ?: driver?.fullName ?: user.email}">Nguyễn Văn An</h2>
+<p class="text-on-surface-variant text-sm font-medium mb-4" th:text="${user.email}">an.nguyen@gmail.com</p>
+<div class="inline-flex px-4 py-1.5 rounded-full bg-primary-container text-white text-xs font-bold tracking-widest uppercase" th:text="${user.role}">
+                        Khách hàng
+</div>
+
+<!-- Stats (Driver) -->
+<div th:if="${driver != null}" class="mt-8 pt-8 border-t border-surface-container flex justify-around">
+<div class="text-center">
+<span class="block text-primary font-bold text-xl" th:text="${totalRatings ?: '0'}">42</span>
+<span class="text-xs text-on-surface-variant font-medium">Lượt đánh giá</span>
+</div>
+<div class="w-px bg-surface-container h-10"></div>
+<div class="text-center">
+<span class="block text-primary font-bold text-xl" th:text="${avgRating ?: '5.0'}">4.9</span>
+<span class="text-xs text-on-surface-variant font-medium">Sao TB / 5</span>
+</div>
+</div>
+<div th:if="${driver != null}" class="mt-4 pt-4 border-t border-surface-container text-left text-sm text-on-surface-variant">
+    <p><strong>Trạng thái Tài xế:</strong> <span th:text="${driver.verificationStatus}" class="text-amber-600 font-bold"></span></p>
+</div>
+
+</section>
+<!-- Membership & Wallet (Combined Editorial Look) -->
+<section class="space-y-6">
+<!-- Premium Membership Pill Card (Customer only) -->
+<div th:if="${customer?.membership?.name() == 'PREMIUM'}" class="bg-primary p-6 rounded-3xl relative overflow-hidden shadow-2xl">
+<div class="absolute top-0 right-0 w-32 h-32 bg-secondary-container opacity-20 blur-3xl rounded-full -mr-16 -mt-16"></div>
+<div class="flex justify-between items-start mb-6">
+<div>
+<p class="text-white/60 text-xs font-bold tracking-widest uppercase mb-1">Membership Rank</p>
+<h3 class="text-secondary-container text-2xl font-black italic tracking-tighter">PREMIUM</h3>
+</div>
+<span class="material-symbols-outlined text-white/40 text-3xl">star</span>
+</div>
+<p class="text-white/80 text-xs font-medium">Bạn đang tận hưởng dịch vụ Đặt Xe Ưu Tiên. <br/>Hạn tới: <span class="font-bold text-white" th:text="${#temporals.format(customer.premiumExp, 'dd/MM/yyyy')}"></span></p>
+<button onclick="window.location.href='/premium'" class="mt-4 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-bold transition-colors w-full">Quản lý Premium</button>
+</div>
+
+<!-- Standard Upgrade Pill Card -->
+<div th:if="${customer != null and customer.membership?.name() != 'PREMIUM'}" class="bg-surface-container-high p-6 rounded-3xl relative overflow-hidden shadow-md group cursor-pointer" onclick="window.location.href='/premium'">
+<div class="flex justify-between items-start mb-6 border-b border-outline-variant/30 pb-4">
+<div>
+<p class="text-on-surface-variant text-xs font-bold tracking-widest uppercase mb-1">Khách Hàng Cơ Bản</p>
+<h3 class="text-primary text-2xl font-black italic tracking-tighter">STANDARD</h3>
+</div>
+<span class="material-symbols-outlined text-primary/40 text-3xl">info</span>
+</div>
+<button class="flex items-center gap-2 text-secondary-container font-bold group-hover:gap-4 transition-all">Nâng cấp Premium <span class="material-symbols-outlined">arrow_forward</span></button>
+</div>
+
+<!-- Wallet Glassmorphism -->
+<div class="bg-surface-container-low p-6 rounded-3xl border border-white/40 flex items-center justify-between shadow-sm cursor-pointer hover:bg-white transition-colors">
+<div class="flex items-center space-x-4">
+<div class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-secondary font-bold">account_balance_wallet</span>
+</div>
+<div>
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Số dư ví</p>
+<!-- We don't have wallet balance in User model immediately injected here, linking it to Wallet UI -->
+<p class="text-sm font-bold text-primary">Xem chi tiết</p>
+</div>
+</div>
+<button class="w-10 h-10 rounded-full bg-primary-container text-white flex items-center justify-center hover:scale-110 transition-transform" onclick="window.location.href='/wallet'">
+<span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+
+<!-- Assigned Vehicle (Driver Only) -->
+<div th:if="${assignedVehicle != null}" class="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant/30 shadow-sm">
+<h4 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+    <span class="material-symbols-outlined text-secondary-container text-xl">directions_car</span>
+    Xe Đang Lái Hộ
+</h4>
+<div class="bg-surface-container-low rounded-2xl p-4 mb-4">
+    <p class="text-sm font-bold text-primary mb-1" th:text="${assignedVehicle.name}">Kia Morning</p>
+    <p class="text-xs font-mono text-on-surface-variant bg-surface-container-highest inline-block px-2 py-1 rounded" th:text="${assignedVehicle.licensePlate}">51A-123.45</p>
+</div>
+<form th:action="@{/profile/update-location}" method="post">
+    <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Cập nhật vị trí tĩnh</label>
+    <div class="flex">
+        <input name="location" type="text" th:value="${assignedVehicle.currentAddress}" class="flex-1 w-full bg-surface-container px-3 py-2 rounded-l-xl text-sm border-none focus:ring-secondary/50 placeholder:text-outline/50" placeholder="VD: Sân bay TSN...">
+        <button type="submit" class="bg-secondary-container text-white px-3 py-2 rounded-r-xl border border-secondary-container text-sm font-bold hover:brightness-110 transition-colors">Lưu</button>
+    </div>
+</form>
+</div>
+
+</section>
+</div>
+
+<!-- Right Column: Settings Form -->
+<div class="lg:col-span-8 space-y-6">
+<div class="bg-surface-container-lowest p-8 md:p-10 rounded-3xl ambient-glow">
+<div class="flex items-center justify-between mb-10">
+<h3 class="text-xl font-bold text-primary flex items-center gap-3">
+<span class="material-symbols-outlined">person_edit</span>
+                            Thông tin cá nhân
+                        </h3>
+</div>
+<form th:action="@{/profile/edit}" method="post" th:object="${form}" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+<!-- Full Name -->
+<div class="space-y-2">
+<label class="text-xs font-bold text-on-surface-variant uppercase tracking-widest px-1">Họ và tên</label>
+<input th:field="*{fullName}" class="w-full px-0 py-3 bg-transparent border-0 border-b-2 border-surface-container focus:ring-0 focus:border-secondary transition-colors text-primary font-medium text-lg" placeholder="Nhập họ tên" type="text"/>
+</div>
+<!-- Phone Number -->
+<div class="space-y-2">
+<label class="text-xs font-bold text-on-surface-variant uppercase tracking-widest px-1">Số điện thoại</label>
+<input th:field="*{phone}" class="w-full px-0 py-3 bg-transparent border-0 border-b-2 border-surface-container focus:ring-0 focus:border-secondary transition-colors text-primary font-medium text-lg" placeholder="Nhập số điện thoại" type="tel"/>
+</div>
+<div class="space-y-2 md:col-span-2">
+<label class="text-xs font-bold text-on-surface-variant uppercase tracking-widest px-1">Ảnh Đại Diện (URL)</label>
+<input th:field="*{avatarUrl}" class="w-full px-0 py-3 bg-transparent border-0 border-b-2 border-surface-container focus:ring-0 focus:border-secondary transition-colors text-primary font-medium text-lg" placeholder="https://..." type="text"/>
+</div>
+<!-- Email (Read Only) -->
+<div class="space-y-2 md:col-span-2">
+<label class="text-xs font-bold text-on-surface-variant uppercase tracking-widest px-1">Email (Không thể thay đổi)</label>
+<div class="relative">
+<input class="w-full px-0 py-3 bg-transparent border-0 border-b-2 border-surface-container text-on-surface-variant/50 font-medium text-lg cursor-not-allowed" readonly="" type="email" th:value="${user.email}"/>
+<span class="absolute right-0 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-300">lock</span>
+</div>
+</div>
+
+<!-- Driver Specific Display Section -->
+<div th:if="${driver != null}" class="md:col-span-2 bg-surface-container-low p-6 rounded-2xl border border-outline-variant/40 mt-4 space-y-4">
+    <h4 class="text-sm font-bold text-secondary-container uppercase tracking-widest mb-2 flex items-center gap-2">
+        <span class="material-symbols-outlined">assignment_ind</span>Hồ Sơ Tài Xế Đăng Ký
+    </h4>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-1 block">CCCD</label>
+            <p class="font-bold text-primary bg-white/50 px-3 py-2 rounded-lg inline-block" th:text="${driver.cccd}">--</p>
         </div>
-
-        <!-- Basic Info Card -->
-        <div class="card">
-            <div class="card-header">
-                <span class="card-title">Thông tin tài khoản</span>
-            </div>
-            <div class="detail-grid">
-                <div class="detail-item">
-                    <label>Email</label>
-                    <p th:text="${user.email}">—</p>
-                </div>
-                <div class="detail-item">
-                    <label>Số điện thoại</label>
-                    <p th:text="${user.phone}">—</p>
-                </div>
-                <div class="detail-item">
-                    <label>Loại tài khoản</label>
-                    <p th:text="${user.role}">—</p>
-                </div>
-                <div class="detail-item">
-                    <label>Trạng thái</label>
-                    <p th:text="${user.isActive ? 'Đang hoạt động' : 'Đã bị khoá'}">—</p>
-                </div>
-                <div class="detail-item">
-                    <label>Ngày tạo</label>
-                    <p th:text="${#temporals.format(user.createdAt,'dd/MM/yyyy HH:mm')}">—</p>
-                </div>
-            </div>
+        <div>
+            <label class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-1 block">Giấy Phép Lái Xe</label>
+            <p class="font-bold text-primary bg-white/50 px-3 py-2 rounded-lg inline-block" th:text="${driver.driverLicense}">--</p>
         </div>
-
-        <!-- Customer Card -->
-        <div class="card" th:if="${customer != null}">
-            <div class="card-header"><span class="card-title">Hồ sơ Khách hàng</span></div>
-            <div class="detail-grid">
-                <div class="detail-item"><label>Họ tên</label>
-                    <p th:text="${customer.fullName}">—</p>
-                </div>
-                <div class="detail-item"><label>Địa chỉ</label>
-                    <p th:text="${customer.address ?: '—'}">—</p>
-                </div>
-                <div class="detail-item">
-                    <label>Gói tài khoản</label>
-                    <p th:text="${customer.membership}">—</p>
-                </div>
-                <div class="detail-item" th:if="${customer.premiumExp != null}">
-                    <label>Hết hạn Premium</label>
-                    <p th:text="${#temporals.format(customer.premiumExp, 'dd/MM/yyyy')}">—</p>
-                </div>
-            </div>
+        <div>
+            <label class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-1 block">Ngày Hết Hạn GPLX</label>
+            <p class="font-bold text-primary bg-white/50 px-3 py-2 rounded-lg inline-block" th:text="${#temporals.format(driver.licenseExpiry,'dd/MM/yyyy')}">--</p>
         </div>
-
-        <!-- Driver Card -->
-        <div class="card" th:if="${driver != null}">
-            <div class="card-header"><span class="card-title">Hồ sơ Tài xế</span></div>
-            <div class="detail-grid">
-                <div class="detail-item"><label>Họ tên</label>
-                    <p th:text="${driver.fullName}">—</p>
-                </div>
-                <div class="detail-item"><label>CCCD</label>
-                    <p th:text="${driver.cccd}">—</p>
-                </div>
-                <div class="detail-item"><label>Bằng lái xe</label>
-                    <p th:text="${driver.driverLicense}">—</p>
-                </div>
-                <div class="detail-item"><label>Hết hạn bằng lái</label>
-                    <p th:text="${#temporals.format(driver.licenseExpiry,'dd/MM/yyyy')}">—</p>
-                </div>
-                <div class="detail-item"><label>Loại xe</label>
-                    <p th:text="${driver.vehicleTypes}">—</p>
-                </div>
-                <div class="detail-item"><label>Trạng thái xét duyệt</label>
-                    <p th:text="${driver.verificationStatus}">—</p>
-                </div>
-                <div class="detail-item"><label>Đánh giá (Số sao trung bình)</label>
-                    <p><span th:text="${avgRating}">—</span> ⭐ (<span th:text="${totalRatings}">0</span> lượt)</p>
-                </div>
-            </div>
+        <div>
+            <label class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-1 block">Loại Xe</label>
+            <p class="font-bold text-primary bg-white/50 px-3 py-2 rounded-lg inline-block" th:text="${driver.vehicleTypes}">--</p>
         </div>
+    </div>
+</div>
 
-        <!-- Assigned Vehicle Card (for Driver) -->
-        <div class="card" th:if="${driver != null and assignedVehicle != null}">
-            <div class="card-header"><span class="card-title">Xe Đang Chạy</span></div>
-            <div class="detail-grid">
-                <div class="detail-item"><label>Tên xe</label>
-                    <p th:text="${assignedVehicle.name}">—</p>
-                </div>
-                <div class="detail-item"><label>Biển số</label>
-                    <p th:text="${assignedVehicle.licensePlate}">—</p>
-                </div>
-            </div>
-
-            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
-                <label style="display:block; font-size:.875rem; font-weight:600; margin-bottom:.5rem;">Cập Nhật Khu Vực
-                    / Địa Chỉ Xe</label>
-                <form th:action="@{/profile/update-location}" method="post" style="display: flex; gap: .5rem;">
-                    <input type="text" name="location" class="form-control" th:value="${assignedVehicle.currentAddress}"
-                        placeholder="Nhập địa chỉ hiện tại..." required style="flex: 1;" />
-                    <button type="submit" class="btn btn-primary" style="white-space: nowrap;">Cập nhật</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="btn-group">
-            <a class="btn btn-primary" th:href="@{/profile/edit}">✏️ Chỉnh sửa hồ sơ</a>
-            <a class="btn btn-outline" th:href="@{/profile/change-password}">🔒 Đổi mật khẩu</a>
-            <a class="btn btn-outline" th:if="${user?.role?.name() == 'CUSTOMER'}" th:href="@{/premium}">⭐ Quản lý
-                Premium</a>
-        </div>
-    </main>
-</body>
-
-</html>
+<!-- Security Section -->
+<div class="md:col-span-2 mt-8 pt-8 border-t border-surface-container">
+<h4 class="text-sm font-bold text-primary mb-4 uppercase tracking-widest">Bảo mật tài khoản</h4>
+<button onclick="window.location.href='/profile/change-password'" class="flex items-center space-x-3 text-secondary font-semibold hover:opacity-80 transition-opacity group" type="button">
+<span class="material-symbols-outlined p-2 bg-secondary-container/10 rounded-lg group-hover:scale-110 transition-transform">lock_reset</span>
+<span>Đổi mật khẩu truy cập</span>
+</button>
+</div>
+<!-- Submit Button -->
+<div class="md:col-span-2 pt-10 flex flex-col md:flex-row gap-4 items-center">
+<button class="w-full md:w-auto px-10 py-4 bg-primary-container text-white font-bold rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all" type="submit">
+                                Lưu thay đổi
+                            </button>
+<button class="w-full md:w-auto px-10 py-4 text-on-surface-variant font-bold hover:bg-surface-container transition-colors rounded-2xl" type="reset">
+                                Đặt lại
+                            </button>
+</div>
+</form>
+</div>
+<!-- Preference Cards (Editorial Asymmetry) -->
+<div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="bg-[#F5F3F9] p-6 rounded-3xl flex items-center justify-between group cursor-not-allowed transition-colors ambient-glow border border-transparent">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-outline">location_on</span>
+<span class="font-bold text-outline">Địa chỉ đã lưu (Tính năng đang phát triển)</span>
+</div>
+</div>
+<!-- Link to wallet / payment methods -->
+<div class="bg-[#F5F3F9] p-6 rounded-3xl flex items-center justify-between group cursor-pointer hover:bg-white transition-colors ambient-glow border border-transparent hover:border-surface-container-high" onclick="window.location.href='/wallet'">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary-container">credit_card</span>
+<span class="font-bold text-primary">Phương thức thanh toán / Ví</span>
+</div>
+<span class="material-symbols-outlined text-slate-400 group-hover:translate-x-1 transition-transform">chevron_right</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full pt-12 pb-8 bg-[#0A2463] dark:bg-slate-950 border-t border-white/10 mt-12">
+<div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8">
+<div class="md:col-span-1">
+<div class="text-xl font-bold text-[#FE6A34] mb-4">SR-Booking</div>
+<p class="text-slate-300 text-sm leading-relaxed">Nền tảng di chuyển thông minh hàng đầu tại Việt Nam.</p>
+</div>
+<div class="md:col-span-3 flex flex-wrap gap-8 justify-end">
+<a class="text-slate-300 hover:text-white transition-colors text-sm font-['Be_Vietnam_Pro']" href="#">Liên hệ</a>
+<a class="text-slate-300 hover:text-white transition-colors text-sm font-['Be_Vietnam_Pro']" href="#">Pháp lý</a>
+<a class="text-slate-300 hover:text-white transition-colors text-sm font-['Be_Vietnam_Pro']" href="#">Điều khoản</a>
+<a class="text-slate-300 hover:text-white transition-colors text-sm font-['Be_Vietnam_Pro']" href="#">Chính sách bảo mật</a>
+</div>
+<div class="md:col-span-4 pt-8 mt-8 border-t border-white/5 text-center md:text-left">
+<p class="text-slate-400 text-sm">© 2026 SR-Booking Mobility. All rights reserved.</p>
+</div>
+</div>
+</footer> 
+</body></html>

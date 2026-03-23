@@ -105,7 +105,7 @@
                     <td th:text="${'#' + r.id}"></td>
                     <td th:text="${r.vehicle != null ? r.vehicle.name : r.vehicleId}"></td>
                     <td th:text="${r.driver != null ? r.driver.fullName : r.driverId}"></td>
-                    <td th:text="${#temporals.format(r.plannedStart, 'dd/MM/yyyy HH:mm') + ' - ' + #temporals.format(r.plannedEnd, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td th:text="${(r.plannedStart != null ? r.plannedStart.toString().replace('T', ' ').substring(0, 16) : 'N/A') + ' - ' + (r.plannedEnd != null ? r.plannedEnd.toString().replace('T', ' ').substring(0, 16) : 'N/A')}"></td>
                     <td th:text="${#numbers.formatDecimal(r.totalPrice, 0, 'COMMA', 0, 'POINT') + 'd'}"></td>
                     <td>
                         <span data-rental-status class="badge"

@@ -1,62 +1,157 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Realtime Dashboard</title>
-    <style th:replace="~{layout/base :: head}"></style>
+    <title>Realtime Dashboard – SR-Booking Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <style>
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1rem;
-        }
-        .stat-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1rem 1.2rem;
-        }
-        .stat-label {
-            color: var(--muted);
-            font-size: .85rem;
-            margin-bottom: .35rem;
-        }
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--primary);
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Be Vietnam Pro', sans-serif; background: #f5f3f9; color: #1b1b20; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .sidebar-link { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 12px; color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 600; transition: all .2s; }
+        .sidebar-link:hover { background: rgba(255,255,255,.1); color: white; }
+        .sidebar-link.active { background: #FE6A34; color: white; transform: scale(1.02); }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+        @keyframes countUp { from { transform: translateY(6px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+        .stat-card { animation: countUp .4s ease; }
     </style>
 </head>
 <body>
-<nav th:replace="~{layout/base :: navbar}"></nav>
-<main class="main">
-    <div class="page-header">
-        <h1 class="page-title">Realtime & Push Dashboard</h1>
+
+<!-- Sidebar -->
+<aside style="position:fixed;left:0;top:0;height:100%;width:256px;background:#0A2463;display:flex;flex-direction:column;padding:24px 0;z-index:50;box-shadow:4px 0 24px rgba(0,16,62,.15);">
+    <div style="padding:0 24px;margin-bottom:32px;">
+        <h1 style="color:white;font-size:1.4rem;font-weight:800;font-style:italic;letter-spacing:-.02em;">SR-Booking</h1>
+        <p style="color:#93c5fd;font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;opacity:.7;">Mobility Admin</p>
     </div>
-    <div class="stats">
-        <div class="stat-card">
-            <div class="stat-label">FCM Device Tokens</div>
-            <div class="stat-value" th:text="${deviceTokenCount}">0</div>
+    <nav style="flex:1;padding:0 8px;display:flex;flex-direction:column;gap:2px;">
+        <a class="sidebar-link" href="/admin/dashboard"><span class="material-symbols-outlined" style="font-size:20px;">dashboard</span>Dashboard</a>
+        <a class="sidebar-link" href="/admin/users"><span class="material-symbols-outlined" style="font-size:20px;">group</span>Quản lý Users</a>
+        <a class="sidebar-link" href="/admin/vehicles"><span class="material-symbols-outlined" style="font-size:20px;">directions_car</span>Quản lý Xe</a>
+        <a class="sidebar-link" href="/admin/sober-bookings"><span class="material-symbols-outlined" style="font-size:20px;">assignment</span>Quản lý Lái hộ</a>
+        <a class="sidebar-link" href="/admin/withdrawals"><span class="material-symbols-outlined" style="font-size:20px;">payments</span>Rút tiền</a>
+        <a class="sidebar-link" href="/admin/pickup-points"><span class="material-symbols-outlined" style="font-size:20px;">location_on</span>Điểm đón</a>
+        <a class="sidebar-link active" href="/admin/realtime">
+            <span class="material-symbols-outlined" style="font-size:20px;">monitoring</span>Realtime
+            <span style="margin-left:auto;width:8px;height:8px;background:#4ade80;border-radius:50%;animation:pulse 1.5s infinite;"></span>
+        </a>
+    </nav>
+    <div style="padding:0 8px;border-top:1px solid rgba(255,255,255,.1);padding-top:12px;margin-top:8px;">
+        <a class="sidebar-link" href="/auth/logout" style="color:#fca5a5;">
+            <span class="material-symbols-outlined" style="font-size:18px;">logout</span>Đăng xuất
+        </a>
+    </div>
+</aside>
+
+<!-- Top Header -->
+<header style="position:fixed;top:0;right:0;width:calc(100% - 256px);height:64px;background:rgba(255,255,255,.85);backdrop-filter:blur(16px);display:flex;justify-content:space-between;align-items:center;padding:0 32px;z-index:40;border-bottom:1px solid #f0eef5;">
+    <div style="display:flex;align-items:center;gap:10px;">
+        <h2 style="font-weight:800;color:#0A2463;font-size:.95rem;">Realtime Dashboard</h2>
+        <span style="display:flex;align-items:center;gap:4px;background:#f0fdf4;color:#166534;font-size:.72rem;font-weight:700;padding:.25rem .65rem;border-radius:20px;">
+            <span style="width:6px;height:6px;background:#22c55e;border-radius:50%;animation:pulse 1.5s infinite;display:inline-block;"></span>
+            LIVE
+        </span>
+    </div>
+    <div style="width:34px;height:34px;border-radius:50%;background:#0A2463;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:12px;">AD</div>
+</header>
+
+<!-- Main -->
+<main style="margin-left:256px;padding:88px 32px 48px;">
+
+    <div style="margin-bottom:24px;">
+        <h1 style="font-size:1.6rem;font-weight:800;color:#0A2463;margin-bottom:4px;">📡 Giám sát thời gian thực</h1>
+        <p style="color:#64748b;font-size:.875rem;">Trạng thái hệ thống hiện tại — tự động cập nhật mỗi 30 giây</p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;">
+
+        <!-- FCM Tokens -->
+        <div class="stat-card" style="background:white;border-radius:20px;padding:24px;border:1px solid #f0eef5;box-shadow:0 4px 16px rgba(0,16,62,.05);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+                <div style="width:44px;height:44px;background:#ede9fe;border-radius:14px;display:flex;align-items:center;justify-content:center;">
+                    <span class="material-symbols-outlined" style="color:#7c3aed;font-size:22px;">devices</span>
+                </div>
+                <span style="font-size:.68rem;font-weight:700;color:#7c3aed;background:#ede9fe;padding:.2rem .55rem;border-radius:20px;">FCM</span>
+            </div>
+            <div style="font-size:.78rem;color:#64748b;font-weight:600;margin-bottom:4px;">Device Tokens đã đăng ký</div>
+            <div style="font-size:2rem;font-weight:800;color:#0A2463;" th:text="${deviceTokenCount}">0</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-label">Tai xe online</div>
-            <div class="stat-value" th:text="${driverOnlineCount}">0</div>
+
+        <!-- Drivers Online -->
+        <div class="stat-card" style="background:white;border-radius:20px;padding:24px;border:1px solid #f0eef5;box-shadow:0 4px 16px rgba(0,16,62,.05);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+                <div style="width:44px;height:44px;background:#d1fae5;border-radius:14px;display:flex;align-items:center;justify-content:center;">
+                    <span class="material-symbols-outlined" style="color:#065f46;font-size:22px;">local_taxi</span>
+                </div>
+                <span style="display:flex;align-items:center;gap:4px;font-size:.68rem;font-weight:700;color:#065f46;background:#d1fae5;padding:.2rem .55rem;border-radius:20px;">
+                    <span style="width:5px;height:5px;background:#22c55e;border-radius:50%;animation:pulse 1.5s infinite;display:inline-block;"></span>LIVE
+                </span>
+            </div>
+            <div style="font-size:.78rem;color:#64748b;font-weight:600;margin-bottom:4px;">Tài xế đang online</div>
+            <div style="font-size:2rem;font-weight:800;color:#065f46;" th:text="${driverOnlineCount}">0</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-label">Don thue tai xe (Pending)</div>
-            <div class="stat-value" th:text="${pendingSoberCount}">0</div>
+
+        <!-- Pending Sober -->
+        <div class="stat-card" style="background:white;border-radius:20px;padding:24px;border:1px solid #f0eef5;box-shadow:0 4px 16px rgba(0,16,62,.05);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+                <div style="width:44px;height:44px;background:#fef3c7;border-radius:14px;display:flex;align-items:center;justify-content:center;">
+                    <span class="material-symbols-outlined" style="color:#92400e;font-size:22px;">assignment</span>
+                </div>
+                <span style="font-size:.68rem;font-weight:700;color:#92400e;background:#fef3c7;padding:.2rem .55rem;border-radius:20px;">Chờ</span>
+            </div>
+            <div style="font-size:.78rem;color:#64748b;font-weight:600;margin-bottom:4px;">Đơn lái hộ đang chờ</div>
+            <div style="font-size:2rem;font-weight:800;color:#92400e;" th:text="${pendingSoberCount}">0</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-label">Don giao xe (Pending)</div>
-            <div class="stat-value" th:text="${pendingVehicleOnlyCount}">0</div>
+
+        <!-- Pending Vehicle Only -->
+        <div class="stat-card" style="background:white;border-radius:20px;padding:24px;border:1px solid #f0eef5;box-shadow:0 4px 16px rgba(0,16,62,.05);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+                <div style="width:44px;height:44px;background:#fee2e2;border-radius:14px;display:flex;align-items:center;justify-content:center;">
+                    <span class="material-symbols-outlined" style="color:#991b1b;font-size:22px;">directions_car</span>
+                </div>
+                <span style="font-size:.68rem;font-weight:700;color:#991b1b;background:#fee2e2;padding:.2rem .55rem;border-radius:20px;">Chờ</span>
+            </div>
+            <div style="font-size:.78rem;color:#64748b;font-weight:600;margin-bottom:4px;">Đơn giao xe đang chờ</div>
+            <div style="font-size:2rem;font-weight:800;color:#991b1b;" th:text="${pendingVehicleOnlyCount}">0</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-label">Active Driver Locations (Redis)</div>
-            <div class="stat-value" th:text="${activeLocationCount}">0</div>
+
+        <!-- Active Locations -->
+        <div class="stat-card" style="background:linear-gradient(135deg,#0A2463,#1e3a8a);border-radius:20px;padding:24px;box-shadow:0 8px 24px rgba(10,36,99,.2);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+                <div style="width:44px;height:44px;background:rgba(255,255,255,.12);border-radius:14px;display:flex;align-items:center;justify-content:center;">
+                    <span class="material-symbols-outlined" style="color:white;font-size:22px;">location_on</span>
+                </div>
+                <span style="display:flex;align-items:center;gap:4px;font-size:.68rem;font-weight:700;color:#4ade80;background:rgba(255,255,255,.1);padding:.2rem .55rem;border-radius:20px;">
+                    <span style="width:5px;height:5px;background:#4ade80;border-radius:50%;animation:pulse 1.5s infinite;display:inline-block;"></span>Redis
+                </span>
+            </div>
+            <div style="font-size:.78rem;color:rgba(255,255,255,.6);font-weight:600;margin-bottom:4px;">Vị trí đang theo dõi (Redis)</div>
+            <div style="font-size:2rem;font-weight:800;color:white;" th:text="${activeLocationCount}">0</div>
         </div>
+
+    </div>
+
+    <!-- Quick actions -->
+    <div style="margin-top:28px;display:flex;gap:12px;flex-wrap:wrap;">
+        <a href="/admin/sober-bookings" style="display:inline-flex;align-items:center;gap:8px;background:white;padding:.65rem 1.2rem;border-radius:12px;border:1px solid #f0eef5;box-shadow:0 2px 8px rgba(0,16,62,.06);text-decoration:none;color:#0A2463;font-weight:600;font-size:.875rem;transition:all .2s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,16,62,.12)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,16,62,.06)'">
+            <span class="material-symbols-outlined" style="font-size:18px;">assignment</span>Xem đơn lái hộ
+        </a>
+        <a href="/admin/users" style="display:inline-flex;align-items:center;gap:8px;background:white;padding:.65rem 1.2rem;border-radius:12px;border:1px solid #f0eef5;box-shadow:0 2px 8px rgba(0,16,62,.06);text-decoration:none;color:#0A2463;font-weight:600;font-size:.875rem;transition:all .2s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,16,62,.12)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,16,62,.06)'">
+            <span class="material-symbols-outlined" style="font-size:18px;">group</span>Xem tài xế online
+        </a>
+        <button onclick="location.reload()" style="display:inline-flex;align-items:center;gap:8px;background:#FE6A34;border:none;padding:.65rem 1.2rem;border-radius:12px;box-shadow:0 4px 12px rgba(254,106,52,.3);color:white;font-weight:600;font-size:.875rem;cursor:pointer;transition:all .2s;font-family:inherit;" onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">
+            <span class="material-symbols-outlined" style="font-size:18px;">refresh</span>Làm mới
+        </button>
     </div>
 </main>
+
+<script>
+    // Auto-refresh every 30 seconds
+    setTimeout(() => location.reload(), 30000);
+</script>
 </body>
 </html>
+

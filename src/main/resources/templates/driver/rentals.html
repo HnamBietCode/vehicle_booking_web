@@ -1,269 +1,179 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <title>Don thue duoc giao</title>
-    <style>
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{driver/fragments :: head('VinaPulse - Thuê xe được giao')}"></head>
+<body class="bg-surface-container-low font-body text-on-surface min-h-screen pb-32">
+    <!-- TopAppBar -->
+    <header th:replace="~{driver/fragments :: header}"></header>
 
-        :root {
-            --primary: #4F46E5;
-            --primary-dark: #3730A3;
-            --bg: #F8FAFC;
-            --surface: #FFFFFF;
-            --border: #E2E8F0;
-            --text: #1E293B;
-            --muted: #64748B;
-            --radius: 12px;
-        }
+    <main class="pt-24 px-6 max-w-5xl mx-auto">
+        <!-- Header Section -->
+        <section class="mb-10">
+            <h1 class="font-headline text-3xl font-bold tracking-tight text-primary mb-2">Đơn thuê xe được giao</h1>
+            <p class="text-on-surface-variant body-lg">Quản lý danh sách các chuyến đi được giao cho bạn.</p>
+        </section>
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-        }
+        <!-- Brief Daily Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+            <div class="bg-primary-container p-6 rounded-[20px] text-white flex justify-between items-center shadow-lg">
+                <div>
+                    <div class="text-white/60 text-xs font-semibold uppercase tracking-wider">Hôm nay</div>
+                    <div class="text-3xl font-bold mt-1" th:text="${todayStats.totalTrips ?: 0}">0</div>
+                </div>
+                <div class="text-right">
+                    <div class="text-white/60 text-xs font-semibold uppercase tracking-wider">Thu nhập</div>
+                    <div class="text-2xl font-bold mt-1" th:text="${'₫ ' + #numbers.formatDecimal(todayStats.totalRevenue ?: 0, 0, 'COMMA', 0, 'POINT')}">₫ 0</div>
+                </div>
+            </div>
+            
+            <!-- Quick Action Card -->
+            <div class="bg-secondary-container p-6 rounded-[20px] text-white flex flex-col justify-center shadow-lg" th:if="${pendingVehicleOnly.size() > 0}">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="material-symbols-outlined text-[18px]">notification_important</span>
+                    <span class="text-xs font-bold uppercase tracking-wider">Có đơn mới!</span>
+                </div>
+                <div class="text-lg font-bold" th:text="${pendingVehicleOnly.size() + ' đơn đang chờ nhận'}"></div>
+            </div>
+        </div>
 
-        .navbar {
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-            padding: 0 2rem;
-            display: flex;
-            align-items: center;
-            height: 64px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
-        }
+        <!-- Rentals Table Section -->
+        <section class="bg-surface-container-lowest p-8 rounded-[24px] shadow-[0_4px_24px_rgba(0,16,62,0.08)] mb-10 overflow-hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="font-headline text-xl font-semibold text-primary">Danh sách chuyến đi</h2>
+                <div class="flex gap-2">
+                    <button class="px-3 py-1 bg-surface-variant text-on-surface-variant text-xs font-bold rounded-full">Tất cả</button>
+                    <button class="px-3 py-1 hover:bg-surface-variant text-on-surface-variant/60 text-xs font-bold rounded-full">Đang thực hiện</button>
+                </div>
+            </div>
 
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.3rem;
-            color: var(--primary);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: .5rem;
-        }
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="text-on-surface-variant/60 text-[10px] uppercase font-bold tracking-[0.2em] border-b border-outline-variant/10">
+                            <th class="pb-4">Mã đơn</th>
+                            <th class="pb-4">Khách hàng / Thời gian</th>
+                            <th class="pb-4">Loại xe / Giá</th>
+                            <th class="pb-4">Trạng thái</th>
+                            <th class="pb-4 text-right">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-outline-variant/5">
+                        <!-- Iterating through rentals -->
+                        <tr th:each="rental : ${rentals}" class="group hover:bg-surface-container-low transition-colors duration-200">
+                            <td class="py-5">
+                                <span class="text-xs font-bold text-primary" th:text="${'#' + rental.id}">#12345</span>
+                            </td>
+                            <td class="py-5">
+                                <div class="font-bold text-on-surface" th:text="${rental.customer?.fullName ?: 'Khách hàng'}">Nguyễn Văn A</div>
+                                <div class="text-[11px] text-on-surface-variant mt-1" th:text="${#temporals.format(rental.plannedStart, 'dd/MM HH:mm')}">24/03 08:30</div>
+                            </td>
+                            <td class="py-5">
+                                <div class="text-xs font-medium text-secondary" th:text="${rental.vehicle?.name ?: 'Xe'}">VinFast Lux A</div>
+                                <div class="text-[11px] font-bold text-primary mt-1" th:text="${#numbers.formatDecimal(rental.totalPrice ?: 0, 0, 'COMMA', 0, 'POINT') + ' ₫'}">1,200,000 ₫</div>
+                            </td>
+                            <td class="py-5">
+                                <span th:class="${'px-2 py-1 rounded text-[10px] font-bold uppercase ' + 
+                                               (rental.status.name() == 'PENDING' ? 'bg-secondary-fixed text-on-secondary-fixed' : 
+                                                rental.status.name() == 'CONFIRMED' ? 'bg-on-tertiary-container text-white' : 
+                                                rental.status.name() == 'ACTIVE' ? 'bg-primary text-white' : 
+                                                'bg-surface-variant text-on-surface-variant')}"
+                                      th:text="${rental.status}">PENDING</span>
+                            </td>
+                            <td class="py-5 text-right">
+                                <div class="flex justify-end gap-2">
+                                    <!-- Accept Button -->
+                                    <form th:if="${rental.status.name() == 'PENDING'}" th:action="@{/driver/rentals/{id}/accept(id=${rental.id})}" method="post">
+                                        <button type="submit" class="bg-[#0A2463] text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:scale-105 active:scale-95 transition-all">Nhận đơn</button>
+                                    </form>
+                                    <!-- Start Button -->
+                                    <form th:if="${rental.status.name() == 'CONFIRMED'}" th:action="@{/driver/rentals/{id}/start(id=${rental.id})}" method="post">
+                                        <button type="submit" class="bg-secondary-container text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:scale-105 active:scale-95 transition-all">Bắt đầu</button>
+                                    </form>
+                                    <!-- Complete Button (Modal Trigger) -->
+                                    <button th:if="${rental.status.name() == 'ACTIVE'}" 
+                                            th:onclick="'openCompleteModal(' + ${rental.id} + ')'"
+                                            class="bg-on-tertiary-container text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:scale-105 active:scale-95 transition-all">Hoàn thành</button>
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <!-- Empty state -->
+                        <tr th:if="${#lists.isEmpty(rentals)}">
+                            <td colspan="5" class="py-10 text-center text-on-surface-variant italic">Bạn chưa có chuyến đi nào được giao.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
 
-        .navbar-nav {
-            display: flex;
-            align-items: center;
-            gap: .25rem;
-            margin-left: auto;
-            list-style: none;
-        }
+        <!-- New Public Rentals Section -->
+        <section th:if="${!#lists.isEmpty(pendingVehicleOnly)}" class="bg-surface-container-lowest p-8 rounded-[24px] shadow-[0_4px_24px_rgba(0,16,62,0.08)] mb-10 border border-secondary/20">
+            <h2 class="font-headline text-xl font-semibold text-secondary mb-6">Đơn giao xe công khai</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div th:each="r : ${pendingVehicleOnly}" class="p-4 bg-surface-container rounded-xl flex justify-between items-center border border-outline-variant/10">
+                    <div>
+                        <div class="text-xs font-bold text-primary" th:text="${'#' + r.id}"></div>
+                        <div class="text-[11px] text-on-surface-variant" th:text="${r.pickupAddress}">Address</div>
+                    </div>
+                    <form th:action="@{/driver/rentals/{id}/accept(id=${r.id})}" method="post">
+                        <button type="submit" class="bg-secondary text-white px-3 py-1.5 rounded-lg text-xs font-bold">Nhận đơn</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
 
-        .nav-link {
-            padding: .5rem .85rem;
-            border-radius: 8px;
-            text-decoration: none;
-            color: var(--muted);
-            font-size: .9rem;
-            font-weight: 500;
-            transition: all .2s;
-        }
-
-        .nav-link:hover, .nav-link.active { background: var(--primary); color: #fff; }
-
-        .main {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
-        }
-
-        .page-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1.5rem;
-        }
-
-        .page-title { font-size: 1.5rem; font-weight: 700; }
-        .card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 1.75rem;
-            margin-bottom: 1.5rem;
-        }
-        .card-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 1.2rem; color: var(--text); }
-        .alert {
-            padding: .85rem 1.2rem;
-            border-radius: 8px;
-            margin-bottom: 1.2rem;
-            font-size: .9rem;
-            font-weight: 500;
-        }
-        .alert-danger { background: #FEF2F2; color: #991B1B; border-left: 4px solid #EF4444; }
-        .alert-success { background: #F0FDF4; color: #166534; border-left: 4px solid #10B981; }
-        .table-wrap { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: .9rem; }
-        th {
-            background: var(--bg);
-            font-weight: 600;
-            color: var(--muted);
-            padding: .75rem 1rem;
-            text-align: left;
-            border-bottom: 2px solid var(--border);
-        }
-        td { padding: .75rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
-        .badge {
-            display: inline-block;
-            padding: .25rem .65rem;
-            border-radius: 999px;
-            font-size: .75rem;
-            font-weight: 600;
-        }
-        .badge-approved { background: #D1FAE5; color: #065F46; }
-        .badge-pending { background: #FEF3C7; color: #92400E; }
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: .4rem;
-            padding: .6rem 1.3rem;
-            border: none;
-            border-radius: 8px;
-            font-size: .9rem;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all .2s;
-        }
-        .btn-primary { background: var(--primary); color: #fff; }
-        .btn-primary:hover { background: var(--primary-dark); }
-        .btn-sm { padding: .35rem .8rem; font-size: .8rem; }
-        .form-control {
-            width: 100%;
-            padding: .65rem 1rem;
-            border: 1.5px solid var(--border);
-            border-radius: 8px;
-            font-size: .95rem;
-            font-family: inherit;
-        }
-
-        .inline-form { display: grid; grid-template-columns: 130px 1fr auto; gap: .5rem; align-items: center; }
-        .inline-form .form-control { padding: .45rem .65rem; }
-        .inline-form textarea.form-control { min-height: 34px; }
-        @media (max-width: 900px) { .inline-form { grid-template-columns: 1fr; } }
-    </style>
-</head>
-<body>
-<nav th:replace="~{layout/base :: navbar}"></nav>
-
-<main class="main">
-    <div class="page-header">
-        <h1 class="page-title">Don thue duoc giao</h1>
-    </div>
-
-    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
-    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-
-    <div class="card" th:if="${pendingVehicleOnly != null and !#lists.isEmpty(pendingVehicleOnly)}">
-        <h3 class="card-title">Don giao xe dang cho tai xe nhan</h3>
-        <div class="table-wrap">
-            <table>
-                <thead>
-                <tr>
-                    <th>Ma don</th>
-                    <th>Khach</th>
-                    <th>Thoi gian</th>
-                    <th>Gia co ban</th>
-                    <th>Thao tac</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="r : ${pendingVehicleOnly}">
-                    <td th:text="${'#' + r.id}"></td>
-                    <td th:text="${r.customer != null ? r.customer.fullName : r.customerId}"></td>
-                    <td th:text="${#temporals.format(r.plannedStart, 'dd/MM/yyyy HH:mm') + ' - ' + #temporals.format(r.plannedEnd, 'dd/MM/yyyy HH:mm')}"></td>
-                    <td th:text="${#numbers.formatDecimal(r.basePrice, 0, 'COMMA', 0, 'POINT') + 'd'}"></td>
-                    <td>
-                        <form th:action="@{/driver/rentals/{id}/accept(id=${r.id})}" method="post">
-                            <button type="submit" class="btn btn-primary btn-sm">Nhan don</button>
-                        </form>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+    <!-- Complete Modal -->
+    <div id="completeModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-all duration-300">
+        <div class="bg-white rounded-[24px] w-full max-w-md p-8 shadow-2xl scale-95 opacity-0 transition-all duration-300" id="modalContainer">
+            <h3 class="text-2xl font-bold text-primary mb-2">Hoàn thành chuyến đi</h3>
+            <p class="text-on-surface-variant text-sm mb-6">Vui lòng nhập thêm phí phát sinh (nếu có).</p>
+            
+            <form id="completeForm" method="post" th:object="${completeForm}">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-on-surface-variant uppercase mb-1">Phí phát sinh (VNĐ)</label>
+                        <input type="number" th:field="*{extraFee}" class="w-full px-4 py-3 bg-surface-container rounded-xl border-none focus:ring-2 focus:ring-primary transition-all text-sm" placeholder="0">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-on-surface-variant uppercase mb-1">Ghi chú</label>
+                        <textarea th:field="*{notes}" class="w-full px-4 py-3 bg-surface-container rounded-xl border-none focus:ring-2 focus:ring-primary transition-all text-sm h-24" placeholder="Tình trạng xe, v.v."></textarea>
+                    </div>
+                </div>
+                
+                <div class="flex gap-4 mt-8">
+                    <button type="button" onclick="closeModal()" class="flex-1 px-4 py-3 bg-surface-variant text-on-surface-variant font-bold rounded-xl active:scale-95 transition-all text-sm">Hủy</button>
+                    <button type="submit" class="flex-1 px-4 py-3 bg-[#0A2463] text-white font-bold rounded-xl active:scale-95 shadow-lg shadow-primary/20 transition-all text-sm">Xác nhận</button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <div class="card" th:if="${#lists.isEmpty(rentals)}">
-        <div style="color:var(--muted);">Chua co don thue nao.</div>
-    </div>
+    <!-- BottomNavBar -->
+    <nav th:replace="~{driver/fragments :: bottomnav('rentals')}"></nav>
 
-    <div class="card" th:if="${!#lists.isEmpty(rentals)}">
-        <h3 class="card-title">Danh sach don</h3>
-        <div class="table-wrap">
-            <table>
-                <thead>
-                <tr>
-                    <th>Ma don</th>
-                    <th>Khach</th>
-                    <th>Thoi gian</th>
-                    <th>Gia co ban</th>
-                    <th>Trang thai</th>
-                    <th>Thao tac</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="r : ${rentals}">
-                    <td th:text="${'#' + r.id}"></td>
-                    <td th:text="${r.customer != null ? r.customer.fullName : r.customerId}"></td>
-                    <td th:text="${#temporals.format(r.plannedStart, 'dd/MM/yyyy HH:mm') + ' - ' + #temporals.format(r.plannedEnd, 'dd/MM/yyyy HH:mm')}"></td>
-                    <td th:text="${#numbers.formatDecimal(r.basePrice, 0, 'COMMA', 0, 'POINT') + 'd'}"></td>
-                    <td>
-                        <span class="badge badge-approved" th:text="${r.status}"></span>
-                        <span class="badge badge-pending" th:text="${r.paymentStatus}" style="margin-left:6px;"></span>
-                    </td>
-                    <td>
-                        <div th:if="${r.status.name() == 'PENDING'}" style="display:flex; gap:.5rem; flex-wrap:wrap;">
-                            <form th:action="@{/driver/rentals/{id}/accept(id=${r.id})}" method="post">
-                                <button type="submit" class="btn btn-primary btn-sm">Nhan don</button>
-                            </form>
-                            <form th:action="@{/driver/rentals/{id}/reject(id=${r.id})}" method="post" style="display:flex; gap:.4rem; align-items:center;">
-                                <select name="reason" class="form-control" style="min-width:160px;">
-                                    <option value="Tai xe tu choi nhan don.">Tai xe tu choi nhan don</option>
-                                    <option value="Khong phu hop lich trinh.">Khong phu hop lich trinh</option>
-                                    <option value="Ly do khac.">Ly do khac</option>
-                                </select>
-                                <button type="submit" class="btn btn-sm">Tu choi</button>
-                            </form>
-                        </div>
+    <script th:inline="javascript">
+        function openCompleteModal(rentalId) {
+            const modal = document.getElementById('completeModal');
+            const container = document.getElementById('modalContainer');
+            const form = document.getElementById('completeForm');
+            form.action = `/driver/rentals/${rentalId}/complete`;
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                container.classList.remove('scale-95', 'opacity-0');
+                container.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
 
-                        <div th:if="${r.status.name() == 'CONFIRMED'}">
-                            <form th:action="@{/driver/rentals/{id}/start(id=${r.id})}" method="post">
-                                <button type="submit" class="btn btn-primary btn-sm">Bat dau</button>
-                            </form>
-                        </div>
-
-                        <form th:if="${r.status.name() == 'ACTIVE'}"
-                              th:action="@{/driver/rentals/{id}/complete(id=${r.id})}" method="post"
-                              class="inline-form">
-                            <input class="form-control" type="number" name="extraFee" min="0" step="1000" value="0" placeholder="Phi phat sinh">
-                            <input class="form-control" type="text" name="notes" placeholder="Ghi chu">
-                            <button type="submit" class="btn btn-primary btn-sm">Hoan thanh</button>
-                        </form>
-
-                        <span th:if="${r.status.name() == 'COMPLETED'}" style="color:var(--muted);">Da hoan thanh</span>
-                        <span th:if="${r.status.name() == 'CANCELLED'}" style="color:var(--muted);">Da huy</span>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</main>
+        function closeModal() {
+            const modal = document.getElementById('completeModal');
+            const container = document.getElementById('modalContainer');
+            container.classList.add('scale-95', 'opacity-0');
+            container.classList.remove('scale-100', 'opacity-100');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+    </script>
 </body>
 </html>

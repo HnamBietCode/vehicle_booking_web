@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{driver/fragments :: head('VinaPulse - Thống kê doanh thu')}"></head>
+<body class="bg-surface-container-low font-body text-on-surface min-h-screen pb-32">
+    <!-- TopAppBar -->
+    <header th:replace="~{driver/fragments :: header}"></header>
+
+    <main class="pt-24 px-6 max-w-5xl mx-auto">
+        <!-- Header Section -->
+        <section class="mb-10">
+            <h1 class="font-headline text-3xl font-bold tracking-tight text-primary mb-2">Biểu đồ hiệu suất</h1>
+            <p class="text-on-surface-variant body-lg" th:text="${'Phân tích chi tiết hoạt động của bạn trong ' + (period == 'monthly' ? '30 ngày qua' : 'tuần qua') + '.'}"></p>
+        </section>
+
+        <!-- Stats Overview Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+            <!-- Total Income Card -->
+            <div class="velocity-gradient p-8 rounded-[24px] shadow-[0_4px_24px_rgba(0,16,62,0.08)] flex flex-col justify-between h-48 relative overflow-hidden">
+                <div class="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
+                <div>
+                    <span class="text-on-primary/60 label-sm font-semibold uppercase tracking-widest">Tổng thu nhập</span>
+                    <div class="text-white text-4xl font-bold mt-2" th:text="${'₫ ' + #numbers.formatDecimal(dashboard.totalRevenue ?: 0, 0, 'COMMA', 0, 'POINT')}">₫ 0</div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="bg-tertiary-fixed text-on-tertiary-fixed px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[14px]" data-icon="trending_up">trending_up</span>
+                        +12.4%
+                    </span>
+                    <span class="text-on-primary/40 text-xs italic">so với tháng trước</span>
+                </div>
+                <div class="absolute right-8 top-1/2 -translate-y-1/2 opacity-10">
+                    <span class="material-symbols-outlined text-8xl" data-icon="payments">payments</span>
+                </div>
+            </div>
+
+            <!-- Total Trips Card -->
+            <div class="bg-surface-container-lowest p-8 rounded-[24px] shadow-[0_4px_24px_rgba(0,16,62,0.08)] flex flex-col justify-between h-48 border border-outline-variant/15 relative">
+                <div>
+                    <span class="text-on-surface-variant label-sm font-semibold uppercase tracking-widest">Tổng chuyến đi</span>
+                    <div class="text-primary text-4xl font-bold mt-2" th:text="${dashboard.totalTrips ?: 0}">0</div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="bg-secondary-fixed text-on-secondary-fixed px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[14px]" data-icon="trending_up">trending_up</span>
+                        +8.2%
+                    </span>
+                    <span class="text-on-surface-variant/40 text-xs italic">so với tháng trước</span>
+                </div>
+                <div class="absolute right-8 top-1/2 -translate-y-1/2 opacity-5 pointer-events-none">
+                    <span class="material-symbols-outlined text-8xl text-primary" data-icon="local_taxi">local_taxi</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Chart Section (Bento Style) -->
+        <section class="bg-surface-container-lowest p-8 rounded-[24px] shadow-[0_4px_24px_rgba(0,16,62,0.08)] mb-10">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+                <div>
+                    <h2 class="font-headline text-xl font-semibold text-primary">Xu hướng Thu nhập & Chuyến đi</h2>
+                    <p class="text-on-surface-variant text-sm" th:text="${period == 'monthly' ? 'Trong 30 ngày gần nhất' : 'Trong 7 ngày gần nhất'}">Biểu đồ so sánh</p>
+                </div>
+                <div class="flex gap-4">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-[#0A2463]"></div>
+                        <span class="text-xs font-medium text-on-surface-variant">Thu nhập</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-[#FE6A34]"></div>
+                        <span class="text-xs font-medium text-on-surface-variant">Chuyến đi</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart Visualization -->
+            <div class="h-64 flex items-end justify-between gap-1 md:gap-3 px-2 border-b border-outline-variant/20 pb-2">
+                <th:block th:each="day : ${chartData}">
+                    <div class="flex flex-col gap-1 items-center flex-1 max-w-[40px] group relative">
+                        <!-- Tooltip -->
+                        <div class="absolute bottom-full mb-2 bg-primary-container text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20">
+                            <div th:text="${#temporals.format(day.date, 'dd/MM')}"></div>
+                            <div th:text="${#numbers.formatDecimal(day.revenue, 0, 'COMMA', 0, 'POINT') + '₫'}"></div>
+                            <div th:text="${day.trips + ' chuyến'}"></div>
+                        </div>
+                        
+                        <!-- Revenue Bar (Max assumed 2M for scaling or relative to max) -->
+                        <div class="w-full bg-[#FE6A34] rounded-t-sm" 
+                             th:style="${'height: ' + (day.trips > 0 ? (day.trips * 10) : 5) + '%; min-height: 4px;'}"></div>
+                        <div class="w-full bg-[#0A2463] rounded-t-sm" 
+                             th:style="${'height: ' + (day.revenue > 0 ? (day.revenue.divide(new java.math.BigDecimal(50000)).min(new java.math.BigDecimal(100))) : 2) + '%; min-height: 4px;'}"></div>
+                    </div>
+                </th:block>
+            </div>
+            <div class="flex justify-between mt-4 px-2">
+                <span class="text-[10px] text-on-surface-variant uppercase font-bold tracking-widest">Bắt đầu</span>
+                <span th:if="${chartData.size() > 15}" class="text-[10px] text-on-surface-variant uppercase font-bold tracking-widest">Giữa kỳ</span>
+                <span class="text-[10px] text-on-surface-variant uppercase font-bold tracking-widest">Hiện tại</span>
+            </div>
+        </section>
+
+        <!-- Secondary Performance Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-surface-container p-6 rounded-[20px]">
+                <div class="text-on-surface-variant text-xs font-semibold uppercase mb-3">Đánh giá khách hàng</div>
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl font-bold text-primary">4.92</span>
+                    <span class="material-symbols-outlined text-[#FFD700]" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+                </div>
+                <div class="mt-2 h-1 bg-white/50 rounded-full overflow-hidden">
+                    <div class="h-full bg-secondary-container w-[92%]"></div>
+                </div>
+            </div>
+            <div class="bg-surface-container p-6 rounded-[20px]">
+                <div class="text-on-surface-variant text-xs font-semibold uppercase mb-3">Tỷ lệ nhận đơn</div>
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl font-bold text-primary">98%</span>
+                    <span class="material-symbols-outlined text-on-tertiary-container" data-icon="verified">verified</span>
+                </div>
+                <div class="mt-2 h-1 bg-white/50 rounded-full overflow-hidden">
+                    <div class="h-full bg-on-tertiary-container w-[98%]"></div>
+                </div>
+            </div>
+            <div class="bg-surface-container p-6 rounded-[20px]">
+                <div class="text-on-surface-variant text-xs font-semibold uppercase mb-3">Số giờ trực tuyến</div>
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl font-bold text-primary">164h</span>
+                    <span class="material-symbols-outlined text-secondary" data-icon="schedule">schedule</span>
+                </div>
+                <div class="mt-2 h-1 bg-white/50 rounded-full overflow-hidden">
+                    <div class="h-full bg-primary-container w-[70%]"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- BottomNavBar -->
+    <nav th:replace="~{driver/fragments :: bottomnav('stats')}"></nav>
+</body>
+</html>

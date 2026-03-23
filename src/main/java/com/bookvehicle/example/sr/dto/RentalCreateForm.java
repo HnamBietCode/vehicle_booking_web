@@ -17,6 +17,7 @@ public class RentalCreateForm {
     private LocalDateTime plannedStart;
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime plannedEnd;
+    private Integer duration;
     private String notes;
 
     public Long getVehicleId() {
@@ -89,6 +90,14 @@ public class RentalCreateForm {
 
     public void setPlannedEnd(LocalDateTime plannedEnd) {
         this.plannedEnd = plannedEnd;
+    }
+
+    public Integer getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Integer duration) {
+        this.duration = duration;
     }
 
     public String getNotes() {

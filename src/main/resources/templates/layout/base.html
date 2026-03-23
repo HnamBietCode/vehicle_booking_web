@@ -419,53 +419,92 @@
             color: var(--muted);
         }
     </style>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-container": "#0a2463",
+                        "on-primary-container": "#7a8ed2",
+                        "secondary-container": "#fe6a34",
+                        "background": "#faf8ff",
+                        "on-surface": "#1b1b20",
+                        "on-surface-variant": "#444650",
+                        "outline-variant": "#c5c6d2"
+                    },
+                    fontFamily: {
+                        "headline": ["Be Vietnam Pro"],
+                        "body": ["Be Vietnam Pro"]
+                    }
+                }
+            }
+        }
+    </script>
     <th:block th:fragment="head">
         <!-- child page styles slot -->
     </th:block>
 </head>
 
-<body>
-    <!-- â”€â”€â”€ Navbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
-    <nav class="navbar" th:fragment="navbar">
-        <a class="navbar-brand" href="/">VehicleBook</a>
-        <ul class="navbar-nav"
-            th:if="${session?.loggedUser != null || #httpServletRequest.getAttribute('loggedUser') != null}">
-            <th:block th:with="u=${session?.loggedUser ?: #httpServletRequest.getAttribute('loggedUser')}">
-                <li th:if="${u?.role?.name() != 'ADMIN'}"><a class="nav-link" th:href="@{/vehicles/search}">🔍 Tìm xe</a></li>
-                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/users}">👥 Quản lý Users</a></li>
-                <li th:if="${u?.role?.name() == 'DRIVER'}"><a class="nav-link" th:href="@{/driver/dashboard}">📈 Thống kê</a></li>
-                <li th:if="${u?.role?.name() == 'DRIVER'}"><a class="nav-link" th:href="@{/driver/rentals}">🧾 Đơn thuê</a></li>
-                <li th:if="${u?.role?.name() == 'DRIVER'}"><a class="nav-link" th:href="@{/driver/sober-bookings}">🚗 Xử lý lái hộ</a></li>
-                <li th:if="${u?.role?.name() == 'CUSTOMER'}"><a class="nav-link" th:href="@{/rentals/my}">🧾 Đơn thuê</a></li>
-                <li th:if="${u?.role?.name() == 'CUSTOMER'}"><a class="nav-link" th:href="@{/bookings/options}">Đặt dịch vụ</a></li>
-                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/vehicles}">🚗 Quản lý xe</a></li>
-                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/pickup-points}">📍 Điểm đón</a></li>
-                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/sober-bookings}">🚗 Quản lý lái hộ</a></li>
-                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/withdrawals}">💸 Rút tiền</a></li>
-                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/realtime}">Realtime</a></li>
-                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/dashboard}">📊 Báo cáo</a></li>
-                <li th:if="${u?.role?.name() != 'ADMIN'}"><a class="nav-link" th:href="@{/profile}">👤 Hồ sơ</a></li>
-                <li th:if="${u?.role?.name() == 'CUSTOMER'}">
-                    <a class="nav-link" th:href="@{/premium}">
-                        ⭐ Premium
-                        <span class="nav-badge" th:if="${u != null}">VIP</span>
+<body class="bg-background text-on-surface">
+    <!-- Modern Navbar -->
+    <header th:fragment="navbar" class="fixed top-0 w-full z-50 bg-white shadow-[0_2px_15px_rgba(0,0,0,0.05)]">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
+            <!-- Brand -->
+            <div class="flex items-center gap-12">
+                <a href="/" class="text-2xl font-extrabold text-[#0A2463] tracking-tight">SR-Booking</a>
+                
+                <!-- Desktop Navigation Links -->
+                <nav class="hidden md:flex items-center gap-8" th:with="user=${session?.loggedUser ?: #httpServletRequest.getAttribute('loggedUser')}">
+                    <a href="/" class="text-sm font-bold transition-all relative group"
+                       th:classappend="${#httpServletRequest != null and #httpServletRequest.requestURI == '/' ? 'text-secondary-container' : 'text-on-surface-variant hover:text-primary-container'}">
+                        Trang chủ
+                        <div th:if="${#httpServletRequest != null and #httpServletRequest.requestURI == '/'}" class="absolute -bottom-1 left-0 right-0 h-0.5 bg-secondary-container"></div>
                     </a>
-                </li>
-                <li th:if="${u?.role?.name() != 'ADMIN'}"><a class="nav-link" th:href="@{/wallet}">💳 Ví điện tử</a></li>
-                <li>
-                    <a class="nav-link" th:href="@{/auth/logout}" style="color:#EF4444;"
-                       onmouseover="this.style.background='#EF4444';this.style.color='#fff'"
-                       onmouseout="this.style.background='';this.style.color='#EF4444'">Đăng xuất</a>
-                </li>
-            </th:block>
-        </ul>
-        <ul class="navbar-nav"
-            th:unless="${session?.loggedUser != null || #httpServletRequest.getAttribute('loggedUser') != null}">
-            <li><a class="nav-link" th:href="@{/vehicles/search}">🔍 Tìm xe</a></li>
-            <li><a class="nav-link" th:href="@{/auth/login}">Đăng nhập</a></li>
-            <li><a class="nav-link btn-primary btn" th:href="@{/auth/register}" style="margin-left:.5rem;">Đăng ký</a></li>
-        </ul>
-    </nav>
+
+                    <th:block th:if="${user != null}">
+                        <a th:if="${user?.role?.name() == 'CUSTOMER'}" th:href="@{/vehicles/search}" class="text-sm font-bold transition-all relative group"
+                           th:classappend="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/vehicles') ? 'text-secondary-container' : 'text-on-surface-variant hover:text-primary-container'}">
+                            Thuê xe
+                            <div th:if="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/vehicles')}" class="absolute -bottom-1 left-0 right-0 h-0.5 bg-secondary-container"></div>
+                        </a>
+                        
+                        <a th:if="${user?.role?.name() == 'CUSTOMER'}" th:href="@{/bookings/options}" class="text-sm font-bold transition-all relative group"
+                           th:classappend="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/bookings') ? 'text-secondary-container' : 'text-on-surface-variant hover:text-primary-container'}">
+                            Lái hộ
+                            <div th:if="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/bookings')}" class="absolute -bottom-1 left-0 right-0 h-0.5 bg-secondary-container"></div>
+                        </a>
+
+                        <a th:href="@{/wallet}" class="text-sm font-bold transition-all relative group"
+                           th:classappend="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/wallet') ? 'text-secondary-container' : 'text-on-surface-variant hover:text-primary-container'}">
+                            Ví
+                            <div th:if="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/wallet')}" class="absolute -bottom-1 left-0 right-0 h-0.5 bg-secondary-container"></div>
+                        </a>
+                    </th:block>
+
+                    <!-- Guest Mode Links if needed -->
+                    <th:block th:if="${user == null}">
+                        <a th:href="@{/vehicles/search}" class="text-sm font-bold text-on-surface-variant hover:text-primary-container transition-all">Thuê xe</a>
+                        <a th:href="@{/auth/login}" class="text-sm font-bold text-on-surface-variant hover:text-primary-container transition-all">Đăng nhập</a>
+                        <a th:href="@{/auth/register}" class="px-4 py-2 bg-primary-container text-white rounded-lg text-sm font-bold hover:scale-105 transition-all">Đăng ký</a>
+                    </th:block>
+                </nav>
+            </div>
+
+            <!-- Profile & Logout -->
+            <div class="flex items-center gap-6" th:with="user=${session?.loggedUser ?: #httpServletRequest.getAttribute('loggedUser')}">
+                <th:block th:if="${user != null}">
+                    <a th:href="@{/profile}" class="text-sm font-bold text-[#0A2463] hover:text-secondary-container transition-all flex items-center gap-2">
+                        Hồ sơ cá nhân
+                    </a>
+                    <a th:href="@{/auth/logout}" class="flex items-center text-rose-500 hover:text-rose-700 transition-all" title="Đăng xuất">
+                        <span class="material-symbols-outlined text-2xl font-bold">logout</span>
+                    </a>
+                </th:block>
+            </div>
+        </div>
+    </header>
 
     <!-- â”€â”€â”€ Main content slot â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <main class="main" th:fragment="main">

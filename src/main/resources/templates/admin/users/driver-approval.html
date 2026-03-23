@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duyệt Hồ sơ Tài xế – SR-Booking Admin</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Be Vietnam Pro', sans-serif; background: #f5f3f9; color: #1b1b20; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .sidebar-link { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 12px; color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 600; transition: all .2s; }
+        .sidebar-link:hover { background: rgba(255,255,255,.1); color: white; }
+        .sidebar-link.active { background: #FE6A34; color: white; }
+        .doc-card { background: white; border-radius: 20px; padding: 28px; border: 1px solid #f0eef5; box-shadow: 0 4px 16px rgba(0,16,62,.05); }
+        .doc-img-wrap { position: relative; overflow: hidden; border-radius: 14px; aspect-ratio: 1.58/1; background: #f5f3f9; cursor: zoom-in; }
+        .doc-img-wrap img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(30%); transition: all .4s; }
+        .doc-img-wrap:hover img { filter: grayscale(0); transform: scale(1.02); }
+        .doc-img-zoom { position: absolute; inset: 0; background: rgba(10,36,99,.15); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .25s; }
+        .doc-img-wrap:hover .doc-img-zoom { opacity: 1; }
+        .img-label { position: absolute; bottom: 10px; left: 12px; background: rgba(0,0,0,.4); backdrop-filter: blur(4px); color: white; font-size: 9px; font-weight: 700; padding: .18rem .5rem; border-radius: 6px; text-transform: uppercase; letter-spacing: .08em; }
+        .info-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f5f3f9; }
+        .info-row:last-child { border-bottom: none; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+        /* Alert */
+        .alert { padding: .8rem 1.1rem; border-radius: 10px; margin-bottom: 16px; font-size: .875rem; font-weight: 500; }
+        .alert-danger { background: #FEF2F2; color: #991B1B; border-left: 3px solid #EF4444; }
+        .alert-success { background: #F0FDF4; color: #166534; border-left: 3px solid #10B981; }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside style="position:fixed;left:0;top:0;height:100%;width:256px;background:#0A2463;display:flex;flex-direction:column;padding:24px 0;z-index:50;box-shadow:4px 0 24px rgba(0,16,62,.15);">
+    <div style="padding:0 24px;margin-bottom:32px;">
+        <h1 style="color:white;font-size:1.4rem;font-weight:800;font-style:italic;letter-spacing:-.02em;">SR-Booking</h1>
+        <p style="color:#93c5fd;font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;opacity:.7;">Mobility Admin</p>
+    </div>
+    <nav style="flex:1;padding:0 8px;display:flex;flex-direction:column;gap:2px;">
+        <a class="sidebar-link" href="/admin/dashboard"><span class="material-symbols-outlined" style="font-size:20px;">dashboard</span>Dashboard</a>
+        <a class="sidebar-link active" href="/admin/users"><span class="material-symbols-outlined" style="font-size:20px;">group</span>Quản lý Users</a>
+        <a class="sidebar-link" href="/admin/vehicles"><span class="material-symbols-outlined" style="font-size:20px;">directions_car</span>Quản lý Xe</a>
+        <a class="sidebar-link" href="/admin/sober-bookings"><span class="material-symbols-outlined" style="font-size:20px;">assignment</span>Quản lý Lái hộ</a>
+        <a class="sidebar-link" href="/admin/withdrawals"><span class="material-symbols-outlined" style="font-size:20px;">payments</span>Rút tiền</a>
+        <a class="sidebar-link" href="/admin/pickup-points"><span class="material-symbols-outlined" style="font-size:20px;">location_on</span>Điểm đón</a>
+        <a class="sidebar-link" href="/admin/realtime">
+            <span class="material-symbols-outlined" style="font-size:20px;">monitoring</span>Realtime
+            <span style="margin-left:auto;width:8px;height:8px;background:#4ade80;border-radius:50%;animation:pulse 1.5s infinite;"></span>
+        </a>
+    </nav>
+    <div style="padding:0 8px;border-top:1px solid rgba(255,255,255,.1);padding-top:12px;margin-top:8px;">
+        <a class="sidebar-link" href="/auth/logout" style="color:#fca5a5;">
+            <span class="material-symbols-outlined" style="font-size:18px;">logout</span>Đăng xuất
+        </a>
+    </div>
+</aside>
+
+<!-- Header -->
+<header style="position:fixed;top:0;right:0;left:256px;height:72px;background:rgba(255,255,255,.85);backdrop-filter:blur(16px);display:flex;justify-content:space-between;align-items:center;padding:0 32px;z-index:40;border-bottom:1px solid #f0eef5;">
+    <div style="display:flex;align-items:center;gap:12px;">
+        <a href="/admin/users" style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#f5f3f9;color:#0A2463;text-decoration:none;transition:background .2s;" onmouseover="this.style.background='#e9e7ed'" onmouseout="this.style.background='#f5f3f9'">
+            <span class="material-symbols-outlined" style="font-size:20px;">arrow_back</span>
+        </a>
+        <h2 style="font-weight:800;color:#0A2463;font-size:1.1rem;">Duyệt Hồ sơ Tài xế</h2>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+        <div style="display:flex;align-items:center;gap:6px;background:#fef3c7;padding:.35rem .85rem;border-radius:20px;">
+            <span class="material-symbols-outlined" style="color:#92400e;font-size:18px;font-variation-settings:'FILL' 1;">hourglass_empty</span>
+            <span style="font-size:.72rem;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:.05em;">Đang chờ duyệt</span>
+        </div>
+        <div style="width:34px;height:34px;border-radius:50%;background:#0A2463;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:12px;">AD</div>
+    </div>
+</header>
+
+<!-- Main -->
+<main style="margin-left:256px;padding:96px 32px 100px;">
+
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+    <!-- Bento grid -->
+    <div style="display:grid;grid-template-columns:340px 1fr;gap:24px;max-width:1100px;">
+
+        <!-- LEFT: Profile + Region -->
+        <div style="display:flex;flex-direction:column;gap:20px;">
+
+            <!-- Profile card -->
+            <div class="doc-card">
+                <div style="display:flex;flex-direction:column;align-items:center;text-align:center;">
+                    <div style="position:relative;margin-bottom:18px;">
+                        <div style="width:110px;height:110px;border-radius:24px;overflow:hidden;box-shadow:0 8px 24px rgba(0,16,62,.15);">
+                            <img th:if="${driver?.profileImageUrl != null}" th:src="${driver.profileImageUrl}" style="width:100%;height:100%;object-fit:cover;" alt="Avatar">
+                            <div th:unless="${driver?.profileImageUrl != null}" style="width:100%;height:100%;background:#0A2463;display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:800;color:white;"
+                                 th:text="${driver != null ? #strings.toUpperCase(#strings.substring(driver.email,0,2)) : 'TX'}">TX</div>
+                        </div>
+                        <div style="position:absolute;bottom:-8px;right:-8px;width:30px;height:30px;background:#FE6A34;border-radius:50%;border:3px solid white;display:flex;align-items:center;justify-content:center;">
+                            <span class="material-symbols-outlined" style="font-size:14px;color:white;">verified_user</span>
+                        </div>
+                    </div>
+                    <h3 style="font-size:1.3rem;font-weight:800;color:#0A2463;margin-bottom:4px;"
+                        th:text="${driver?.fullName ?: 'Tài xế'}">Tài xế</h3>
+                    <p style="color:#94a3b8;font-size:.82rem;font-weight:600;margin-bottom:20px;"
+                       th:text="'ID: #' + (${driver?.id ?: '—'})">ID: —</p>
+
+                    <!-- Contact -->
+                    <div style="width:100%;border-top:1px solid #f0eef5;padding-top:20px;display:flex;flex-direction:column;gap:14px;text-align:left;">
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <div style="width:38px;height:38px;background:#f5f3f9;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <span class="material-symbols-outlined" style="font-size:18px;color:#0A2463;">mail</span>
+                            </div>
+                            <div>
+                                <p style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;">Email</p>
+                                <p style="font-weight:600;color:#1b1b20;font-size:.875rem;" th:text="${driver?.email ?: '—'}">—</p>
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <div style="width:38px;height:38px;background:#f5f3f9;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <span class="material-symbols-outlined" style="font-size:18px;color:#0A2463;">call</span>
+                            </div>
+                            <div>
+                                <p style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;">Số điện thoại</p>
+                                <p style="font-weight:600;color:#1b1b20;font-size:.875rem;" th:text="${driver?.phone ?: '—'}">—</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Region -->
+            <div class="doc-card">
+                <h4 style="font-weight:800;color:#0A2463;font-size:.95rem;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+                    <span class="material-symbols-outlined" style="color:#FE6A34;font-size:20px;">location_on</span>Khu vực hoạt động
+                </h4>
+                <div class="info-row">
+                    <span style="color:#64748b;font-weight:600;font-size:.875rem;">Thành phố</span>
+                    <span style="font-weight:700;color:#0A2463;font-size:.875rem;" th:text="${driver?.city ?: 'TP. Hồ Chí Minh'}">TP. Hồ Chí Minh</span>
+                </div>
+                <div class="info-row">
+                    <span style="color:#64748b;font-weight:600;font-size:.875rem;">Quận/Huyện</span>
+                    <span style="font-weight:700;color:#0A2463;font-size:.875rem;" th:text="${driver?.district ?: '—'}">—</span>
+                </div>
+                <div class="info-row">
+                    <span style="color:#64748b;font-weight:600;font-size:.875rem;">Phường/Xã</span>
+                    <span style="font-weight:700;color:#0A2463;font-size:.875rem;" th:text="${driver?.ward ?: '—'}">—</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Documents -->
+        <div style="display:flex;flex-direction:column;gap:20px;">
+
+            <!-- Vehicle types -->
+            <div class="doc-card">
+                <h4 style="font-weight:800;color:#0A2463;font-size:.95rem;margin-bottom:16px;">🚗 Loại xe đăng ký</h4>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                    <div th:if="${driver?.vehicleCategories != null}" th:each="cat : ${driver.vehicleCategories}"
+                         style="display:flex;align-items:center;gap:8px;background:#0A2463;color:white;padding:.5rem 1rem;border-radius:12px;font-weight:700;font-size:.875rem;">
+                        <span class="material-symbols-outlined" style="font-size:18px;"
+                              th:text="${cat.name() == 'MOTORCYCLE' ? 'moped' : (cat.name() == 'CAR_4' ? 'directions_car' : 'airport_shuttle')}">directions_car</span>
+                        <span th:text="${cat.name() == 'MOTORCYCLE' ? 'Xe máy' : (cat.name() == 'CAR_4' ? 'Ô tô 4 chỗ' : (cat.name() == 'CAR_7' ? 'Ô tô 7 chỗ' : cat.name()))}">—</span>
+                    </div>
+                    <!-- Fallback if no categories -->
+                    <div th:if="${driver?.vehicleCategories == null || #lists.isEmpty(driver.vehicleCategories)}"
+                         style="color:#94a3b8;font-size:.875rem;font-style:italic;">Chưa có thông tin</div>
+                </div>
+            </div>
+
+            <!-- CCCD -->
+            <div class="doc-card">
+                <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px;">
+                    <div>
+                        <p style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;">Căn cước công dân (CCCD)</p>
+                        <h4 style="font-size:1.1rem;font-weight:800;color:#0A2463;" th:text="${driver?.nationalId ?: '—'}">—</h4>
+                    </div>
+                    <span style="display:flex;align-items:center;gap:4px;background:#d1fae5;color:#065f46;font-size:.7rem;font-weight:700;padding:.25rem .65rem;border-radius:20px;">
+                        <span class="material-symbols-outlined" style="font-size:14px;font-variation-settings:'FILL' 1;">check_circle</span>Ảnh rõ nét
+                    </span>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div class="doc-img-wrap">
+                        <img th:if="${driver?.cccdFrontUrl != null}" th:src="${driver.cccdFrontUrl}" alt="CCCD mặt trước">
+                        <div th:unless="${driver?.cccdFrontUrl != null}" style="display:flex;align-items:center;justify-content:center;height:100%;color:#94a3b8;font-size:.8rem;">Chưa có ảnh</div>
+                        <div class="doc-img-zoom">
+                            <div style="width:44px;height:44px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.2);">
+                                <span class="material-symbols-outlined" style="color:#0A2463;">zoom_in</span>
+                            </div>
+                        </div>
+                        <span class="img-label">Mặt trước</span>
+                    </div>
+                    <div class="doc-img-wrap">
+                        <img th:if="${driver?.cccdBackUrl != null}" th:src="${driver.cccdBackUrl}" alt="CCCD mặt sau">
+                        <div th:unless="${driver?.cccdBackUrl != null}" style="display:flex;align-items:center;justify-content:center;height:100%;color:#94a3b8;font-size:.8rem;">Chưa có ảnh</div>
+                        <div class="doc-img-zoom">
+                            <div style="width:44px;height:44px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.2);">
+                                <span class="material-symbols-outlined" style="color:#0A2463;">zoom_in</span>
+                            </div>
+                        </div>
+                        <span class="img-label">Mặt sau</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Driver License -->
+            <div class="doc-card">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;">
+                    <div>
+                        <p style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;">Giấy phép lái xe</p>
+                        <h4 style="font-size:1.1rem;font-weight:800;color:#0A2463;" th:text="${driver?.driverLicenseNumber ?: '—'}">—</h4>
+                    </div>
+                    <div th:if="${driver?.driverLicenseExpiry != null}" style="text-align:right;">
+                        <p style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;">Hết hạn</p>
+                        <p style="font-weight:800;color:#EF4444;font-size:.95rem;" th:text="${#temporals.format(driver.driverLicenseExpiry, 'dd/MM/yyyy')}">—</p>
+                    </div>
+                </div>
+                <div class="doc-img-wrap" style="max-width:480px;margin:0 auto;">
+                    <img th:if="${driver?.driverLicenseUrl != null}" th:src="${driver.driverLicenseUrl}" alt="Giấy phép lái xe">
+                    <div th:unless="${driver?.driverLicenseUrl != null}" style="display:flex;align-items:center;justify-content:center;height:100%;color:#94a3b8;font-size:.8rem;padding:2rem;">Chưa có ảnh</div>
+                    <div class="doc-img-zoom">
+                        <div style="width:44px;height:44px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.2);">
+                            <span class="material-symbols-outlined" style="color:#0A2463;">zoom_in</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Sticky Action Bar -->
+<footer style="position:fixed;bottom:0;left:256px;right:0;height:80px;background:rgba(255,255,255,.9);backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:space-between;padding:0 32px;border-top:1px solid #f0eef5;box-shadow:0 -4px 24px rgba(0,16,62,.06);z-index:40;">
+    <div style="display:flex;align-items:center;gap:10px;">
+        <span style="width:8px;height:8px;background:#FE6A34;border-radius:50%;animation:pulse 1.5s infinite;display:inline-block;"></span>
+        <span style="font-size:.875rem;color:#64748b;font-weight:500;">Vui lòng kiểm tra kỹ thông tin trước khi phê duyệt.</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+        <!-- Reject -->
+        <form th:action="@{/admin/users/{id}/driver/reject(id=${driver?.id})}" method="post" style="display:inline;" th:if="${driver != null}"
+              onsubmit="return confirm('Từ chối hồ sơ tài xế này?')">
+            <button type="submit" style="padding:.75rem 1.5rem;background:none;border:none;color:#EF4444;font-weight:700;font-size:.9rem;cursor:pointer;border-radius:14px;font-family:inherit;transition:background .2s;"
+                    onmouseover="this.style.background='#FEF2F2'" onmouseout="this.style.background='none'">
+                ✕ Từ chối hồ sơ
+            </button>
+        </form>
+        <!-- Request more info -->
+        <button type="button" style="padding:.75rem 1.5rem;background:none;border:1.5px solid #e9e7ed;color:#1b1b20;font-weight:700;font-size:.9rem;cursor:pointer;border-radius:14px;font-family:inherit;transition:all .2s;"
+                onmouseover="this.style.background='#f5f3f9'" onmouseout="this.style.background='none'">
+            📋 Yêu cầu bổ sung
+        </button>
+        <!-- Approve -->
+        <form th:action="@{/admin/users/{id}/driver/approve(id=${driver?.id})}" method="post" style="display:inline;" th:if="${driver != null}"
+              onsubmit="return confirm('Phê duyệt tài xế này?')">
+            <button type="submit" style="padding:.75rem 2rem;background:#0A2463;color:white;border:none;font-weight:800;font-size:.9rem;cursor:pointer;border-radius:14px;font-family:inherit;display:flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(10,36,99,.25);transition:all .2s;"
+                    onmouseover="this.style.transform='scale(1.03)';this.style.boxShadow='0 6px 20px rgba(10,36,99,.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(10,36,99,.25)'">
+                <span class="material-symbols-outlined" style="font-size:18px;">verified</span>Phê duyệt tài xế
+            </button>
+        </form>
+        <!-- If no driver data, just show back button -->
+        <a th:unless="${driver != null}" href="/admin/users" style="padding:.75rem 1.5rem;background:#0A2463;color:white;border:none;font-weight:700;font-size:.9rem;cursor:pointer;border-radius:14px;text-decoration:none;">← Quay lại</a>
+    </div>
+</footer>
+
+</body>
+</html>

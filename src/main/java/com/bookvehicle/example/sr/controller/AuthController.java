@@ -28,19 +28,24 @@ public class AuthController {
     public String showRegisterForm(Model model, HttpSession session) {
         if (SecurityUtil.isLoggedIn(session))
             return "redirect:/";
-        model.addAttribute("form", new RegisterForm());
-        return "auth/register";
+        model.addAttribute("registerForm", new RegisterForm());
+        model.addAttribute("loginForm", new LoginForm());
+        model.addAttribute("showRegister", true);
+        return "auth/login";
     }
 
     /** Xử lý đăng ký */
     @PostMapping("/register")
-    public String handleRegister(@ModelAttribute("form") RegisterForm form,
+    public String handleRegister(@ModelAttribute("registerForm") RegisterForm form,
             Model model,
             RedirectAttributes redirectAttributes) {
         String error = authService.register(form);
         if (error != null) {
-            model.addAttribute("error", error);
-            return "auth/register";
+            model.addAttribute("errorReg", error);
+            model.addAttribute("registerForm", form);
+            model.addAttribute("loginForm", new LoginForm());
+            model.addAttribute("showRegister", true);
+            return "auth/login";
         }
 
         String role = form.getRole().toUpperCase();
@@ -63,7 +68,8 @@ public class AuthController {
             @RequestParam(name = "error", required = false) String error) {
         if (SecurityUtil.isLoggedIn(session))
             return "redirect:/";
-        model.addAttribute("form", new LoginForm());
+        model.addAttribute("loginForm", new LoginForm());
+        model.addAttribute("registerForm", new RegisterForm());
         if ("forbidden".equals(error))
             model.addAttribute("error", "Bạn không có quyền truy cập trang đó.");
         return "auth/login";
@@ -71,13 +77,14 @@ public class AuthController {
 
     /** Xử lý đăng nhập */
     @PostMapping("/login")
-    public String handleLogin(@ModelAttribute("form") LoginForm form,
+    public String handleLogin(@ModelAttribute("loginForm") LoginForm form,
             Model model,
             HttpSession session,
             @RequestParam(name = "redirect", required = false) String redirect) {
         User user = authService.login(form.getEmail(), form.getPassword());
         if (user == null) {
-            model.addAttribute("form", form);
+            model.addAttribute("loginForm", form);
+            model.addAttribute("registerForm", new RegisterForm());
             model.addAttribute("error", "Email hoặc mật khẩu không đúng, hoặc tài khoản đã bị khoá.");
             return "auth/login";
         }
@@ -89,7 +96,7 @@ public class AuthController {
         return switch (user.getRole()) {
             case ADMIN -> "redirect:/admin/users";
             case CUSTOMER -> "redirect:/profile";
-            case DRIVER -> "redirect:/profile";
+            case DRIVER -> "redirect:/driver/dashboard";
         };
     }
 
@@ -99,6 +106,65 @@ public class AuthController {
     public String logout(HttpSession session, RedirectAttributes ra) {
         SecurityUtil.clearSession(session);
         ra.addFlashAttribute("success", "Bạn đã đăng xuất thành công.");
+        return "redirect:/auth/login";
+    }
+
+    // ── Forgot Password Flow ───────────────────────────────────────
+
+    @GetMapping("/forgot-password")
+    public String forgotPasswordForm(Model model) {
+        model.addAttribute("step", 1);
+        return "auth/forgot-password";
+    }
+
+    @PostMapping("/forgot-password/send-otp")
+    public String sendOtp(@RequestParam("email") String email, Model model) {
+        String error = authService.sendPasswordResetOtp(email);
+        if (error != null) {
+            model.addAttribute("error", error);
+            model.addAttribute("step", 1);
+            model.addAttribute("email", email);
+            return "auth/forgot-password";
+        }
+        model.addAttribute("step", 2);
+        model.addAttribute("email", email);
+        return "auth/forgot-password";
+    }
+
+    @PostMapping("/forgot-password/verify-otp")
+    public String verifyOtp(@RequestParam("email") String email,
+                            @RequestParam("otp") String otp,
+                            Model model) {
+        String error = authService.verifyPasswordResetOtp(email, otp);
+        if (error != null) {
+            model.addAttribute("error", error);
+            model.addAttribute("step", 2);
+            model.addAttribute("email", email);
+            model.addAttribute("otp", otp);
+            return "auth/forgot-password";
+        }
+        model.addAttribute("step", 3);
+        model.addAttribute("email", email);
+        model.addAttribute("otp", otp);
+        return "auth/forgot-password";
+    }
+
+    @PostMapping("/forgot-password/reset")
+    public String resetPassword(@RequestParam("email") String email,
+                                @RequestParam("otp") String otp,
+                                @RequestParam("newPassword") String newPassword,
+                                @RequestParam("confirmPassword") String confirmPassword,
+                                RedirectAttributes ra,
+                                Model model) {
+        String error = authService.resetPassword(email, otp, newPassword, confirmPassword);
+        if (error != null) {
+            model.addAttribute("error", error);
+            model.addAttribute("step", 3);
+            model.addAttribute("email", email);
+            model.addAttribute("otp", otp);
+            return "auth/forgot-password";
+        }
+        ra.addFlashAttribute("success", "Mật khẩu đã được đặt lại thành công. Vui lòng đăng nhập.");
         return "redirect:/auth/login";
     }
 }

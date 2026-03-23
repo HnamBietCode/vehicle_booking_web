@@ -1,444 +1,523 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Báo Cáo | Đặt Xe</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        /* BASE CSS copied from layout/base.html for consistency */
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        :root {
-            --primary: #4F46E5;
-            --primary-dark: #3730A3;
-            --accent: #F59E0B;
-            --danger: #EF4444;
-            --success: #10B981;
-            --bg: #F8FAFC;
-            --surface: #FFFFFF;
-            --border: #E2E8F0;
-            --text: #1E293B;
-            --muted: #64748B;
-            --radius: 12px;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-        }
-
-        .navbar {
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-            padding: 0 2rem;
-            display: flex;
-            align-items: center;
-            height: 64px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
-        }
-
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.3rem;
-            color: var(--primary);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: .5rem;
-        }
-
-        .navbar-brand::before {
-            content: '🚗';
-            font-size: 1.4rem;
-        }
-
-        .navbar-nav {
-            display: flex;
-            align-items: center;
-            gap: .25rem;
-            margin-left: auto;
-            list-style: none;
-        }
-
-        .nav-link {
-            padding: .5rem .85rem;
-            border-radius: 8px;
-            text-decoration: none;
-            color: var(--muted);
-            font-size: .9rem;
-            font-weight: 500;
-            transition: all .2s;
-        }
-
-        .nav-link:hover,
-        .nav-link.active {
-            background: var(--primary);
-            color: #fff;
-        }
-
-        .main {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
-        }
-
-        .card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 1.75rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .card-title {
-            font-size: 1.15rem;
-            font-weight: 700;
-            margin-bottom: 1.2rem;
-            color: var(--text);
-        }
-
-        .page-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1.5rem;
-        }
-
-        .page-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: .9rem;
-            background: var(--surface);
-        }
-
-        th {
-            background: var(--bg);
-            font-weight: 600;
-            color: var(--muted);
-            padding: .75rem 1rem;
-            text-align: left;
-            border-bottom: 2px solid var(--border);
-        }
-
-        td {
-            padding: .75rem 1rem;
-            border-bottom: 1px solid var(--border);
-            vertical-align: middle;
-        }
-
-        tr:hover td {
-            background: #f8fafc;
-        }
-
-        /* Dashboard specific CSS */
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .kpi-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 1.25rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
-        }
-
-        .kpi-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-        }
-
-        .revenue-bg {
-            background: #E0E7FF;
-            color: #4F46E5;
-        }
-
-        .trips-bg {
-            background: #D1FAE5;
-            color: #059669;
-        }
-
-        .kpi-details .kpi-label {
-            color: var(--muted);
-            font-size: 0.95rem;
-            font-weight: 500;
-            margin-bottom: 0.25rem;
-        }
-
-        .kpi-details .kpi-value {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--text);
-        }
-
-        .chart-card {
-            margin-bottom: 2rem;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 400px;
-            width: 100%;
-        }
-
-        .rank-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            font-weight: 700;
-            font-size: 0.85rem;
-            color: white;
-        }
-
-        .rank-1 {
-            background-color: #F59E0B;
-        }
-
-        .rank-2 {
-            background-color: #9CA3AF;
-        }
-
-        .rank-3 {
-            background-color: #B45309;
-        }
-
-        .rank-other {
-            background-color: var(--muted);
-        }
-
-        .rating-star {
-            color: #F59E0B;
-        }
-
-        .filter-select {
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            background: var(--surface);
-            font-weight: 500;
-            font-family: inherit;
-        }
-
-        .table-wrap {
-            overflow-x: auto;
-        }
-    </style>
+    <title>Admin Dashboard | SR-Booking Mobility</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-variant": "#e3e2e8",
+                        "outline-variant": "#c5c6d2",
+                        "on-primary-container": "#7a8ed2",
+                        "primary-fixed": "#dce1ff",
+                        "outline": "#757681",
+                        "secondary": "#ab3500",
+                        "on-background": "#1b1b20",
+                        "on-surface": "#1b1b20",
+                        "secondary-container": "#fe6a34",
+                        "primary": "#00103e",
+                        "on-secondary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed-variant": "#2e4382",
+                        "on-secondary-container": "#5d1900",
+                        "surface-container": "#efedf3",
+                        "surface-container-low": "#f5f3f9",
+                        "on-tertiary-fixed-variant": "#005047",
+                        "primary-container": "#0a2463",
+                        "surface-dim": "#dbd9df",
+                        "surface-bright": "#faf8ff",
+                        "surface-container-high": "#e9e7ed",
+                        "surface": "#faf8ff",
+                        "background": "#faf8ff",
+                        "on-surface-variant": "#444650",
+                    },
+                    fontFamily: {
+                        "headline": ["Be Vietnam Pro"],
+                        "body": ["Be Vietnam Pro"],
+                        "label": ["Be Vietnam Pro"]
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Be Vietnam Pro', sans-serif; }
+        .sidebar-link { transition: all 0.2s ease; }
+        .sidebar-link:hover { background: rgba(255,255,255,0.1); color: white; }
+        .sidebar-link.active { background: #FE6A34; color: white; transform: scale(1.02); }
+        .kpi-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,16,62,0.12); }
+        .chart-bar { transition: opacity 0.2s ease; }
+        .chart-bar:hover { opacity: 0.8; }
+        .table-row { transition: background 0.15s ease; }
+        .table-row:hover { background: #f8fafc; }
+        @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .live-dot { animation: pulse-dot 1.5s infinite; }
+    </style>
 </head>
+<body class="bg-surface-container-low text-on-surface">
 
-<body>
-    <!-- Navigation Bar from Base Layout -->
-    <nav th:replace="~{layout/base :: navbar}"></nav>
+<!-- ─── Sidebar ──────────────────────────────────────────────────────── -->
+<aside class="fixed left-0 top-0 h-full w-64 bg-[#0A2463] flex flex-col py-6 gap-1 z-50 shadow-2xl">
+    <div class="px-6 mb-8">
+        <h1 class="text-2xl font-bold text-white tracking-tighter italic">SR-Booking</h1>
+        <p class="text-[10px] text-blue-300 tracking-[0.2em] uppercase font-bold opacity-70">Mobility Admin</p>
+    </div>
 
-    <main class="main">
-        <div class="page-header">
-            <h1 class="page-title">📊 Báo Cáo Thống Kê</h1>
-            <select id="periodSelector" class="filter-select">
-                <option value="weekly">Theo tuần</option>
-                <option value="monthly" selected>Theo tháng</option>
-                <option value="yearly">Theo năm</option>
-            </select>
+    <nav class="flex-1 px-2 space-y-1">
+        <a class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-xl text-white" href="/admin/dashboard">
+            <span class="material-symbols-outlined text-xl">dashboard</span>
+            <span class="text-sm font-semibold">Dashboard</span>
+        </a>
+        <a class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300" href="/admin/users">
+            <span class="material-symbols-outlined text-xl">group</span>
+            <span class="text-sm font-semibold">Quản lý Users</span>
+        </a>
+        <a class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300" href="/admin/vehicles">
+            <span class="material-symbols-outlined text-xl">directions_car</span>
+            <span class="text-sm font-semibold">Quản lý Xe</span>
+        </a>
+        <a class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300" href="/admin/sober-bookings">
+            <span class="material-symbols-outlined text-xl">assignment</span>
+            <span class="text-sm font-semibold">Quản lý Lái hộ</span>
+        </a>
+        <a class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300" href="/admin/withdrawals">
+            <span class="material-symbols-outlined text-xl">payments</span>
+            <span class="text-sm font-semibold">Rút tiền</span>
+        </a>
+        <a class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300" href="/admin/pickup-points">
+            <span class="material-symbols-outlined text-xl">location_on</span>
+            <span class="text-sm font-semibold">Điểm đón</span>
+        </a>
+        <a class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300" href="/admin/realtime">
+            <span class="material-symbols-outlined text-xl">monitoring</span>
+            <span class="text-sm font-semibold">Realtime</span>
+            <span class="ml-auto w-2 h-2 bg-green-400 rounded-full live-dot"></span>
+        </a>
+    </nav>
+
+    <div class="px-4 mt-4 border-t border-white/10 pt-4">
+        <a class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-300 text-sm" href="/admin/dashboard">
+            <span class="material-symbols-outlined text-base">help</span>
+            <span>Hỗ trợ</span>
+        </a>
+        <a class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-300 hover:!text-red-400 text-sm" href="/auth/logout">
+            <span class="material-symbols-outlined text-base">logout</span>
+            <span>Đăng xuất</span>
+        </a>
+    </div>
+</aside>
+
+<!-- ─── Top Header ──────────────────────────────────────────────────── -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 bg-white/80 backdrop-blur-xl flex justify-between items-center px-8 z-40 border-b border-slate-100">
+    <div class="flex items-center gap-4">
+        <h2 class="font-bold text-[#0A2463] text-base hidden sm:block">SR-Booking Admin</h2>
+        <div class="relative ml-2">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 text-lg">search</span>
+            <input class="pl-10 pr-4 py-1.5 bg-surface-container-low border-0 rounded-full text-sm w-64 focus:ring-2 focus:ring-[#FE6A34] outline-none transition-all" placeholder="Tìm user, mã đơn..." type="text" id="headerSearch">
+        </div>
+    </div>
+    <div class="flex items-center gap-3">
+        <select id="periodSelector" class="bg-surface-container-low border-0 text-sm rounded-xl px-3 py-2 font-semibold text-primary outline-none focus:ring-2 focus:ring-[#FE6A34] text-[#0A2463]">
+            <option value="weekly">Theo tuần</option>
+            <option value="monthly" selected>Theo tháng</option>
+            <option value="yearly">Theo năm</option>
+        </select>
+        <div class="flex items-center gap-1 border-l border-slate-200 pl-3">
+            <button class="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-all" title="Thông báo">
+                <span class="material-symbols-outlined text-xl">notifications</span>
+            </button>
+            <div class="w-8 h-8 rounded-full bg-[#0A2463] flex items-center justify-center text-white font-bold text-xs ml-1 cursor-pointer">AD</div>
+        </div>
+    </div>
+</header>
+
+<!-- ─── Main Content ─────────────────────────────────────────────────── -->
+<main class="ml-64 pt-24 px-8 pb-24 min-h-screen">
+
+    <!-- Page Title -->
+    <div class="flex justify-between items-end mb-8">
+        <div>
+            <h1 class="text-2xl font-extrabold text-[#0A2463] tracking-tight mb-1">Tổng quan Hệ thống</h1>
+            <p class="text-sm text-on-surface-variant">
+                Xin chào Admin 👋 —
+                <span th:with="u=${session?.loggedUser}" th:text="${u?.email ?: 'Admin'}">Admin</span>
+            </p>
+        </div>
+        <div class="flex items-center gap-2 text-xs font-bold text-slate-500 bg-white rounded-xl px-4 py-2.5 shadow-sm border border-slate-100">
+            <span class="material-symbols-outlined text-sm">calendar_today</span>
+            <span id="currentDate">Đang tải...</span>
+        </div>
+    </div>
+
+    <!-- ─── KPI Cards ──────────────────────────────────────────── -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+
+        <!-- Total Revenue -->
+        <div class="kpi-card bg-gradient-to-br from-[#00103E] to-[#0A2463] p-6 rounded-2xl shadow-lg relative overflow-hidden group cursor-default">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-11 h-11 bg-white/10 rounded-xl flex items-center justify-center">
+                    <span class="material-symbols-outlined text-white text-xl">account_balance_wallet</span>
+                </div>
+                <span class="text-xs font-bold text-green-400 bg-white/10 px-2 py-1 rounded-lg">+18%</span>
+            </div>
+            <h3 class="text-white/60 text-xs font-medium uppercase tracking-wider mb-1">Doanh thu tháng</h3>
+            <p id="totalRevenue" class="text-2xl font-extrabold text-white tracking-tight">0 ₫</p>
+            <div class="mt-3 h-1 w-full bg-white/10 rounded-full overflow-hidden">
+                <div id="revenueBar" class="h-full bg-[#FE6A34] rounded-full" style="width:0%"></div>
+            </div>
         </div>
 
-        <!-- KPI Grid -->
-        <div class="kpi-grid">
-            <div class="kpi-card">
-                <div class="kpi-icon revenue-bg">💰</div>
-                <div class="kpi-details">
-                    <p class="kpi-label">Tổng Doanh Thu</p>
-                    <h3 id="totalRevenue" class="kpi-value">0 ₫</h3>
+        <!-- Total Trips -->
+        <div class="kpi-card bg-white p-6 rounded-2xl shadow-sm relative overflow-hidden group cursor-default border border-slate-100">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-11 h-11 bg-blue-50 rounded-xl flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[#0A2463] text-xl">local_taxi</span>
                 </div>
+                <span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-lg" id="tripsGrowthBadge">--</span>
             </div>
-            <div class="kpi-card">
-                <div class="kpi-icon trips-bg">🚗</div>
-                <div class="kpi-details">
-                    <p class="kpi-label">Tổng Số Chuyến</p>
-                    <h3 id="totalTrips" class="kpi-value">0</h3>
-                </div>
-            </div>
+            <h3 class="text-slate-500 text-xs font-medium uppercase tracking-wider mb-1">Tổng số chuyến</h3>
+            <p id="totalTrips" class="text-2xl font-extrabold text-[#0A2463] tracking-tight">0</p>
         </div>
 
-        <!-- Chart -->
-        <div class="card chart-card">
-            <h3 class="card-title">📈 Tăng Trưởng Doanh Thu & Chuyến Đi</h3>
-            <div class="chart-container">
+        <!-- Total Users (static placeholder) -->
+        <div class="kpi-card bg-white p-6 rounded-2xl shadow-sm relative overflow-hidden group cursor-default border border-slate-100">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-11 h-11 bg-orange-50 rounded-xl flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[#FE6A34] text-xl">group</span>
+                </div>
+                <span class="text-xs font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-lg">Người dùng</span>
+            </div>
+            <h3 class="text-slate-500 text-xs font-medium uppercase tracking-wider mb-1">Tổng người dùng</h3>
+            <p class="text-2xl font-extrabold text-[#0A2463] tracking-tight">
+                <a href="/admin/users" class="hover:text-[#FE6A34] transition-colors">Xem →</a>
+            </p>
+        </div>
+
+        <!-- Withdrawals pending (static placeholder) -->
+        <div class="kpi-card bg-white p-6 rounded-2xl shadow-sm border-b-2 border-[#FE6A34] relative overflow-hidden group cursor-default border border-slate-100">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-11 h-11 bg-[#FE6A34]/10 rounded-xl flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[#FE6A34] text-xl">payments</span>
+                </div>
+                <span class="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-lg">Chờ duyệt</span>
+            </div>
+            <h3 class="text-slate-500 text-xs font-medium uppercase tracking-wider mb-1">Yêu cầu rút tiền</h3>
+            <p class="text-2xl font-extrabold text-[#0A2463] tracking-tight">
+                <a href="/admin/withdrawals" class="hover:text-[#FE6A34] transition-colors">Xem →</a>
+            </p>
+        </div>
+    </section>
+
+    <!-- ─── Chart + Top Drivers ───────────────────────────────── -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+
+        <!-- Chart Card -->
+        <div class="lg:col-span-2 bg-white p-7 rounded-2xl shadow-sm border border-slate-100">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-base font-bold text-[#0A2463]">📈 Biểu đồ Doanh thu & Chuyến đi</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Dữ liệu theo kỳ đã chọn</p>
+                </div>
+                <div class="flex gap-3 text-xs">
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-[#0A2463] inline-block"></span>Doanh thu</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-[#FE6A34] inline-block"></span>Chuyến đi</span>
+                </div>
+            </div>
+            <div class="relative h-72 w-full">
                 <canvas id="mainChart"></canvas>
             </div>
         </div>
 
         <!-- Top Drivers -->
-        <div class="card">
-            <h3 class="card-title">🏆 Top Tài Xế Nổi Bật</h3>
-            <div class="table-wrap">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Hạng</th>
-                            <th>Tài Xế</th>
-                            <th>Số Chuyến</th>
-                            <th>Đánh Giá</th>
-                        </tr>
-                    </thead>
-                    <tbody id="topDriversBody">
-                        <tr>
-                            <td colspan="4" style="text-align: center; padding: 2rem;">Đang tải dữ liệu...</td>
-                        </tr>
-                    </tbody>
-                </table>
+        <div class="bg-white p-7 rounded-2xl shadow-sm border border-slate-100">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-base font-bold text-[#0A2463]">🏆 Top Tài xế</h3>
+                <span class="text-[10px] font-bold text-[#FE6A34] bg-orange-50 px-2 py-1 rounded-lg uppercase">Nổi bật</span>
             </div>
+            <div id="topDriversList" class="space-y-4">
+                <!-- Injected by JS -->
+                <div class="text-center py-8 text-slate-400 text-sm">Đang tải...</div>
+            </div>
+            <a href="/admin/users" class="block w-full mt-6 py-2.5 border border-slate-200 rounded-xl text-sm font-bold text-[#0A2463] hover:bg-slate-50 transition-colors text-center">Xem tất cả tài xế</a>
         </div>
+    </div>
 
-        <!-- JavaScript Logic -->
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                let reportChart = null;
-                const periodSelector = document.getElementById('periodSelector');
-                const totalRevenueEl = document.getElementById('totalRevenue');
-                const totalTripsEl = document.getElementById('totalTrips');
-                const topDriversBody = document.getElementById('topDriversBody');
+    <!-- ─── Recent Sober Bookings Table ──────────────────────── -->
+    <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="p-7 flex justify-between items-center border-b border-slate-100">
+            <div>
+                <h3 class="text-base font-bold text-[#0A2463]">📋 Đơn lái hộ gần nhất</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Dữ liệu từ hệ thống quản lý lái hộ</p>
+            </div>
+            <a href="/admin/sober-bookings" class="text-[#FE6A34] text-sm font-bold hover:underline">Xem tất cả →</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                        <th class="px-7 py-4">Mã đơn</th>
+                        <th class="px-7 py-4">Khách hàng</th>
+                        <th class="px-7 py-4">Tài xế</th>
+                        <th class="px-7 py-4">Điểm đón</th>
+                        <th class="px-7 py-4">Giá trị</th>
+                        <th class="px-7 py-4">Trạng thái</th>
+                        <th class="px-7 py-4">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody id="recentBookingsBody" class="divide-y divide-slate-50">
+                    <tr>
+                        <td colspan="7" class="px-7 py-10 text-center text-sm text-slate-400">Đang tải dữ liệu...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
 
-                const formatCurrency = (value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
-                const formatDate = (dateStr) => {
-                    const d = new Date(dateStr);
-                    return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
-                };
+</main>
 
-                const fetchDashboardData = async (period) => {
-                    try {
-                        const response = await fetch(`/api/admin/reports/dashboard?period=${period}`);
-                        if (!response.ok) throw new Error('Network error');
-                        const data = await response.json();
+<!-- ─── FAB ──────────────────────────────────────────────────────────── -->
+<a href="/admin/sober-bookings" class="fixed bottom-8 right-8 w-14 h-14 bg-[#FE6A34] text-white rounded-2xl shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-200 z-50 group">
+    <span class="material-symbols-outlined text-2xl">add</span>
+    <span class="absolute right-full mr-3 bg-[#0A2463] text-white px-3 py-2 rounded-xl text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all font-bold shadow-lg">Tạo đơn mới</span>
+</a>
 
-                        totalRevenueEl.innerText = formatCurrency(data.totalRevenue);
-                        totalTripsEl.innerText = data.totalTrips;
+<!-- ─── Scripts ───────────────────────────────────────────────────────── -->
+<script th:inline="javascript">
+/*<![CDATA[*/
+document.addEventListener('DOMContentLoaded', () => {
 
-                        topDriversBody.innerHTML = '';
-                        if (!data.topDrivers || data.topDrivers.length === 0) {
-                            topDriversBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Chưa có dữ liệu</td></tr>';
-                            return;
+    // ── Date Display ──────────────────────────────────────────
+    const now = new Date();
+    document.getElementById('currentDate').textContent =
+        now.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+
+    // ── Helpers ───────────────────────────────────────────────
+    const fmt = v => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v);
+    const fmtShort = v => {
+        if (v >= 1_000_000_000) return (v / 1_000_000_000).toFixed(1) + ' tỷ ₫';
+        if (v >= 1_000_000) return (v / 1_000_000).toFixed(0) + 'M ₫';
+        if (v >= 1_000) return (v / 1_000).toFixed(0) + 'k ₫';
+        return v + ' ₫';
+    };
+    const fmtDate = s => {
+        const d = new Date(s);
+        return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+    };
+
+    const statusBadge = status => {
+        const map = {
+            'COMPLETED': ['bg-green-100 text-green-700', 'Hoàn thành'],
+            'ACCEPTED':  ['bg-blue-100 text-blue-700',  'Đã nhận'],
+            'IN_PROGRESS': ['bg-orange-100 text-orange-700', 'Đang thực hiện'],
+            'PENDING':   ['bg-yellow-100 text-yellow-700', 'Chờ duyệt'],
+            'CANCELLED': ['bg-slate-100 text-slate-500', 'Đã hủy'],
+            'REJECTED':  ['bg-red-100 text-red-600', 'Từ chối'],
+        };
+        const [cls, lbl] = map[status] || ['bg-gray-100 text-gray-500', status];
+        return `<span class="${cls} px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide">${lbl}</span>`;
+    };
+
+    const initials = name => name ? name.split(' ').map(w => w[0]).slice(-2).join('').toUpperCase() : '?';
+    const avatarColors = ['bg-blue-100 text-blue-700', 'bg-purple-100 text-purple-700', 'bg-amber-100 text-amber-700', 'bg-rose-100 text-rose-700', 'bg-emerald-100 text-emerald-700'];
+    const colorFor = str => avatarColors[(str || '').length % avatarColors.length];
+
+    // ── fetchWithTimeout: tự abort nếu >10s ──────────────────
+    const fetchWithTimeout = (url, ms = 10000) => {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), ms);
+        return fetch(url, { signal: controller.signal })
+            .finally(() => clearTimeout(timer));
+    };
+
+    let reportChart = null;
+
+    // ── Chart Data (độc lập, không block gì cả) ───────────────
+    const fetchChartData = async period => {
+        const canvas = document.getElementById('mainChart');
+        try {
+            const res = await fetchWithTimeout(`/api/admin/reports/charts?period=${period}`);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+
+            const labels = data.map(i => fmtDate(i.date));
+            const revenueData = data.map(i => i.revenue);
+            const tripsData = data.map(i => i.trips);
+
+            if (reportChart) reportChart.destroy();
+            const ctx = canvas.getContext('2d');
+            reportChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Doanh Thu (VND)',
+                            data: revenueData,
+                            type: 'line',
+                            borderColor: '#0A2463',
+                            backgroundColor: 'rgba(10,36,99,0.08)',
+                            borderWidth: 2.5,
+                            pointBackgroundColor: '#0A2463',
+                            pointRadius: 4,
+                            tension: 0.4,
+                            fill: true,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Số Chuyến',
+                            data: tripsData,
+                            backgroundColor: '#FE6A34',
+                            borderRadius: 6,
+                            yAxisID: 'y1'
                         }
-
-                        data.topDrivers.forEach((driver, index) => {
-                            const rank = index + 1;
-                            let rankClass = rank === 1 ? 'rank-1' : (rank === 2 ? 'rank-2' : (rank === 3 ? 'rank-3' : 'rank-other'));
-
-                            const tr = document.createElement('tr');
-                            tr.innerHTML = `
-                                <td><span class="rank-badge ${rankClass}">${rank}</span></td>
-                                <td>
-                                    <div style="display:flex; align-items:center; gap:10px;">
-                                        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(driver.name)}&background=random" style="width:32px; height:32px; border-radius:50%">
-                                        <span style="font-weight:600;">${driver.name}</span>
-                                    </div>
-                                </td>
-                                <td>${driver.totalTrips}</td>
-                                <td><span class="rating-star">⭐</span> ${driver.rating ? driver.rating.toFixed(1) : '0.0'}</td>
-                            `;
-                            topDriversBody.appendChild(tr);
-                        });
-                    } catch (error) {
-                        console.error(error);
-                        topDriversBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">Lỗi tải dữ liệu</td></tr>';
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { backgroundColor: '#1E293B', padding: 12, cornerRadius: 10, titleFont: { family: 'Be Vietnam Pro', weight: '700' }, bodyFont: { family: 'Be Vietnam Pro' } }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { family: 'Be Vietnam Pro', size: 11 } } },
+                        y: { type: 'linear', display: true, position: 'left', grid: { borderDash: [5, 5], color: '#f1f5f9' }, ticks: { font: { family: 'Be Vietnam Pro', size: 10 }, callback: v => fmtShort(v) } },
+                        y1: { type: 'linear', display: true, position: 'right', grid: { display: false }, beginAtZero: true, ticks: { font: { family: 'Be Vietnam Pro', size: 10 } } }
                     }
-                };
-
-                const fetchChartData = async (period) => {
-                    try {
-                        const response = await fetch(`/api/admin/reports/charts?period=${period}`);
-                        if (!response.ok) throw new Error('Network error');
-                        const data = await response.json();
-
-                        const labels = data.map(item => formatDate(item.date));
-                        const revenueData = data.map(item => item.revenue);
-                        const tripsData = data.map(item => item.trips);
-
-                        if (reportChart) reportChart.destroy();
-
-                        const ctx = document.getElementById('mainChart').getContext('2d');
-                        reportChart = new Chart(ctx, {
-                            type: 'bar',
-                            data: {
-                                labels: labels,
-                                datasets: [
-                                    {
-                                        label: 'Doanh Thu (VND)',
-                                        data: revenueData,
-                                        type: 'line',
-                                        borderColor: '#4F46E5',
-                                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                                        borderWidth: 3,
-                                        pointBackgroundColor: '#4F46E5',
-                                        tension: 0.4,
-                                        fill: true,
-                                        yAxisID: 'y'
-                                    },
-                                    {
-                                        label: 'Số Chuyến',
-                                        data: tripsData,
-                                        type: 'bar',
-                                        backgroundColor: '#10B981',
-                                        borderRadius: 4,
-                                        yAxisID: 'y1'
-                                    }
-                                ]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                interaction: { mode: 'index', intersect: false },
-                                plugins: {
-                                    tooltip: { backgroundColor: '#1E293B', padding: 12, cornerRadius: 8 },
-                                    legend: { labels: { usePointStyle: true, font: { family: "'Inter', sans-serif", weight: '500' } } }
-                                },
-                                scales: {
-                                    x: { grid: { display: false } },
-                                    y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Doanh Thu (VND)' }, grid: { borderDash: [5, 5] } },
-                                    y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'Số Chuyến' }, grid: { display: false }, beginAtZero: true }
-                                }
-                            }
-                        });
-                    } catch (error) { console.error('Error rendering chart', error); }
-                };
-
-                const loadData = (p) => { fetchDashboardData(p); fetchChartData(p); };
-                periodSelector.addEventListener('change', (e) => loadData(e.target.value));
-                loadData(periodSelector.value); // init
+                }
             });
-        </script>
-    </main>
-</body>
+        } catch (e) {
+            if (e.name === 'AbortError') {
+                canvas.insertAdjacentHTML('afterend', '<p class="text-xs text-slate-400 text-center mt-2">⏱ Biểu đồ tải quá lâu — <a href="" class="underline">thử lại</a></p>');
+            }
+            console.warn('Chart load failed:', e.message);
+        }
+    };
 
+    // ── Dashboard KPI + Top Drivers (độc lập) ─────────────────
+    const fetchDashboardData = async period => {
+        const list = document.getElementById('topDriversList');
+        try {
+            const res = await fetchWithTimeout(`/api/admin/reports/dashboard?period=${period}`);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+
+            // KPI
+            document.getElementById('totalRevenue').textContent = fmtShort(data.totalRevenue || 0);
+            document.getElementById('revenueBar').style.width = Math.min((data.totalRevenue || 0) / 1_000_000_000 * 100, 100) + '%';
+            document.getElementById('totalTrips').textContent = (data.totalTrips || 0).toLocaleString('vi-VN');
+            document.getElementById('tripsGrowthBadge').textContent = (data.totalTrips || 0) + ' chuyến';
+
+            // Top Drivers
+            if (!data.topDrivers || data.topDrivers.length === 0) {
+                list.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm">Chưa có dữ liệu</div>';
+                return;
+            }
+            const rankColors = ['#F59E0B', '#9CA3AF', '#B45309'];
+            list.innerHTML = data.topDrivers.map((d, i) => `
+                <div class="flex items-center gap-3 group">
+                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
+                         style="background:${rankColors[i] || '#6B7280'}">${i + 1}</div>
+                    <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(d.name)}&background=0A2463&color=fff&bold=true"
+                         class="w-9 h-9 rounded-xl object-cover" alt="${d.name}">
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-sm font-bold text-[#0A2463] truncate">${d.name}</h4>
+                        <p class="text-xs text-slate-500">${d.totalTrips} chuyến · ⭐ ${d.rating ? d.rating.toFixed(1) : '0.0'}</p>
+                    </div>
+                </div>
+            `).join('');
+
+        } catch (e) {
+            if (e.name === 'AbortError') {
+                document.getElementById('totalRevenue').textContent = '⏱ timeout';
+                document.getElementById('totalTrips').textContent = '—';
+            } else {
+                document.getElementById('totalRevenue').textContent = '—';
+                document.getElementById('totalTrips').textContent = '—';
+            }
+            list.innerHTML = '<div class="text-center py-4 text-slate-400 text-xs">Không thể tải dữ liệu</div>';
+            console.warn('Dashboard KPI load failed:', e.message);
+        }
+    };
+
+    // ── Recent Sober Bookings (độc lập) ───────────────────────
+    const fetchRecentBookings = async () => {
+        const tbody = document.getElementById('recentBookingsBody');
+        try {
+            const res = await fetchWithTimeout('/api/admin/sober-bookings?page=0&size=8');
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            const items = Array.isArray(data) ? data : (data.content || data.data || []);
+
+            if (!items.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="px-7 py-10 text-center text-sm text-slate-400">Chưa có đơn nào</td></tr>';
+                return;
+            }
+            tbody.innerHTML = items.map(b => {
+                const custName = b.customerName || b.customer?.fullName || b.customer?.username || 'N/A';
+                const driverName = b.driverName || b.driver?.fullName || b.driver?.username || '⏳ Chưa có';
+                const pickup = b.pickupAddress || b.pickupPoint?.name || b.startAddress || 'N/A';
+                const price = b.totalPrice != null ? fmt(b.totalPrice) : (b.estimatedPrice != null ? fmt(b.estimatedPrice) : '—');
+                const cc = colorFor(custName);
+                return `
+                <tr class="table-row">
+                    <td class="px-7 py-4 text-sm font-bold text-[#0A2463]">#SB-${b.id}</td>
+                    <td class="px-7 py-4">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 ${cc} rounded-full flex items-center justify-center text-[10px] font-bold shrink-0">${initials(custName)}</div>
+                            <span class="text-sm font-medium">${custName}</span>
+                        </div>
+                    </td>
+                    <td class="px-7 py-4 text-sm text-on-surface-variant">${driverName}</td>
+                    <td class="px-7 py-4 text-sm text-on-surface-variant max-w-[160px] truncate">${pickup}</td>
+                    <td class="px-7 py-4 text-sm font-bold text-[#0A2463]">${price}</td>
+                    <td class="px-7 py-4">${statusBadge(b.status)}</td>
+                    <td class="px-7 py-4">
+                        <a href="/admin/sober-bookings/${b.id}" class="text-[#FE6A34] text-xs font-bold hover:underline">Chi tiết</a>
+                    </td>
+                </tr>`;
+            }).join('');
+        } catch (e) {
+            if (e.name === 'AbortError') {
+                tbody.innerHTML = '<tr><td colspan="7" class="px-7 py-10 text-center text-sm text-orange-500">⏱ Tải dữ liệu quá lâu — <a href="" class="underline font-bold">F5 thử lại</a></td></tr>';
+            } else {
+                tbody.innerHTML = '<tr><td colspan="7" class="px-7 py-10 text-center text-sm text-red-400">❌ Lỗi tải dữ liệu — <a href="" class="underline font-bold">Thử lại</a></td></tr>';
+            }
+            console.warn('Bookings load failed:', e.message);
+        }
+    };
+
+    // ── Init: tất cả song song, độc lập nhau ─────────────────
+    const periodSelector = document.getElementById('periodSelector');
+    const load = p => {
+        fetchDashboardData(p);  // chạy độc lập
+        fetchChartData(p);      // chạy độc lập
+    };
+
+    periodSelector.addEventListener('change', e => load(e.target.value));
+
+    // requestAnimationFrame: đảm bảo trang render xong trước khi fetch
+    // → giải quyết vấn đề đơ / treo khi vào trang
+    requestAnimationFrame(() => {
+        load(periodSelector.value);
+        fetchRecentBookings();
+    });
+});
+/*]]>*/
+</script>
+
+</body>
 </html>
