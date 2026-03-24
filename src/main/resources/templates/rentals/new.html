@@ -385,8 +385,7 @@
             
             let total = base;
             if (mode === 'WITH_DRIVER') {
-                // Approximate driver fee: 100k/hour. If daily, 100k * 10 hours/day maybe? 
-                // Let's stick to 100k per mathematical "hour" for now as a simple estimate.
+                // Approximate driver fee: 100k/hour. If daily, 100k * 10 hours/day maybe?
                 const hours = type === 'DAILY' ? duration * 10 : duration; 
                 total += (hours * 100000);
             }

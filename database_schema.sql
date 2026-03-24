@@ -389,6 +389,8 @@ CREATE TABLE notifications (
     user_id     BIGINT NOT NULL,
     title       VARCHAR(200) NOT NULL,
     body        TEXT NOT NULL,
+    type        VARCHAR(50) NOT NULL,
+    /*
     type        ENUM(
                     'BOOKING_ASSIGNED',   -- Tài xế được gán chuyến
                     'BOOKING_ACCEPTED',   -- Khách tìm được tài xế
@@ -397,8 +399,8 @@ CREATE TABLE notifications (
                     'DRIVER_APPROVED',    -- Tài xế được duyệt
                     'DRIVER_REJECTED',    -- Tài xế bị từ chối
                     'GENERAL'
-                ) NOT NULL,
-    ref_type    ENUM('RENTAL', 'BOOKING', 'DRIVER', 'SYSTEM'),
+                ) NOT NULL, */
+    ref_type    VARCHAR(50),
     ref_id      BIGINT,
     is_read     BOOLEAN NOT NULL DEFAULT FALSE,
     created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

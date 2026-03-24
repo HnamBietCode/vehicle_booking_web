@@ -414,18 +414,66 @@
         <div class="card" th:if="${driver != null}">
             <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
                 <span>Hồ sơ Tài xế</span>
-                <div style="display:flex; gap:.5rem;" th:if="${driver.verificationStatus.name() == 'PENDING'}">
+            </div>
+
+            <!-- Verification Status Banner -->
+            <div th:if="${driver.verificationStatus.name() == 'PENDING'}" style="background:linear-gradient(135deg,#FFF7ED,#FEF3C7);border:1px solid #FDE68A;border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:40px;height:40px;background:#FEF3C7;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                        <span class="material-symbols-outlined" style="color:#D97706;font-size:22px;">hourglass_top</span>
+                    </div>
+                    <div>
+                        <p style="font-weight:700;font-size:.9rem;color:#92400E;">Đang chờ duyệt hồ sơ</p>
+                        <p style="font-size:.78rem;color:#B45309;margin-top:2px;">Tài xế cần được admin duyệt trước khi có thể nhận đơn</p>
+                    </div>
+                </div>
+                <div style="display:flex;gap:8px;flex-shrink:0;">
                     <form th:action="@{/admin/users/{id}/verify-driver(id=${target.id})}" method="post">
                         <input type="hidden" name="status" value="APPROVED">
-                        <button type="submit" class="btn btn-success btn-sm">✔ Duyệt</button>
+                        <button type="submit" class="btn btn-success btn-sm" style="padding:8px 16px;">✔ Duyệt</button>
                     </form>
-                    <form th:action="@{/admin/users/{id}/verify-driver(id=${target.id})}" method="post" id="rejectForm">
-                        <input type="hidden" name="status" value="REJECTED">
-                        <input type="hidden" name="reason" id="rejectReasonInput" value="">
-                        <button type="button" class="btn btn-danger btn-sm" onclick="promptReject()">✖ Từ chối</button>
-                    </form>
+                    <button type="button" class="btn btn-danger btn-sm" style="padding:8px 16px;" onclick="openRejectModal()">✖ Từ chối</button>
                 </div>
             </div>
+
+            <div th:if="${driver.verificationStatus.name() == 'REJECTED'}" style="background:linear-gradient(135deg,#FEF2F2,#FEE2E2);border:1px solid #FECACA;border-radius:12px;padding:16px 20px;margin-bottom:20px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div style="width:40px;height:40px;background:#FEE2E2;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                            <span class="material-symbols-outlined" style="color:#DC2626;font-size:22px;">cancel</span>
+                        </div>
+                        <div>
+                            <p style="font-weight:700;font-size:.9rem;color:#991B1B;">Hồ sơ bị từ chối</p>
+                            <p style="font-size:.78rem;color:#B91C1C;margin-top:2px;">Tài xế không thể nhận đơn cho đến khi được duyệt lại</p>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px;flex-shrink:0;">
+                        <form th:action="@{/admin/users/{id}/verify-driver(id=${target.id})}" method="post">
+                            <input type="hidden" name="status" value="APPROVED">
+                            <button type="submit" class="btn btn-success btn-sm" style="padding:8px 16px;">✔ Duyệt lại</button>
+                        </form>
+                        <button type="button" class="btn btn-danger btn-sm" style="padding:8px 16px;" onclick="openRejectModal()">✖ Từ chối lại</button>
+                    </div>
+                </div>
+                <div th:if="${driver.rejectionReason != null}" style="margin-top:12px;background:#fff;border-radius:8px;padding:12px 16px;border-left:4px solid #EF4444;">
+                    <p style="font-size:.78rem;font-weight:700;color:#991B1B;margin-bottom:4px;">📋 Lý do từ chối:</p>
+                    <p style="font-size:.88rem;color:#7F1D1D;" th:text="${driver.rejectionReason}">—</p>
+                </div>
+            </div>
+
+            <div th:if="${driver.verificationStatus.name() == 'APPROVED'}" style="background:linear-gradient(135deg,#F0FDF4,#DCFCE7);border:1px solid #BBF7D0;border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
+                <div style="width:40px;height:40px;background:#DCFCE7;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                    <span class="material-symbols-outlined" style="color:#16A34A;font-size:22px;">verified</span>
+                </div>
+                <div>
+                    <p style="font-weight:700;font-size:.9rem;color:#166534;">Đã được duyệt</p>
+                    <p style="font-size:.78rem;color:#15803D;margin-top:2px;">
+                        <span th:if="${driver.approvedAt != null}" th:text="'Duyệt lúc: ' + ${#temporals.format(driver.approvedAt,'dd/MM/yyyy HH:mm')}"></span>
+                        <span th:if="${approverName != null}" th:text="' — Người duyệt: ' + ${approverName}"></span>
+                    </p>
+                </div>
+            </div>
+
             <div class="detail-grid">
                 <div class="detail-item"><label>Họ tên</label>
                     <p th:text="${driver.fullName}">—</p>
@@ -480,22 +528,6 @@
                     <div class="detail-item"><label>Loại xe</label>
                         <p th:text="${driver.vehicleTypes}">—</p></div>
                 </th:block>
-                <div class="detail-item" th:if="${driver.verificationStatus.name() != 'APPROVED'}"><label>Xét
-                        duyệt</label>
-                    <p><span class="badge"
-                            th:classappend="${driver.verificationStatus.name() == 'REJECTED' ? 'badge-rejected' : 'badge-pending'}"
-                            th:text="${driver.verificationStatus.name() == 'REJECTED' ? 'Từ chối' : 'Chờ duyệt'}">—</span>
-                    </p>
-                </div>
-                <div class="detail-item" th:if="${driver.approvedAt != null}"><label>Thời gian duyệt</label>
-                    <p th:text="${#temporals.format(driver.approvedAt,'dd/MM/yyyy HH:mm')}">—</p>
-                </div>
-                <div class="detail-item" th:if="${driver.approvedBy != null}"><label>Người duyệt</label>
-                    <p th:text="${approverName != null ? approverName : ('ID: ' + driver.approvedBy)}">—</p>
-                </div>
-                <div class="detail-item" th:if="${!target.isActive && driver.rejectionReason != null}"><label>Lý do bị khoá</label>
-                    <p th:text="${driver.rejectionReason}">—</p>
-                </div>
                 <div class="detail-item"><label>Đánh giá</label>
                     <p>
                         <span th:text="${avgRating}">0.0</span> ⭐
@@ -519,11 +551,7 @@
                     class="btn btn-warning"
                     th:text="${target.isActive ? '🔒 Khoá tài khoản' : '🔓 Mở khoá'}">Khoá</button>
             </form>
-            <form th:action="@{/admin/users/{id}/delete(id=${target.id})}" method="post"
-                th:if="${target.id != loggedUser.id}"
-                onsubmit="return confirm('Bạn có chắc muốn xoá tài khoản này không?')">
-                <button type="submit" class="btn btn-danger">🗑️ Xoá tài khoản</button>
-            </form>
+            <button type="button" class="btn btn-danger" th:if="${target.id != loggedUser.id}" onclick="openDeleteModal()">🗑️ Xoá tài khoản</button>
             <a class="btn btn-outline" th:href="@{/admin/users}">← Quay lại</a>
         </div>
     </main>
@@ -539,14 +567,24 @@
         display.textContent = pwdVisible ? hash : '••••••••••••';
     }
 
-    function promptReject() {
-        const reason = prompt("Vui lòng nhập lý do từ chối hồ sơ này:");
-        if (reason !== null && reason.trim() !== "") {
-            document.getElementById('rejectReasonInput').value = reason;
-            document.getElementById('rejectForm').submit();
-        } else if (reason !== null) {
-            alert("Lý do từ chối không được để trống!");
+    function openRejectModal() {
+        document.getElementById('rejectModal').classList.add('show');
+        document.getElementById('rejectReasonTextarea').value = '';
+        document.getElementById('rejectReasonTextarea').focus();
+        document.getElementById('rejectErrorMsg').style.display = 'none';
+    }
+    function closeRejectModal() {
+        document.getElementById('rejectModal').classList.remove('show');
+    }
+    function submitReject() {
+        const reason = document.getElementById('rejectReasonTextarea').value.trim();
+        if (!reason) {
+            document.getElementById('rejectErrorMsg').style.display = 'block';
+            document.getElementById('rejectReasonTextarea').focus();
+            return;
         }
+        document.getElementById('rejectReasonHidden').value = reason;
+        document.getElementById('rejectDriverForm').submit();
     }
 
     function promptLock() {
@@ -558,6 +596,80 @@
             alert("Lý do khóa không được để trống!");
         }
     }
+</script>
+
+<!-- Reject Driver Modal -->
+<div class="modal-overlay" id="rejectModal">
+    <div class="modal-box">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <div style="width:40px;height:40px;background:#FEF2F2;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                <span class="material-symbols-outlined" style="color:#EF4444;">gpp_bad</span>
+            </div>
+            <h3 style="font-size:1.1rem;font-weight:800;color:#0A2463;">Từ chối hồ sơ tài xế</h3>
+        </div>
+        <p style="font-size:.875rem;color:#64748b;margin-bottom:12px;">Nhập lý do từ chối để tài xế biết cần sửa đổi gì:</p>
+        <textarea id="rejectReasonTextarea" rows="3" placeholder="Ví dụ: Bằng lái đã hết hạn, thiếu ảnh CCCD..." style="width:100%;padding:10px 14px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:.9rem;font-family:inherit;resize:vertical;transition:border-color .2s;"></textarea>
+        <p id="rejectErrorMsg" style="display:none;color:#EF4444;font-size:.8rem;font-weight:600;margin-top:6px;">⚠️ Lý do từ chối không được để trống!</p>
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px;">
+            <button type="button" class="btn btn-outline" onclick="closeRejectModal()">Hủy</button>
+            <button type="button" class="btn btn-danger" onclick="submitReject()">
+                <span class="material-symbols-outlined" style="font-size:15px;">gpp_bad</span>Xác nhận từ chối
+            </button>
+        </div>
+    </div>
+</div>
+<form id="rejectDriverForm" th:action="@{/admin/users/{id}/verify-driver(id=${target.id})}" method="post" style="display:none;">
+    <input type="hidden" name="status" value="REJECTED">
+    <input type="hidden" name="reason" id="rejectReasonHidden" value="">
+</form>
+<script>
+    document.getElementById('rejectModal')?.addEventListener('click', e => { if (e.target === e.currentTarget) closeRejectModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeRejectModal(); closeDeleteModal(); } });
+</script>
+
+<!-- Delete Modal -->
+<style>
+    .modal-overlay { display:none; position:fixed; inset:0; z-index:9999; background:rgba(15,23,42,.5); backdrop-filter:blur(4px); align-items:center; justify-content:center; }
+    .modal-overlay.show { display:flex; animation:fadeIn .2s ease; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    .modal-box { background:#fff; border-radius:20px; padding:2rem; width:90%; max-width:460px; box-shadow:0 20px 60px rgba(0,0,0,.15); animation:slideUp .25s ease; }
+    @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+</style>
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-box">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <div style="width:40px;height:40px;background:#FEE2E2;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                <span class="material-symbols-outlined" style="color:#EF4444;">delete_forever</span>
+            </div>
+            <h3 style="font-size:1.1rem;font-weight:800;color:#0A2463;">Xoá tài khoản</h3>
+        </div>
+        <p style="font-size:.875rem;color:#64748b;margin-bottom:8px;">Bạn có chắc chắn muốn xoá tài khoản:</p>
+        <p style="font-size:.95rem;font-weight:700;color:#EF4444;margin-bottom:16px;" th:text="${target.email}"></p>
+        <div style="background:#FEF2F2;border-radius:10px;padding:12px 16px;margin-bottom:20px;">
+            <p style="font-size:.82rem;color:#991B1B;font-weight:600;">⚠️ Hành động này không thể hoàn tác. Toàn bộ dữ liệu liên quan sẽ bị xóa vĩnh viễn.</p>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;">
+            <button type="button" class="btn btn-outline" onclick="closeDeleteModal()">Hủy</button>
+            <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                <span class="material-symbols-outlined" style="font-size:15px;">delete_forever</span>Xác nhận xoá
+            </button>
+        </div>
+    </div>
+</div>
+<form id="deleteForm" th:action="@{/admin/users/{id}/delete(id=${target.id})}" method="post" style="display:none;"></form>
+
+<script>
+    function openDeleteModal() {
+        document.getElementById('deleteModal').classList.add('show');
+    }
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('show');
+    }
+    function confirmDelete() {
+        document.getElementById('deleteForm').submit();
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDeleteModal(); });
+    document.getElementById('deleteModal')?.addEventListener('click', e => { if (e.target === e.currentTarget) closeDeleteModal(); });
 </script>
 
 </html>

@@ -8,13 +8,16 @@ import com.bookvehicle.example.sr.model.*;
 import com.bookvehicle.example.sr.service.UserService;
 import com.bookvehicle.example.sr.service.VehicleService;
 import com.bookvehicle.example.sr.service.RatingService;
+import com.bookvehicle.example.sr.service.EmailService;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Controller
@@ -24,12 +27,14 @@ public class UserManagementController {
     private final UserService userService;
     private final VehicleService vehicleService;
     private final RatingService ratingService;
+    private final EmailService emailService;
 
     public UserManagementController(UserService userService, VehicleService vehicleService,
-            RatingService ratingService) {
+            RatingService ratingService, EmailService emailService) {
         this.userService = userService;
         this.vehicleService = vehicleService;
         this.ratingService = ratingService;
+        this.emailService = emailService;
     }
 
     // ── Index – Danh sách user ────────────────────────────────────
@@ -96,8 +101,32 @@ public class UserManagementController {
         return "admin/users/add";
     }
 
+    @PostMapping("/add/send-otp")
+    @ResponseBody
+    public ResponseEntity<?> sendCreateOtp(@RequestParam String email) {
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Email không được để trống."));
+        }
+        emailService.sendAdminCreateOtp(email.trim());
+        return ResponseEntity.ok(Map.of("success", true, "message", "Mã OTP đã được gửi đến " + email));
+    }
+
+    @PostMapping("/add/verify-otp")
+    @ResponseBody
+    public ResponseEntity<?> verifyCreateOtp(@RequestParam String email, @RequestParam String otp) {
+        if (email == null || email.isBlank() || otp == null || otp.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Thiếu thông tin."));
+        }
+        String error = emailService.checkAdminCreateOtp(email.trim(), otp.trim());
+        if (error != null) {
+            return ResponseEntity.ok(Map.of("success", false, "error", error));
+        }
+        return ResponseEntity.ok(Map.of("success", true));
+    }
+
     @PostMapping("/add")
     public String handleAdd(@ModelAttribute("form") RegisterForm form,
+            @RequestParam(name = "otp", required = false) String otp,
             @RequestParam(name = "licenseNumbers", required = false) String[] licenseNumbers,
             @RequestParam(name = "licenseClasses", required = false) String[] licenseClasses,
             @RequestParam(name = "licenseExpiries", required = false) String[] licenseExpiries,
@@ -105,6 +134,19 @@ public class UserManagementController {
             Model model,
             HttpSession session,
             RedirectAttributes ra) {
+        // Verify OTP trước khi tạo
+        if (otp == null || otp.isBlank()) {
+            model.addAttribute("error", "Vui lòng nhập mã OTP xác nhận.");
+            model.addAttribute("loggedUser", SecurityUtil.getLoggedUser(session));
+            return "admin/users/add";
+        }
+        String otpError = emailService.verifyAdminCreateOtp(form.getEmail(), otp.trim());
+        if (otpError != null) {
+            model.addAttribute("error", otpError);
+            model.addAttribute("loggedUser", SecurityUtil.getLoggedUser(session));
+            return "admin/users/add";
+        }
+
         String error = userService.adminCreateUser(form, licenseNumbers, licenseClasses, licenseExpiries, licenseVehicleTypes);
         if (error != null) {
             model.addAttribute("error", error);

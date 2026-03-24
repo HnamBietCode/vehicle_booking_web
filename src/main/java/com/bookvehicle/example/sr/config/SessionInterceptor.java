@@ -38,9 +38,9 @@ public class SessionInterceptor implements HandlerInterceptor {
             return false;
         }
 
-        // Bảo vệ /admin/**
+        // Bảo vệ /admin/** – trả 404 nếu không phải ADMIN
         if (path.startsWith("/admin") && !loggedUser.getRole().name().equals("ADMIN")) {
-            response.sendRedirect(request.getContextPath() + "/auth/login?error=forbidden");
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return false;
         }
 

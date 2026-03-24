@@ -247,9 +247,9 @@
                     <label class="form-label" for="role">Vai trò</label>
                     <select id="role" class="form-control" name="role" required>
                         <option value="">-- Chọn vai trò --</option>
-                        <option value="ADMIN">🛡️ Admin</option>
-                        <option value="CUSTOMER">🧑‍💼 Khách hàng</option>
-                        <option value="DRIVER">🚕 Tài xế</option>
+                        <option value="ADMIN" th:selected="${form.role == 'ADMIN'}">🛡️ Admin</option>
+                        <option value="CUSTOMER" th:selected="${form.role == 'CUSTOMER'}">🧑‍💼 Khách hàng</option>
+                        <option value="DRIVER" th:selected="${form.role == 'DRIVER'}">🚕 Tài xế</option>
                     </select>
                 </div>
 
@@ -312,14 +312,45 @@
                     <p class="field-error" id="confirmPasswordError"></p>
                 </div>
 
+                <input type="hidden" name="otp" id="otpHiddenInput"/>
+
                 <div class="btn-group">
-                    <button type="submit" class="btn btn-primary">💾 Tạo tài khoản</button>
+                    <button type="button" class="btn btn-primary" id="createAccountBtn" onclick="startOtpFlow()">💾 Tạo tài khoản</button>
                     <a class="btn btn-outline" th:href="@{/admin/users}">← Huỷ</a>
                 </div>
             </form>
         </div>
     </main>
     </div><!-- end margin-left wrapper -->
+
+    <!-- OTP Modal -->
+    <div id="otpModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(10,36,99,.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);justify-content:center;align-items:center;padding:16px;">
+        <div id="otpModalContent" style="background:white;border-radius:24px;max-width:440px;width:100%;box-shadow:0 24px 64px rgba(10,36,99,.25);overflow:hidden;transform:scale(.9);opacity:0;transition:all .3s cubic-bezier(.4,0,.2,1);">
+            <div style="padding:32px 32px 0;text-align:center;">
+                <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#0A2463,#1e40af);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                    <span class="material-symbols-outlined" style="color:white;font-size:28px;">mail</span>
+                </div>
+                <h3 style="font-size:1.15rem;font-weight:800;color:#0A2463;margin-bottom:6px;">Xác nhận tạo tài khoản</h3>
+                <p id="otpModalMessage" style="font-size:.85rem;color:#64748b;line-height:1.5;">Đang gửi mã OTP...</p>
+            </div>
+            <div style="padding:20px 32px;">
+                <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin-bottom:6px;">Nhập mã OTP (6 số)</label>
+                <input type="text" id="otpModalInput" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" placeholder="• • • • • •"
+                    style="width:100%;text-align:center;font-size:1.4rem;font-weight:800;letter-spacing:8px;padding:14px;border:2px solid #e9e7ed;border-radius:12px;outline:none;transition:border-color .2s;font-family:inherit;"
+                    onfocus="this.style.borderColor='#0A2463'" onblur="this.style.borderColor='#e9e7ed'"
+                    oninput="this.value=this.value.replace(/[^0-9]/g,'');"/>
+                <p id="otpModalError" style="font-size:.8rem;color:#EF4444;font-weight:600;margin-top:8px;text-align:center;display:none;"></p>
+                <p style="font-size:.78rem;color:#64748b;margin-top:8px;text-align:center;">
+                    <span id="otpCountdown">⏱ Gửi lại mã sau <strong id="otpCountdownNum">60</strong>s</span>
+                    <button type="button" id="otpResendBtn" onclick="resendOtp()" style="display:none;background:none;border:none;color:#0A2463;font-weight:700;cursor:pointer;text-decoration:underline;font-family:inherit;font-size:.78rem;">📩 Gửi lại mã OTP</button>
+                </p>
+            </div>
+            <div style="padding:0 32px 28px;display:flex;gap:10px;">
+                <button type="button" onclick="hideOtpModal()" style="flex:1;padding:12px;border:1.5px solid #e9e7ed;background:white;border-radius:12px;font-size:.88rem;font-weight:700;color:#64748b;cursor:pointer;font-family:inherit;transition:all .2s;" onmouseover="this.style.background='#f5f3f9'" onmouseout="this.style.background='white'">Hủy</button>
+                <button type="button" id="confirmOtpBtn" onclick="confirmOtp()" style="flex:1;padding:12px;border:none;background:linear-gradient(135deg,#0A2463,#1e40af);border-radius:12px;font-size:.88rem;font-weight:700;color:white;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s;"><span class="material-symbols-outlined" style="font-size:16px;">check_circle</span>Xác nhận</button>
+            </div>
+        </div>
+    </div>
 
     <style>
         .vehicle-types-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:.4rem; }
@@ -355,7 +386,7 @@
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.7rem;">
                     <div class="form-group" style="margin:0;"><label class="form-label">Số bằng lái</label>
-                        <input type="text" class="form-control" name="licenseNumbers" required></div>
+                        <input type="text" class="form-control license-number-input" name="licenseNumbers" required maxlength="12" pattern="[0-9]{12}" minlength="12" placeholder="12 chữ số" oninput="this.value=this.value.replace(/[^0-9]/g,'');"></div>
                     <div class="form-group" style="margin:0;"><label class="form-label">Hạng bằng</label>
                         <select class="form-control license-class-select" name="licenseClasses" onchange="onClassChange(this)">
                             <option value="A1">A1 – Xe máy</option>
@@ -480,8 +511,8 @@
                 }
             }
 
-            // ── Full validation khi submit ──
-            document.querySelector('form').addEventListener('submit', function (e) {
+            // ── Full validation (dùng khi bấm Tạo tài khoản) ──
+            function validateForm() {
                 // Collect license checkboxes
                 document.querySelectorAll('.license-row').forEach(row => {
                     const sel = [];
@@ -529,11 +560,185 @@
                     } else showError('cccdError', '');
                 }
 
-                if (hasError) { e.preventDefault(); return false; }
-            });
+                // License validation (if driver)
+                if (roleSelect.value === 'DRIVER') {
+                    const licenseRows = document.querySelectorAll('.license-row');
+                    if (licenseRows.length === 0) {
+                        alert('Tài xế phải có ít nhất 1 bằng lái. Vui lòng bấm "+ Thêm bằng lái".');
+                        hasError = true;
+                    }
+                    // License number validation (12 digits)
+                    document.querySelectorAll('.license-number-input').forEach(input => {
+                        const v = input.value.trim();
+                        if (!v || !/^[0-9]{12}$/.test(v)) {
+                            input.classList.add('is-invalid');
+                            hasError = true;
+                        } else {
+                            input.classList.remove('is-invalid');
+                        }
+                    });
+                }
+
+                return !hasError;
+            }
 
             roleSelect.addEventListener('change', toggleDriver);
             toggleDriver();
+        });
+
+        // ── OTP Flow ──
+        function startOtpFlow() {
+            // Validate form first
+            const isValid = document.querySelector('form').reportValidity();
+            if (!isValid) return;
+
+            // Check driver must have at least 1 license
+            const role = document.getElementById('role').value;
+            if (role === 'DRIVER' && document.querySelectorAll('.license-row').length === 0) {
+                alert('Tài xế phải có ít nhất 1 bằng lái. Vui lòng bấm "+ Thêm bằng lái".');
+                return;
+            }
+
+            const email = document.getElementById('email').value.trim();
+            if (!email) { alert('Vui lòng nhập email.'); return; }
+
+            const btn = document.getElementById('createAccountBtn');
+            btn.textContent = '⏳ Đang gửi OTP...';
+            btn.disabled = true;
+
+            fetch('/admin/users/add/send-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'email=' + encodeURIComponent(email)
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.textContent = '💾 Tạo tài khoản';
+                btn.disabled = false;
+                if (data.success) {
+                    document.getElementById('otpModalMessage').textContent = data.message;
+                    showOtpModal();
+                } else {
+                    alert(data.error || 'Không thể gửi OTP.');
+                }
+            })
+            .catch(() => {
+                btn.textContent = '💾 Tạo tài khoản';
+                btn.disabled = false;
+                alert('Lỗi kết nối. Vui lòng thử lại.');
+            });
+        }
+
+        function resendOtp() {
+            const email = document.getElementById('email').value.trim();
+            document.getElementById('otpModalMessage').textContent = 'Đang gửi lại mã OTP...';
+            document.getElementById('otpResendBtn').style.display = 'none';
+            fetch('/admin/users/add/send-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'email=' + encodeURIComponent(email)
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('otpModalMessage').textContent = data.success ? 'Đã gửi lại mã OTP mới đến ' + email : (data.error || 'Lỗi');
+                document.getElementById('otpModalInput').value = '';
+                document.getElementById('otpModalError').style.display = 'none';
+                startCountdown();
+            });
+        }
+
+        function confirmOtp() {
+            const otp = document.getElementById('otpModalInput').value.trim();
+            const errEl = document.getElementById('otpModalError');
+            const confirmBtn = document.getElementById('confirmOtpBtn');
+            if (!otp || otp.length !== 6) {
+                errEl.textContent = 'Vui lòng nhập đủ 6 số OTP.';
+                errEl.style.display = 'block';
+                return;
+            }
+            // Verify qua AJAX trước
+            confirmBtn.innerHTML = '⏳ Đang kiểm tra...';
+            confirmBtn.disabled = true;
+            const email = document.getElementById('email').value.trim();
+            fetch('/admin/users/add/verify-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'email=' + encodeURIComponent(email) + '&otp=' + encodeURIComponent(otp)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    errEl.style.display = 'none';
+                    document.getElementById('otpHiddenInput').value = otp;
+                    hideOtpModal();
+                    document.querySelector('form').submit();
+                } else {
+                    errEl.textContent = data.error || 'Mã OTP không đúng.';
+                    errEl.style.display = 'block';
+                    document.getElementById('otpModalInput').value = '';
+                    document.getElementById('otpModalInput').focus();
+                    confirmBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;">check_circle</span>Xác nhận';
+                    confirmBtn.disabled = false;
+                }
+            })
+            .catch(() => {
+                errEl.textContent = 'Lỗi kết nối. Vui lòng thử lại.';
+                errEl.style.display = 'block';
+                confirmBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;">check_circle</span>Xác nhận';
+                confirmBtn.disabled = false;
+            });
+        }
+
+        let countdownInterval = null;
+        function startCountdown() {
+            let seconds = 60;
+            document.getElementById('otpCountdown').style.display = 'inline';
+            document.getElementById('otpResendBtn').style.display = 'none';
+            document.getElementById('otpCountdownNum').textContent = seconds;
+            clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                seconds--;
+                document.getElementById('otpCountdownNum').textContent = seconds;
+                if (seconds <= 0) {
+                    clearInterval(countdownInterval);
+                    document.getElementById('otpCountdown').style.display = 'none';
+                    document.getElementById('otpResendBtn').style.display = 'inline';
+                }
+            }, 1000);
+        }
+
+        function showOtpModal() {
+            const modal = document.getElementById('otpModal');
+            const content = document.getElementById('otpModalContent');
+            document.getElementById('otpModalInput').value = '';
+            document.getElementById('otpModalError').style.display = 'none';
+            const confirmBtn = document.getElementById('confirmOtpBtn');
+            confirmBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;">check_circle</span>Xác nhận';
+            confirmBtn.disabled = false;
+            modal.style.display = 'flex';
+            startCountdown();
+            requestAnimationFrame(() => {
+                content.style.transform = 'scale(1)';
+                content.style.opacity = '1';
+            });
+            setTimeout(() => document.getElementById('otpModalInput').focus(), 300);
+        }
+
+        function hideOtpModal() {
+            const content = document.getElementById('otpModalContent');
+            content.style.transform = 'scale(.9)';
+            content.style.opacity = '0';
+            clearInterval(countdownInterval);
+            setTimeout(() => { document.getElementById('otpModal').style.display = 'none'; }, 250);
+        }
+
+        document.getElementById('otpModal')?.addEventListener('click', function(e) {
+            if (e.target === this) hideOtpModal();
+        });
+
+        // Enter key to confirm OTP
+        document.getElementById('otpModalInput')?.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); confirmOtp(); }
         });
     </script>
 </body>
