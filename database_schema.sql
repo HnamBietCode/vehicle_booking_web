@@ -40,6 +40,7 @@ CREATE TABLE customers (
     full_name   VARCHAR(100) NOT NULL,
     address     VARCHAR(255),
     membership  ENUM('STANDARD', 'PREMIUM') NOT NULL DEFAULT 'STANDARD',
+    premium_tier ENUM('BRONZE', 'SILVER', 'GOLD'),
     premium_exp DATE,                                           -- Ngày hết hạn Premium (NULL nếu Standard)
 
     CONSTRAINT fk_customers_user    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
@@ -105,6 +106,8 @@ CREATE TABLE device_tokens (
     user_id     BIGINT NOT NULL,
     token       VARCHAR(500) NOT NULL,
     platform    VARCHAR(50),
+    email_verified BOOLEAN NOT NULL DEFAULT TRUE,
+    email_verified_at DATETIME,
     created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     last_seen   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_device_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,

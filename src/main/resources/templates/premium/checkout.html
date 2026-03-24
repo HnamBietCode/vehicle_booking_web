@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thanh toán Premium | SR-Booking</title>
+    <style th:replace="~{layout/base :: head}"></style>
+    <style>
+        body {
+            background: linear-gradient(180deg, #f7f5f0 0%, #eef3ff 100%);
+        }
+
+        .checkout-shell {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 7.5rem 1.5rem 3rem;
+        }
+
+        .checkout-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(330px, .8fr);
+            gap: 1.4rem;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(8, 31, 87, 0.08);
+            border-radius: 28px;
+            padding: 1.45rem;
+            box-shadow: 0 18px 40px rgba(8, 31, 87, 0.08);
+        }
+
+        .hero-panel {
+            background: linear-gradient(135deg, #081f57 0%, #17398d 58%, #fe6a34 100%);
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-panel::after {
+            content: "";
+            position: absolute;
+            inset: auto -70px -85px auto;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .hero-panel > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .mini-label {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            padding: .4rem .78rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.14);
+            font-size: .76rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            margin-bottom: 1rem;
+        }
+
+        .plan-name {
+            font-size: clamp(2rem, 3vw, 2.8rem);
+            font-weight: 900;
+            letter-spacing: -.05em;
+            margin-bottom: .5rem;
+        }
+
+        .plan-copy {
+            color: rgba(255, 255, 255, 0.82);
+            line-height: 1.62;
+            max-width: 52ch;
+        }
+
+        .hero-meta {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: .8rem;
+            margin-top: 1.2rem;
+        }
+
+        .hero-meta-item {
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: .9rem;
+        }
+
+        .hero-meta-item span {
+            display: block;
+            font-size: .72rem;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: rgba(255, 255, 255, 0.62);
+            margin-bottom: .3rem;
+        }
+
+        .hero-meta-item strong {
+            font-size: 1rem;
+        }
+
+        .section-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #081f57;
+            letter-spacing: -.02em;
+            margin-bottom: .8rem;
+        }
+
+        .benefit-list {
+            list-style: none;
+            display: grid;
+            gap: .7rem;
+        }
+
+        .benefit-list li {
+            display: flex;
+            gap: .7rem;
+            color: #25324a;
+            line-height: 1.55;
+        }
+
+        .benefit-list li::before {
+            content: "•";
+            color: #fe6a34;
+            font-weight: 900;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: .95rem 0;
+            border-bottom: 1px solid rgba(8, 31, 87, 0.08);
+            color: #42516a;
+        }
+
+        .summary-row:last-child {
+            border-bottom: none;
+        }
+
+        .summary-row strong {
+            color: #081f57;
+            text-align: right;
+        }
+
+        .amount {
+            font-size: 2rem;
+            font-weight: 900;
+            letter-spacing: -.05em;
+            color: #081f57;
+        }
+
+        .wallet-box {
+            padding: 1rem;
+            border-radius: 20px;
+            margin: 1rem 0;
+            background: #f3f7ff;
+            border: 1px solid rgba(23, 57, 141, 0.1);
+        }
+
+        .wallet-box.warn {
+            background: #fff4e9;
+            border-color: rgba(254, 106, 52, 0.18);
+        }
+
+        .wallet-balance {
+            font-size: 1.5rem;
+            font-weight: 900;
+            letter-spacing: -.04em;
+            color: #081f57;
+            margin-top: .35rem;
+        }
+
+        .wallet-note {
+            color: #596885;
+            line-height: 1.55;
+            margin-top: .45rem;
+        }
+
+        .flash {
+            padding: .95rem 1rem;
+            border-radius: 18px;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .flash.error {
+            background: #fff2f2;
+            color: #b42318;
+            border: 1px solid #fecaca;
+        }
+
+        .flash.success {
+            background: #ecfdf3;
+            color: #027a48;
+            border: 1px solid #abefc6;
+        }
+
+        .btn-primary {
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: .95rem 1rem;
+            border: none;
+            border-radius: 18px;
+            background: #081f57;
+            color: #fff;
+            font-weight: 800;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 14px 28px rgba(8, 31, 87, 0.18);
+            transition: transform .18s ease, background .18s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            background: #0d2a73;
+        }
+
+        .btn-primary[disabled] {
+            background: #aab6cf;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: .92rem 1rem;
+            border-radius: 18px;
+            text-decoration: none;
+            border: 1px solid rgba(8, 31, 87, 0.12);
+            color: #081f57;
+            background: #fff;
+            font-weight: 700;
+            margin-top: .75rem;
+        }
+
+        .hint {
+            font-size: .84rem;
+            color: #61708a;
+            line-height: 1.55;
+            margin-top: .85rem;
+        }
+
+        @media (max-width: 960px) {
+            .checkout-grid,
+            .hero-meta {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<nav th:replace="~{layout/base :: navbar}"></nav>
+
+<main class="checkout-shell">
+    <div th:if="${error}" class="flash error" th:text="${error}"></div>
+    <div th:if="${success}" class="flash success" th:text="${success}"></div>
+
+    <div class="checkout-grid">
+        <section class="panel hero-panel">
+            <div class="mini-label" th:text="${selectedTier.isVip() ? 'VIP premium' : 'Premium checkout'}">Premium checkout</div>
+            <h1 class="plan-name" th:text="${selectedTier.levelLabel}">Hạng Đồng</h1>
+            <p class="plan-copy" th:text="${selectedTier.summary}">Mô tả gói.</p>
+
+            <div class="hero-meta">
+                <div class="hero-meta-item">
+                    <span>Giá gói</span>
+                    <strong th:text="${#numbers.formatDecimal(selectedTier.price, 0, 'COMMA', 0, 'POINT') + ' đ'}">99.000 đ</strong>
+                </div>
+                <div class="hero-meta-item">
+                    <span>Chu kỳ</span>
+                    <strong>30 ngày</strong>
+                </div>
+                <div class="hero-meta-item">
+                    <span>Hạng hiện tại</span>
+                    <strong th:text="${customer != null and customer.premiumActive ? customer.premiumTier.levelLabel : 'Standard'}">Standard</strong>
+                </div>
+            </div>
+        </section>
+
+        <aside class="panel">
+            <div class="section-title">Tóm tắt thanh toán</div>
+
+            <div class="summary-row">
+                <span>Gói đã chọn</span>
+                <strong th:text="${selectedTier.levelLabel}">Hạng Đồng</strong>
+            </div>
+            <div class="summary-row">
+                <span>Thời hạn cộng thêm</span>
+                <strong>30 ngày</strong>
+            </div>
+            <div class="summary-row">
+                <span>Thanh toán bằng</span>
+                <strong>Ví SR-Booking</strong>
+            </div>
+            <div class="summary-row">
+                <span>Tổng tiền</span>
+                <strong class="amount" th:text="${#numbers.formatDecimal(selectedTier.price, 0, 'COMMA', 0, 'POINT') + ' đ'}">99.000 đ</strong>
+            </div>
+
+            <div class="wallet-box" th:classappend="${canAfford ? '' : ' warn'}">
+                <div class="section-title" style="margin-bottom:0;">Số dư ví</div>
+                <div class="wallet-balance" th:text="${#numbers.formatDecimal(wallet.balance, 0, 'COMMA', 0, 'POINT') + ' đ'}">0 đ</div>
+                <p class="wallet-note"
+                   th:text="${canAfford ? 'Số dư hiện tại đủ để thanh toán gói premium này.' : 'Số dư chưa đủ. Hãy nạp thêm tiền rồi quay lại thanh toán.'}">
+                    Số dư hiện tại đủ để thanh toán gói premium này.
+                </p>
+            </div>
+
+            <form th:action="@{/premium/purchase}" method="post">
+                <input type="hidden" name="tier" th:value="${selectedTier.name()}" />
+                <button type="submit" class="btn-primary" th:disabled="${!canAfford}">
+                    Xác nhận thanh toán
+                </button>
+            </form>
+
+            <a th:href="@{/wallet}" class="btn-secondary" th:if="${!canAfford}">Nạp tiền vào ví</a>
+            <a th:href="@{/premium}" class="btn-secondary">Quay lại danh sách gói</a>
+
+            <p class="hint">
+                Luồng này dùng ví nội bộ giống cách khách hàng thanh toán các đơn trong lịch đặt thuê. Sau khi thanh toán thành công, hạng premium mới sẽ áp dụng ngay trên hồ sơ.
+            </p>
+        </aside>
+    </div>
+
+    <section class="panel" style="margin-top:1.4rem;">
+        <div class="section-title">Quyền lợi bạn sẽ nhận</div>
+        <ul class="benefit-list">
+            <li th:each="benefit : ${selectedTier.benefits}" th:text="${benefit}">Quyền lợi</li>
+        </ul>
+    </section>
+</main>
+</body>
+</html>

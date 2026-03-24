@@ -1,19 +1,38 @@
 package com.bookvehicle.example.sr.service;
 
-import com.bookvehicle.example.sr.dto.RentalCreateForm;
-import com.bookvehicle.example.sr.model.*;
-import com.bookvehicle.example.sr.repository.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.bookvehicle.example.sr.dto.RentalCreateForm;
+import com.bookvehicle.example.sr.model.Customer;
+import com.bookvehicle.example.sr.model.Driver;
+import com.bookvehicle.example.sr.model.NotificationRefType;
+import com.bookvehicle.example.sr.model.NotificationType;
+import com.bookvehicle.example.sr.model.PaymentStatus;
+import com.bookvehicle.example.sr.model.PickupPoint;
+import com.bookvehicle.example.sr.model.ReferenceType;
+import com.bookvehicle.example.sr.model.Role;
+import com.bookvehicle.example.sr.model.TransactionType;
+import com.bookvehicle.example.sr.model.Vehicle;
+import com.bookvehicle.example.sr.model.VehicleCategory;
+import com.bookvehicle.example.sr.model.VehicleRental;
+import com.bookvehicle.example.sr.model.VehicleStatus;
+import com.bookvehicle.example.sr.model.VerificationStatus;
+import com.bookvehicle.example.sr.repository.CustomerRepository;
+import com.bookvehicle.example.sr.repository.DriverRepository;
+import com.bookvehicle.example.sr.repository.PickupPointRepository;
+import com.bookvehicle.example.sr.repository.UserRepository;
+import com.bookvehicle.example.sr.repository.VehicleRentalRepository;
+import com.bookvehicle.example.sr.repository.VehicleRepository;
 
 @Service
 @Transactional
@@ -608,7 +627,8 @@ public class VehicleRentalService {
                         NotificationType.TRIP_COMPLETED,
                         NotificationRefType.RENTAL, rental.getId());
             }
-        } catch (Exception e) {
+
+       } catch (Exception e) {
             log.error("Error creating rental notification: {}", e.getMessage());
         }
         return ServiceResult.success("Da hoan thanh chuyen va da thanh toan.", rental.getId());

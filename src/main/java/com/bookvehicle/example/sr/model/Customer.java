@@ -24,6 +24,10 @@ public class Customer {
     @Column(nullable = false, columnDefinition = "ENUM('STANDARD','PREMIUM') DEFAULT 'STANDARD'")
     private MembershipType membership = MembershipType.STANDARD;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "premium_tier", columnDefinition = "ENUM('BRONZE','SILVER','GOLD')")
+    private PremiumTier premiumTier;
+
     @Column(name = "premium_exp")
     private LocalDate premiumExp;
 
@@ -49,9 +53,25 @@ public class Customer {
     public MembershipType getMembership() { return membership; }
     public void setMembership(MembershipType membership) { this.membership = membership; }
 
+    public PremiumTier getPremiumTier() { return premiumTier; }
+    public void setPremiumTier(PremiumTier premiumTier) { this.premiumTier = premiumTier; }
+
     public LocalDate getPremiumExp() { return premiumExp; }
     public void setPremiumExp(LocalDate premiumExp) { this.premiumExp = premiumExp; }
 
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
+
+    @Transient
+    public boolean isPremiumActive() {
+        return membership == MembershipType.PREMIUM
+                && premiumTier != null
+                && premiumExp != null
+                && !premiumExp.isBefore(LocalDate.now());
+    }
+
+    @Transient
+    public String getPremiumTierDisplayName() {
+        return premiumTier != null ? premiumTier.getDisplayName() : null;
+    }
 }
