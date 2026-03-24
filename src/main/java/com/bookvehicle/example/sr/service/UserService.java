@@ -550,20 +550,20 @@ public class UserService {
                 driver.setRejectionReason(null);
             } else if (vs == VerificationStatus.REJECTED) {
                 driver.setRejectionReason(reason);
+                driver.setApprovedAt(null);
+                driver.setApprovedBy(null);
             }
             driverRepository.save(driver);
 
-            // Cập nhật trạng thái User
+            // Khi duyệt → kích hoạt tài khoản, khi từ chối → KHÔNG khóa tài khoản
             Optional<User> optUser = userRepository.findById(userId);
             if (optUser.isPresent()) {
                 User user = optUser.get();
                 if (vs == VerificationStatus.APPROVED) {
                     user.setIsActive(true);
                     userRepository.save(user);
-                } else if (vs == VerificationStatus.REJECTED) {
-                    user.setIsActive(false);
-                    userRepository.save(user);
                 }
+                // REJECTED: không lock account — tài xế vẫn đăng nhập được nhưng không thể nhận đơn
             }
 
             return null;
