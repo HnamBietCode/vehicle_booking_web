@@ -88,26 +88,7 @@
 </head>
 <body class="bg-surface text-on-surface">
 
-<header class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200/15 shadow-sm">
-<nav class="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
-<div class="flex items-center gap-8">
-<a class="text-2xl font-bold tracking-tighter text-[#0A2463] dark:text-white" th:href="@{/}">SR-Booking</a>
-<div class="hidden md:flex gap-6 items-center">
-<a class="text-slate-600 dark:text-slate-400 hover:text-[#0A2463] dark:hover:text-white transition-colors font-medium text-base" th:href="@{/}">Trang chủ</a>
-<a class="text-slate-600 dark:text-slate-400 hover:text-[#0A2463] dark:hover:text-white transition-colors font-medium text-base" th:href="@{/vehicles/search}">Thuê xe</a>
-<a class="text-slate-600 dark:text-slate-400 hover:text-[#0A2463] dark:hover:text-white transition-colors font-medium text-base" th:href="@{/sober-bookings/new}">Lái hộ</a>
-<a class="text-slate-600 dark:text-slate-400 hover:text-[#0A2463] dark:hover:text-white transition-colors font-medium text-base" th:href="@{/wallet}">Ví</a>
-</div>
-</div>
-<div class="flex items-center gap-4">
-    <div class="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden border-2 border-secondary-container">
-        <img th:if="${user.avatarUrl != null}" th:src="${user.avatarUrl}" alt="Avatar" class="w-full h-full object-cover">
-        <span th:unless="${user.avatarUrl != null}" class="material-symbols-outlined text-4xl text-slate-400 flex justify-center items-center mt-0.5">account_circle</span>
-    </div>
-    <a th:href="@{/auth/logout}" class="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-all"><span class="material-symbols-outlined">logout</span></a>
-</div>
-</nav>
-</header>
+<nav th:replace="~{layout/base :: navbar}"></nav>
 <!-- Main Content Canvas -->
 <main class="pt-28 pb-24 px-6 max-w-7xl mx-auto">
 <!-- Header Section -->
@@ -346,4 +327,66 @@
 </div>
 </div>
 </footer> 
+
+<!-- Notification bell script -->
+<script>
+    function toggleNotifDropdown() {
+        const dd = document.getElementById('notifDropdown');
+        if (!dd) return;
+        const isHidden = dd.style.display === 'none';
+        dd.style.display = isHidden ? 'block' : 'none';
+        if (isHidden) loadLatestNotifs();
+    }
+    document.addEventListener('click', function(e) {
+        const wrap = document.getElementById('notifBellWrap');
+        const dd = document.getElementById('notifDropdown');
+        if (wrap && dd && !wrap.contains(e.target)) dd.style.display = 'none';
+    });
+    async function updateNotifCount() {
+        try {
+            const r = await fetch('/api/notifications/count');
+            if (!r.ok) return;
+            const d = await r.json();
+            const badge = document.getElementById('notifBadge');
+            if (badge) {
+                if (d.count > 0) { badge.textContent = d.count > 99 ? '99+' : d.count; badge.style.display = ''; }
+                else { badge.style.display = 'none'; }
+            }
+        } catch(e) {}
+    }
+    async function loadLatestNotifs() {
+        try {
+            const r = await fetch('/api/notifications/latest');
+            if (!r.ok) return;
+            const list = await r.json();
+            const container = document.getElementById('notifList');
+            if (!container) return;
+            if (list.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:1.5rem;color:#94A3B8;font-size:.85rem;">Không có thông báo</div>';
+                return;
+            }
+            container.innerHTML = list.map(n => {
+                const unread = !n.isRead;
+                const time = new Date(n.createdAt).toLocaleString('vi-VN');
+                return '<div onclick="markNotifRead('+n.id+', this)" style="padding:10px 16px;border-bottom:1px solid #F1F5F9;cursor:pointer;transition:background .2s;'+(unread?'background:#F8F7FF;border-left:3px solid #4F46E5;':'')+'">'
+                    + '<div style="font-weight:'+(unread?'700':'500')+';font-size:.85rem;color:#1E293B;">'+n.title+'</div>'
+                    + '<div style="font-size:.78rem;color:#64748B;margin-top:2px;line-height:1.4;">'+n.body+'</div>'
+                    + '<div style="font-size:.7rem;color:#94A3B8;margin-top:4px;">'+time+'</div>'
+                    + '</div>';
+            }).join('');
+        } catch(e) {}
+    }
+    async function markNotifRead(id, el) {
+        await fetch('/api/notifications/' + id + '/read', { method: 'POST' });
+        if (el) { el.style.background = ''; el.style.borderLeft = ''; }
+        updateNotifCount();
+    }
+    async function markAllReadFromDropdown() {
+        await fetch('/api/notifications/read-all', { method: 'POST' });
+        updateNotifCount();
+        loadLatestNotifs();
+    }
+    updateNotifCount();
+    setInterval(updateNotifCount, 30000);
+</script>
 </body></html>
