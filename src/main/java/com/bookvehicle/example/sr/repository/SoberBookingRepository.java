@@ -27,7 +27,7 @@ public interface SoberBookingRepository extends JpaRepository<SoberBooking, Long
 
     List<SoberBooking> findByStatusAndCreatedAtBefore(SoberBooking.SoberBookingStatus status, java.time.LocalDateTime threshold);
 
-    @Query("SELECT COUNT(b) FROM SoberBooking b WHERE b.customerId = :customerId AND b.paymentStatus = 'PENDING' AND b.status != 'CANCELLED'")
+    @Query("SELECT COUNT(b) FROM SoberBooking b WHERE b.customerId = :customerId AND b.paymentStatus = com.bookvehicle.example.sr.model.PaymentStatus.PENDING AND b.status = com.bookvehicle.example.sr.model.SoberBooking.SoberBookingStatus.COMPLETED")
     long countUnpaidBookings(@Param("customerId") Long customerId);
 
     @Modifying

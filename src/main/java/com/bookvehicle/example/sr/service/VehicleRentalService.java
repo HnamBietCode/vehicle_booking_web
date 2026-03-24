@@ -3,6 +3,8 @@ package com.bookvehicle.example.sr.service;
 import com.bookvehicle.example.sr.dto.RentalCreateForm;
 import com.bookvehicle.example.sr.model.*;
 import com.bookvehicle.example.sr.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +18,8 @@ import java.util.Optional;
 @Service
 @Transactional
 public class VehicleRentalService {
+
+    private static final Logger log = LoggerFactory.getLogger(VehicleRentalService.class);
 
     private final VehicleRentalRepository vehicleRentalRepository;
     private final VehicleRepository vehicleRepository;
@@ -232,7 +236,9 @@ public class VehicleRentalService {
                         NotificationType.BOOKING_ASSIGNED,
                         NotificationRefType.RENTAL, rental.getId());
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            log.error("Error creating rental notification: {}", e.getMessage());
+        }
         return ServiceResult.success("Dat xe thanh cong. Cho tai xe xac nhan.", rental.getId());
     }
 
@@ -310,7 +316,9 @@ public class VehicleRentalService {
                         NotificationType.RENTAL_ACCEPTED,
                         NotificationRefType.RENTAL, rental.getId());
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            log.error("Error creating rental notification: {}", e.getMessage());
+        }
         return ServiceResult.success("Da nhan don thue.", rental.getId());
     }
 
@@ -402,7 +410,9 @@ public class VehicleRentalService {
                         NotificationType.RENTAL_REJECTED,
                         NotificationRefType.RENTAL, rental.getId());
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            log.error("Error creating rental notification: {}", e.getMessage());
+        }
         return ServiceResult.success("Đã hủy đơn thuê xe." +
                 (rental.getPaymentStatus() == PaymentStatus.REFUNDED ? " Tiền đã được hoàn lại cho khách." : ""),
                 rental.getId());
@@ -463,7 +473,9 @@ public class VehicleRentalService {
                             NotificationRefType.RENTAL, rental.getId());
                 }
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            log.error("Error creating rental notification: {}", e.getMessage());
+        }
 
         return ServiceResult.success("Đã hủy đơn thuê xe thành công.", rental.getId());
     }
@@ -506,7 +518,9 @@ public class VehicleRentalService {
                         NotificationType.TRIP_STARTED,
                         NotificationRefType.RENTAL, rental.getId());
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            log.error("Error creating rental notification: {}", e.getMessage());
+        }
         return ServiceResult.success("Da bat dau chuyen.", rental.getId());
     }
 
@@ -608,7 +622,9 @@ public class VehicleRentalService {
                         NotificationType.TRIP_COMPLETED,
                         NotificationRefType.RENTAL, rental.getId());
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            log.error("Error creating rental notification: {}", e.getMessage());
+        }
         return ServiceResult.success("Da hoan thanh chuyen va da thanh toan.", rental.getId());
     }
 
@@ -694,7 +710,9 @@ public class VehicleRentalService {
                     "Bạn đã nhận tiền cho đơn thuê xe #" + rental.getId() + ".",
                     NotificationType.PAYMENT_DONE,
                     NotificationRefType.RENTAL, rental.getId());
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            log.error("Error creating rental notification: {}", e.getMessage());
+        }
         return ServiceResult.success("Thanh toan thanh cong. Da tru vi khach hang.", rental.getId());
     }
 

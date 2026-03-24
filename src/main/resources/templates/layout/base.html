@@ -533,6 +533,68 @@
                 </th:block>
             </div>
         </div>
+        <!-- Notification bell script moved inside navbar fragment -->
+        <script>
+            function toggleNotifDropdown() {
+                const dd = document.getElementById('notifDropdown');
+                if (!dd) return;
+                const isHidden = dd.style.display === 'none';
+                dd.style.display = isHidden ? 'block' : 'none';
+                if (isHidden) loadLatestNotifs();
+            }
+            document.addEventListener('click', function(e) {
+                const wrap = document.getElementById('notifBellWrap');
+                const dd = document.getElementById('notifDropdown');
+                if (wrap && dd && !wrap.contains(e.target)) dd.style.display = 'none';
+            });
+            async function updateNotifCount() {
+                try {
+                    const r = await fetch('/api/notifications/count');
+                    if (!r.ok) return;
+                    const d = await r.json();
+                    const badge = document.getElementById('notifBadge');
+                    if (badge) {
+                        if (d.count > 0) { badge.textContent = d.count > 99 ? '99+' : d.count; badge.style.display = ''; }
+                        else { badge.style.display = 'none'; }
+                    }
+                } catch(e) {}
+            }
+            async function loadLatestNotifs() {
+                try {
+                    const r = await fetch('/api/notifications/latest');
+                    if (!r.ok) return;
+                    const list = await r.json();
+                    const container = document.getElementById('notifList');
+                    if (!container) return;
+                    if (list.length === 0) {
+                        container.innerHTML = '<div style="text-align:center;padding:1.5rem;color:#94A3B8;font-size:.85rem;">Không có thông báo</div>';
+                        return;
+                    }
+                    container.innerHTML = list.map(n => {
+                        const unread = !n.isRead;
+                        const time = new Date(n.createdAt).toLocaleString('vi-VN');
+                        return '<div onclick="markNotifRead('+n.id+', this)" style="padding:10px 16px;border-bottom:1px solid #F1F5F9;cursor:pointer;transition:background .2s;'+(unread?'background:#F8F7FF;border-left:3px solid #4F46E5;':'')+'">'
+                            + '<div style="font-weight:'+(unread?'700':'500')+';font-size:.85rem;color:#1E293B;">'+n.title+'</div>'
+                            + '<div style="font-size:.78rem;color:#64748B;margin-top:2px;line-height:1.4;">'+n.body+'</div>'
+                            + '<div style="font-size:.7rem;color:#94A3B8;margin-top:4px;">'+time+'</div>'
+                            + '</div>';
+                    }).join('');
+                } catch(e) {}
+            }
+            async function markNotifRead(id, el) {
+                await fetch('/api/notifications/' + id + '/read', { method: 'POST' });
+                if (el) { el.style.background = ''; el.style.borderLeft = ''; }
+                updateNotifCount();
+            }
+            async function markAllReadFromDropdown() {
+                await fetch('/api/notifications/read-all', { method: 'POST' });
+                updateNotifCount();
+                loadLatestNotifs();
+            }
+            updateNotifCount();
+            if (window.notifInterval) clearInterval(window.notifInterval);
+            window.notifInterval = setInterval(updateNotifCount, 30000);
+        </script>
     </header>
 
     <!-- â”€â”€â”€ Main content slot â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
@@ -540,67 +602,7 @@
         <!-- child page content fills here -->
     </main>
 
-    <!-- Notification bell script -->
-    <script>
-        function toggleNotifDropdown() {
-            const dd = document.getElementById('notifDropdown');
-            if (!dd) return;
-            const isHidden = dd.style.display === 'none';
-            dd.style.display = isHidden ? 'block' : 'none';
-            if (isHidden) loadLatestNotifs();
-        }
-        document.addEventListener('click', function(e) {
-            const wrap = document.getElementById('notifBellWrap');
-            const dd = document.getElementById('notifDropdown');
-            if (wrap && dd && !wrap.contains(e.target)) dd.style.display = 'none';
-        });
-        async function updateNotifCount() {
-            try {
-                const r = await fetch('/api/notifications/count');
-                if (!r.ok) return;
-                const d = await r.json();
-                const badge = document.getElementById('notifBadge');
-                if (badge) {
-                    if (d.count > 0) { badge.textContent = d.count > 99 ? '99+' : d.count; badge.style.display = ''; }
-                    else { badge.style.display = 'none'; }
-                }
-            } catch(e) {}
-        }
-        async function loadLatestNotifs() {
-            try {
-                const r = await fetch('/api/notifications/latest');
-                if (!r.ok) return;
-                const list = await r.json();
-                const container = document.getElementById('notifList');
-                if (!container) return;
-                if (list.length === 0) {
-                    container.innerHTML = '<div style="text-align:center;padding:1.5rem;color:#94A3B8;font-size:.85rem;">Không có thông báo</div>';
-                    return;
-                }
-                container.innerHTML = list.map(n => {
-                    const unread = !n.isRead;
-                    const time = new Date(n.createdAt).toLocaleString('vi-VN');
-                    return '<div onclick="markNotifRead('+n.id+', this)" style="padding:10px 16px;border-bottom:1px solid #F1F5F9;cursor:pointer;transition:background .2s;'+(unread?'background:#F8F7FF;border-left:3px solid #4F46E5;':'')+'">'
-                        + '<div style="font-weight:'+(unread?'700':'500')+';font-size:.85rem;color:#1E293B;">'+n.title+'</div>'
-                        + '<div style="font-size:.78rem;color:#64748B;margin-top:2px;line-height:1.4;">'+n.body+'</div>'
-                        + '<div style="font-size:.7rem;color:#94A3B8;margin-top:4px;">'+time+'</div>'
-                        + '</div>';
-                }).join('');
-            } catch(e) {}
-        }
-        async function markNotifRead(id, el) {
-            await fetch('/api/notifications/' + id + '/read', { method: 'POST' });
-            if (el) { el.style.background = ''; el.style.borderLeft = ''; }
-            updateNotifCount();
-        }
-        async function markAllReadFromDropdown() {
-            await fetch('/api/notifications/read-all', { method: 'POST' });
-            updateNotifCount();
-            loadLatestNotifs();
-        }
-        updateNotifCount();
-        setInterval(updateNotifCount, 30000);
-    </script>
+
 
 </body>
 
