@@ -608,15 +608,10 @@ public class VehicleRentalService {
                         NotificationType.TRIP_COMPLETED,
                         NotificationRefType.RENTAL, rental.getId());
             }
-<<<<<<< HEAD
         } catch (Exception e) {
             log.error("Error creating rental notification: {}", e.getMessage());
         }
         return ServiceResult.success("Da hoan thanh chuyen va da thanh toan.", rental.getId());
-=======
-        } catch (Exception ignored) {}
-        return ServiceResult.success("Da hoan thanh chuyen. Cho khach thanh toan.", rental.getId());
->>>>>>> daa4705e2651612494dcc3db79c02aac737a255b
     }
 
     public ServiceResult payRental(Long rentalId, Long customerUserId) {
