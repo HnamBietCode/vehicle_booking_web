@@ -185,7 +185,7 @@ public class SoberBookingService {
                         NotificationRefType.SOBER, saved.getId());
             }
         } catch (Exception e) {
-            log.error("Failed to create notification for customer {}: {}", customerUserId, e.getMessage());
+            log.error("Failed to create notification for customer: {}", e.getMessage());
         }
         return saved;
     }
@@ -216,7 +216,7 @@ public class SoberBookingService {
                         NotificationRefType.SOBER, saved.getId());
             }
         } catch (Exception e) {
-            log.error("Failed to create notification for customer {}: {}", customerUserId, e.getMessage());
+            log.error("Failed to create notification for customer: {}", e.getMessage());
         }
         return saved;
     }
@@ -248,7 +248,7 @@ public class SoberBookingService {
                         NotificationRefType.SOBER, saved.getId());
             }
         } catch (Exception e) {
-            log.error("Failed to create notification for customer {}: {}", customerUserId, e.getMessage());
+            log.error("Failed to create notification for customer: {}", e.getMessage());
         }
         return saved;
     }
@@ -289,7 +289,7 @@ public class SoberBookingService {
                         NotificationRefType.SOBER, saved.getId());
             }
         } catch (Exception e) {
-            log.error("Failed to create notification for customer {}: {}", customerUserId, e.getMessage());
+            log.error("Failed to create notification for customer: {}", e.getMessage());
         }
         return saved;
     }
@@ -419,7 +419,7 @@ public class SoberBookingService {
                         NotificationRefType.SOBER, saved.getId());
             }
         } catch (Exception e) {
-            log.error("Failed to create notification for customer {}: {}", customerUserId, e.getMessage());
+            log.error("Failed to create notification for customer: {}", e.getMessage());
         }
         return saved;
     }
