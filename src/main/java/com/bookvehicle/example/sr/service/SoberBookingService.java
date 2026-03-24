@@ -2,6 +2,8 @@ package com.bookvehicle.example.sr.service;
 
 import com.bookvehicle.example.sr.model.*;
 import com.bookvehicle.example.sr.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +15,8 @@ import java.util.List;
 
 @Service
 public class SoberBookingService {
+
+    private static final Logger log = LoggerFactory.getLogger(SoberBookingService.class);
 
     @Autowired
     private SoberBookingRepository soberBookingRepository;
@@ -103,7 +107,9 @@ public class SoberBookingService {
                     "Đơn lái hộ #" + saved.getId() + " đã tạo. Đang chờ tài xế nhận đơn.",
                     NotificationType.SOBER_CREATED,
                     NotificationRefType.SOBER, saved.getId());
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            log.error("Failed to create notification for customer {}: {}", customerUserId, e.getMessage());
+        }
         return saved;
     }
 
@@ -178,7 +184,9 @@ public class SoberBookingService {
                         NotificationType.SOBER_ACCEPTED,
                         NotificationRefType.SOBER, saved.getId());
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            log.error("Failed to create notification for customer {}: {}", customerUserId, e.getMessage());
+        }
         return saved;
     }
 
@@ -207,7 +215,9 @@ public class SoberBookingService {
                         NotificationType.SOBER_ARRIVED,
                         NotificationRefType.SOBER, saved.getId());
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            log.error("Failed to create notification for customer {}: {}", customerUserId, e.getMessage());
+        }
         return saved;
     }
 
@@ -237,7 +247,9 @@ public class SoberBookingService {
                         NotificationType.SOBER_STARTED,
                         NotificationRefType.SOBER, saved.getId());
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            log.error("Failed to create notification for customer {}: {}", customerUserId, e.getMessage());
+        }
         return saved;
     }
 
@@ -276,7 +288,9 @@ public class SoberBookingService {
                         NotificationType.SOBER_COMPLETED,
                         NotificationRefType.SOBER, saved.getId());
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            log.error("Failed to create notification for customer {}: {}", customerUserId, e.getMessage());
+        }
         return saved;
     }
 
@@ -362,7 +376,9 @@ public class SoberBookingService {
                         NotificationType.PAYMENT_DONE,
                         NotificationRefType.SOBER, bookingId);
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            log.error("Failed to create notification for customer {}: {}", customerUserId, e.getMessage());
+        }
         return paidBooking;
     }
 
@@ -402,7 +418,9 @@ public class SoberBookingService {
                         NotificationType.SOBER_CANCELLED,
                         NotificationRefType.SOBER, saved.getId());
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            log.error("Failed to create notification for customer {}: {}", customerUserId, e.getMessage());
+        }
         return saved;
     }
 
