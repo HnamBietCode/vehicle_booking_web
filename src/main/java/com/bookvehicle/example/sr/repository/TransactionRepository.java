@@ -14,6 +14,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     List<Transaction> findByWalletIdOrderByCreatedAtDesc(Long walletId);
 
     @Modifying
-    @Query("DELETE FROM Transaction t WHERE t.walletId IN (SELECT w.id FROM Wallet w WHERE w.userId = :userId)")
+    @Query("DELETE FROM Transaction t WHERE t.wallet.id IN (SELECT w.id FROM Wallet w WHERE w.userId = :userId)")
     void deleteByWalletUserId(@Param("userId") Long userId);
 }

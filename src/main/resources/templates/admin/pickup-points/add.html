@@ -3,65 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thêm điểm đón - Admin</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Thêm điểm đón – SR-Booking Admin</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; }
-        body { margin: 0; font-family: 'Inter', sans-serif; background: #f8fafc; color: #1e293b; }
-        .main { max-width: 760px; margin: 2rem auto; padding: 0 1rem; }
-        .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; }
-        .breadcrumb { margin-bottom: 1rem; color: #64748b; font-size: .9rem; }
-        .breadcrumb a { color: #4f46e5; text-decoration: none; }
-        .page-title { font-size: 1.35rem; font-weight: 700; margin-bottom: 1rem; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; }
-        .form-group { margin-bottom: .9rem; }
-        .form-label { display:block; font-weight:600; margin-bottom:.4rem; font-size:.88rem; }
-        .form-control { width:100%; padding:.65rem .9rem; border:1.5px solid #e2e8f0; border-radius:8px; font-family:inherit; }
-        .btn { border:none; border-radius:8px; padding:.6rem 1rem; text-decoration:none; font-weight:600; cursor:pointer; }
-        .btn-primary { background:#4f46e5; color:#fff; }
-        .btn-outline { background:#fff; color:#475569; border:1px solid #dbe2ea; }
-        .btn-group { display:flex; gap:.6rem; margin-top:.8rem; }
-        .alert-danger { background:#fef2f2; color:#991b1b; border-left:4px solid #ef4444; padding:.75rem 1rem; border-radius:8px; margin-bottom:1rem; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Be Vietnam Pro', sans-serif; background: #f5f3f9; color: #1b1b20; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .sidebar-link { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 12px; color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 600; transition: all .2s; }
+        .sidebar-link:hover { background: rgba(255,255,255,.1); color: white; }
+        .sidebar-link.active { background: #FE6A34; color: white; transform: scale(1.02); }
+        .form-group { margin-bottom: 1.15rem; }
+        .form-label { display: block; font-size: .85rem; font-weight: 600; margin-bottom: .45rem; color: #1b1b20; }
+        .form-control { width: 100%; padding: .7rem 1rem; border: 1.5px solid #e9e7ed; border-radius: 10px; font-size: .9rem; font-family: inherit; transition: border-color .2s, box-shadow .2s; outline: none; background: white; }
+        .form-control:focus { border-color: #0A2463; box-shadow: 0 0 0 3px rgba(10,36,99,.1); }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.2rem; }
+        .btn { display: inline-flex; align-items: center; gap: .4rem; padding: .6rem 1.3rem; border: none; border-radius: 10px; font-size: .875rem; font-weight: 600; cursor: pointer; text-decoration: none; transition: all .2s; font-family: inherit; }
+        .btn-primary { background: #0A2463; color: #fff; }
+        .btn-primary:hover { background: #0d2d78; transform: translateY(-1px); }
+        .btn-outline { background: transparent; border: 1.5px solid #e9e7ed; color: #64748b; }
+        .btn-outline:hover { border-color: #0A2463; color: #0A2463; }
+        .alert-danger { background: #FEF2F2; color: #991B1B; border-left: 3px solid #EF4444; padding: .8rem 1.1rem; border-radius: 10px; margin-bottom: 1.1rem; font-size: .875rem; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
         @media (max-width: 700px) { .form-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
-<main class="main">
-    <div class="breadcrumb"><a th:href="@{/admin/pickup-points}">Điểm đón</a> / Thêm mới</div>
-    <h1 class="page-title">➕ Thêm điểm đón</h1>
-    <div th:if="${error}" class="alert-danger" th:text="${error}"></div>
 
-    <div class="card">
-        <form th:action="@{/admin/pickup-points/add}" method="post" th:object="${form}">
-            <div class="form-group">
-                <label class="form-label" for="name">Tên điểm đón *</label>
-                <input class="form-control" id="name" type="text" th:field="*{name}" required placeholder="Ví dụ: Sân bay Tân Sơn Nhất">
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="address">Địa chỉ *</label>
-                <input class="form-control" id="address" type="text" th:field="*{address}" required placeholder="60 Trường Sơn, Tân Bình, TP.HCM">
-            </div>
-            <div class="form-grid">
+<!-- Sidebar -->
+<aside style="position:fixed;left:0;top:0;height:100%;width:256px;background:#0A2463;display:flex;flex-direction:column;padding:24px 0;z-index:50;box-shadow:4px 0 24px rgba(0,16,62,.15);">
+    <div style="padding:0 24px;margin-bottom:32px;">
+        <h1 style="color:white;font-size:1.4rem;font-weight:800;font-style:italic;letter-spacing:-.02em;">SR-Booking</h1>
+        <p style="color:#93c5fd;font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;opacity:.7;">Mobility Admin</p>
+    </div>
+    <nav style="flex:1;padding:0 8px;display:flex;flex-direction:column;gap:2px;">
+        <a class="sidebar-link" href="/admin/dashboard"><span class="material-symbols-outlined" style="font-size:20px;">dashboard</span>Dashboard</a>
+        <a class="sidebar-link" href="/admin/users"><span class="material-symbols-outlined" style="font-size:20px;">group</span>Quản lý Users</a>
+        <a class="sidebar-link" href="/admin/vehicles"><span class="material-symbols-outlined" style="font-size:20px;">directions_car</span>Quản lý Xe</a>
+        <a class="sidebar-link" href="/admin/sober-bookings"><span class="material-symbols-outlined" style="font-size:20px;">assignment</span>Quản lý Lái hộ</a>
+        <a class="sidebar-link" href="/admin/withdrawals"><span class="material-symbols-outlined" style="font-size:20px;">payments</span>Rút tiền</a>
+        <a class="sidebar-link active" href="/admin/pickup-points"><span class="material-symbols-outlined" style="font-size:20px;">location_on</span>Điểm đón</a>
+            <a class="sidebar-link" href="/admin/ratings"><span class="material-symbols-outlined" style="font-size:20px;">star</span>Đánh giá</a>
+        <a class="sidebar-link" href="/admin/realtime">
+            <span class="material-symbols-outlined" style="font-size:20px;">monitoring</span>Realtime
+            <span style="margin-left:auto;width:8px;height:8px;background:#4ade80;border-radius:50%;animation:pulse 1.5s infinite;"></span>
+        </a>
+    </nav>
+    <div style="padding:0 8px;border-top:1px solid rgba(255,255,255,.1);padding-top:12px;margin-top:8px;">
+        <a class="sidebar-link" href="/auth/logout" style="color:#fca5a5;" onmouseover="this.style.color='#f87171'" onmouseout="this.style.color='#fca5a5'">
+            <span class="material-symbols-outlined" style="font-size:18px;">logout</span>Đăng xuất
+        </a>
+    </div>
+</aside>
+
+<!-- Top Header -->
+<header style="position:fixed;top:0;right:0;width:calc(100% - 256px);height:64px;background:rgba(255,255,255,.85);backdrop-filter:blur(16px);display:flex;justify-content:space-between;align-items:center;padding:0 32px;z-index:40;border-bottom:1px solid #f0eef5;">
+    <div style="display:flex;align-items:center;gap:8px;">
+        <a href="/admin/pickup-points" style="color:#64748b;font-size:.85rem;text-decoration:none;font-weight:500;">Điểm đón</a>
+        <span style="color:#c5c6d2;">/</span>
+        <span style="color:#0A2463;font-weight:700;font-size:.85rem;">Thêm mới</span>
+    </div>
+    <div style="width:34px;height:34px;border-radius:50%;background:#0A2463;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:12px;">AD</div>
+</header>
+
+<!-- Main -->
+<main style="margin-left:256px;padding:88px 32px 48px;">
+    <div style="max-width:680px;">
+        <h1 style="font-size:1.5rem;font-weight:800;color:#0A2463;margin-bottom:6px;">➕ Thêm điểm đón</h1>
+        <p style="color:#64748b;font-size:.875rem;margin-bottom:24px;">Nhập thông tin điểm đón mới cho hệ thống</p>
+
+        <div th:if="${error}" class="alert-danger" th:text="${error}"></div>
+
+        <div style="background:white;border-radius:20px;padding:28px;border:1px solid #f0eef5;box-shadow:0 4px 16px rgba(0,16,62,.05);">
+            <form th:action="@{/admin/pickup-points/add}" method="post" th:object="${form}">
                 <div class="form-group">
-                    <label class="form-label" for="latitude">Latitude</label>
-                    <input class="form-control" id="latitude" type="number" step="0.0000001" th:field="*{latitude}">
+                    <label class="form-label" for="name">Tên điểm đón *</label>
+                    <input class="form-control" id="name" type="text" th:field="*{name}" required placeholder="Ví dụ: Sân bay Tân Sơn Nhất">
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="longitude">Longitude</label>
-                    <input class="form-control" id="longitude" type="number" step="0.0000001" th:field="*{longitude}">
+                    <label class="form-label" for="address">Địa chỉ *</label>
+                    <input class="form-control" id="address" type="text" th:field="*{address}" required placeholder="60 Trường Sơn, Tân Bình, TP.HCM">
                 </div>
-            </div>
-            <div class="form-group">
-                <label style="display:flex; gap:.4rem; align-items:center;">
-                    <input type="checkbox" th:field="*{isActive}"> Kích hoạt ngay
-                </label>
-            </div>
-            <div class="btn-group">
-                <button class="btn btn-primary" type="submit">Lưu điểm đón</button>
-                <a class="btn btn-outline" th:href="@{/admin/pickup-points}">Hủy</a>
-            </div>
-        </form>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="latitude">Latitude</label>
+                        <input class="form-control" id="latitude" type="number" step="0.0000001" th:field="*{latitude}" placeholder="10.8189">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="longitude">Longitude</label>
+                        <input class="form-control" id="longitude" type="number" step="0.0000001" th:field="*{longitude}" placeholder="106.6519">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label style="display:flex;gap:.5rem;align-items:center;cursor:pointer;font-size:.9rem;">
+                        <input type="checkbox" th:field="*{isActive}" style="width:1.1rem;height:1.1rem;accent-color:#0A2463;"> Kích hoạt ngay
+                    </label>
+                </div>
+                <div style="display:flex;gap:.75rem;margin-top:1.5rem;">
+                    <button class="btn btn-primary" type="submit">
+                        <span class="material-symbols-outlined" style="font-size:18px;">save</span>Lưu điểm đón
+                    </button>
+                    <a class="btn btn-outline" th:href="@{/admin/pickup-points}">← Hủy</a>
+                </div>
+            </form>
+        </div>
     </div>
 </main>
 </body>

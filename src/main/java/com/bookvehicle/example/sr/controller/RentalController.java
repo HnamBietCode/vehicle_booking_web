@@ -88,6 +88,7 @@ public class RentalController {
         }
 
         ra.addFlashAttribute("success", result.message());
+        ra.addFlashAttribute("newRentalId", result.rentalId());
         return "redirect:/rentals/my";
     }
 

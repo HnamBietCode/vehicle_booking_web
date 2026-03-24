@@ -15,17 +15,22 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import com.bookvehicle.example.sr.repository.RatingRepository;
+
 @Controller
 @RequestMapping("/admin/vehicles")
 public class VehicleManagementController {
 
     private final VehicleService vehicleService;
     private final FileUploadService fileUploadService;
+    private final RatingRepository ratingRepository;
 
     public VehicleManagementController(VehicleService vehicleService,
-                                        FileUploadService fileUploadService) {
+                                        FileUploadService fileUploadService,
+                                        RatingRepository ratingRepository) {
         this.vehicleService = vehicleService;
         this.fileUploadService = fileUploadService;
+        this.ratingRepository = ratingRepository;
     }
 
     // ── Index ────────────────────────────────────────────────────────
@@ -59,6 +64,16 @@ public class VehicleManagementController {
         model.addAttribute("vehicle", v);
         // Chỉ hiện tài xế có bằng lái phù hợp với loại xe
         model.addAttribute("eligibleDrivers", vehicleService.findEligibleDrivers(v.getCategory()));
+        // Đánh giá xe
+        model.addAttribute("vehicleRatings",
+                ratingRepository.findByTargetTypeAndTargetIdOrderByCreatedAtDesc(
+                        RatingTargetType.VEHICLE, v.getId()));
+        // Đánh giá tài xế (nếu đã gán)
+        if (v.getAssignedDriver() != null) {
+            model.addAttribute("driverRatings",
+                    ratingRepository.findByTargetTypeAndTargetIdOrderByCreatedAtDesc(
+                            RatingTargetType.DRIVER, v.getAssignedDriver()));
+        }
         model.addAttribute("loggedUser", SecurityUtil.getLoggedUser(session));
         return "admin/vehicles/detail";
     }

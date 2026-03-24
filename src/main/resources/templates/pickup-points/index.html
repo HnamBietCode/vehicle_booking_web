@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Điểm đón phổ biến</title>
+    <style th:replace="~{layout/base :: head}"></style>
     <style>
         body { font-family: 'Inter', sans-serif; background:#f8fafc; color:#1e293b; margin:0; }
         .main { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
@@ -16,10 +17,10 @@
         .muted { color:#64748b; }
     </style>
 </head>
-<body>
+<body class="bg-background text-on-surface">
 <nav th:replace="~{layout/base :: navbar}"></nav>
 
-<main class="main">
+<main class="main" style="padding-top:7rem;">
     <div class="page-header">
         <h1 class="page-title">📍 Điểm đón phổ biến</h1>
     </div>

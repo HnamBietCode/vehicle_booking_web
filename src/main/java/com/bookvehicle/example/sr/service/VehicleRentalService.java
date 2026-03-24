@@ -89,6 +89,24 @@ public class VehicleRentalService {
             return ServiceResult.error("Khong tim thay thong tin khach hang.");
         }
 
+        // Ràng buộc: chỉ được thuê 1 xe 1 lần, phải hoàn thành + thanh toán mới được thuê tiếp
+        Customer customer = customerOpt.get();
+        List<VehicleRental> activeRentals = vehicleRentalRepository.findByCustomerIdOrderByCreatedAtDesc(customer.getId());
+        for (VehicleRental existing : activeRentals) {
+            VehicleRental.RentalStatus status = existing.getStatus();
+            // Đang có đơn chưa hoàn thành (PENDING, CONFIRMED, ACTIVE)
+            if (status == VehicleRental.RentalStatus.PENDING 
+                || status == VehicleRental.RentalStatus.CONFIRMED 
+                || status == VehicleRental.RentalStatus.ACTIVE) {
+                return ServiceResult.error("Bạn đang có đơn thuê xe chưa hoàn thành (đơn #" + existing.getId() + "). Vui lòng hoàn thành hoặc hủy đơn cũ trước khi thuê xe mới.");
+            }
+            // Đã hoàn thành nhưng chưa thanh toán
+            if (status == VehicleRental.RentalStatus.COMPLETED 
+                && existing.getPaymentStatus() != PaymentStatus.PAID) {
+                return ServiceResult.error("Bạn có đơn thuê xe #" + existing.getId() + " đã hoàn thành nhưng chưa thanh toán. Vui lòng thanh toán trước khi thuê xe mới.");
+            }
+        }
+
         if (form.getVehicleId() == null) {
             return ServiceResult.error("Vui long chon xe.");
         }
@@ -282,6 +300,17 @@ public class VehicleRentalService {
                 "DRIVER_ACCEPTED",
                 "Tai xe da nhan don cua ban. Ban co the bat dau theo doi ngay khi tai xe chia se vi tri."
         );
+        // In-app notification for customer
+        try {
+            Customer cust = customerRepository.findById(rental.getCustomerId()).orElse(null);
+            if (cust != null) {
+                notificationService.createNotification(
+                        cust.getUserId(), "Tài xế xác nhận đơn thuê",
+                        "Đơn thuê xe #" + rental.getId() + " đã được tài xế xác nhận.",
+                        NotificationType.RENTAL_ACCEPTED,
+                        NotificationRefType.RENTAL, rental.getId());
+            }
+        } catch (Exception ignored) {}
         return ServiceResult.success("Da nhan don thue.", rental.getId());
     }
 
@@ -291,23 +320,63 @@ public class VehicleRentalService {
             return ServiceResult.error("Khong tim thay don thue.");
         }
         VehicleRental rental = rentalOpt.get();
-        if (rental.getStatus() != VehicleRental.RentalStatus.PENDING) {
-            return ServiceResult.error("Don thue khong o trang thai cho xac nhan.");
+
+        // Cho phép hủy khi đơn ở trạng thái PENDING, CONFIRMED hoặc ACTIVE
+        if (rental.getStatus() != VehicleRental.RentalStatus.PENDING
+            && rental.getStatus() != VehicleRental.RentalStatus.CONFIRMED
+            && rental.getStatus() != VehicleRental.RentalStatus.ACTIVE) {
+            return ServiceResult.error("Đơn thuê đã hoàn thành hoặc đã bị hủy, không thể hủy.");
         }
 
         Optional<Driver> actorDriver = driverRepository.findByUserId(driverUserId);
         if (actorDriver.isEmpty() || rental.getDriverId() == null || !actorDriver.get().getId().equals(rental.getDriverId())) {
-            return ServiceResult.error("Ban khong co quyen tu choi don nay.");
+            return ServiceResult.error("Bạn không có quyền hủy đơn này.");
+        }
+
+        // ── Hoàn tiền nếu khách đã thanh toán ─────────────────────────
+        boolean wasActive = rental.getStatus() == VehicleRental.RentalStatus.ACTIVE
+                         || rental.getStatus() == VehicleRental.RentalStatus.CONFIRMED;
+        if (rental.getPaymentStatus() == PaymentStatus.PAID && rental.getTotalPrice() != null
+                && rental.getTotalPrice().compareTo(BigDecimal.ZERO) > 0) {
+            // Hoàn tiền cho khách hàng
+            Customer customer = customerRepository.findById(rental.getCustomerId()).orElse(null);
+            if (customer != null) {
+                walletService.credit(
+                        customer.getUserId(),
+                        rental.getTotalPrice(),
+                        TransactionType.REFUND,
+                        ReferenceType.RENTAL,
+                        rental.getId(),
+                        "Hoàn tiền đơn thuê xe #" + rental.getId() + " do tài xế hủy"
+                );
+                // Thu lại tiền từ tài xế (nếu đã chia)
+                BigDecimal driverShare = rental.getTotalPrice()
+                        .multiply(new BigDecimal("0.60"))
+                        .setScale(2, java.math.RoundingMode.HALF_UP);
+                try {
+                    walletService.debit(
+                            driverUserId,
+                            driverShare,
+                            TransactionType.REFUND,
+                            ReferenceType.RENTAL,
+                            rental.getId(),
+                            "Thu lại tiền hoa hồng đơn #" + rental.getId() + " do hủy"
+                    );
+                } catch (Exception ignored) { /* driver may not have enough balance */ }
+            }
+            rental.setPaymentStatus(PaymentStatus.REFUNDED);
         }
 
         rental.setStatus(VehicleRental.RentalStatus.CANCELLED);
-        rental.setCancelReason((reason == null || reason.isBlank()) ? "Tai xe tu choi nhan don." : reason.trim());
+        rental.setCancelReason((reason == null || reason.isBlank()) ? "Tài xế hủy đơn." : reason.trim());
         vehicleRentalRepository.save(rental);
 
+        // Giải phóng tài xế
         driverRepository.findById(rental.getDriverId()).ifPresent(d -> {
             d.setIsAvailable(true);
             driverRepository.save(d);
         });
+        // Giải phóng xe
         vehicleRepository.findById(rental.getVehicleId()).ifPresent(v -> {
             if (v.getStatus() != VehicleStatus.MAINTENANCE) {
                 v.setStatus(VehicleStatus.AVAILABLE);
@@ -315,12 +384,88 @@ public class VehicleRentalService {
             vehicleRepository.save(v);
         });
 
-        bookingRealtimeService.publishRentalUpdate(
-                rental,
-                "TRIP_CANCELLED",
-                "Tai xe da tu choi don thue. Vui long dat lai hoac chon xe khac."
-        );
-        return ServiceResult.success("Da tu choi don thue.", rental.getId());
+        String eventType = wasActive ? "TRIP_CANCELLED" : "DRIVER_REJECTED";
+        String message = wasActive
+                ? "Tài xế đã hủy chuyến. Tiền sẽ được hoàn lại vào ví của bạn."
+                : "Tài xế đã từ chối đơn thuê. Vui lòng đặt lại hoặc chọn xe khác.";
+        bookingRealtimeService.publishRentalUpdate(rental, eventType, message);
+
+        // Thông báo cho khách hàng
+        try {
+            Customer cust = customerRepository.findById(rental.getCustomerId()).orElse(null);
+            if (cust != null) {
+                notificationService.createNotification(
+                        cust.getUserId(), "Đơn thuê xe bị hủy",
+                        "Đơn thuê xe #" + rental.getId() + " đã bị tài xế hủy. " +
+                        (rental.getPaymentStatus() == PaymentStatus.REFUNDED ? "Tiền đã được hoàn vào ví." : "") +
+                        (reason != null && !reason.isBlank() ? " Lý do: " + reason : ""),
+                        NotificationType.RENTAL_REJECTED,
+                        NotificationRefType.RENTAL, rental.getId());
+            }
+        } catch (Exception ignored) {}
+        return ServiceResult.success("Đã hủy đơn thuê xe." +
+                (rental.getPaymentStatus() == PaymentStatus.REFUNDED ? " Tiền đã được hoàn lại cho khách." : ""),
+                rental.getId());
+    }
+
+    /**
+     * Khách hàng hủy đơn thuê xe (chỉ khi tài xế chưa bắt đầu chuyến).
+     */
+    public ServiceResult cancelByCustomer(Long rentalId, Long customerUserId) {
+        Optional<VehicleRental> rentalOpt = vehicleRentalRepository.findById(rentalId);
+        if (rentalOpt.isEmpty()) {
+            return ServiceResult.error("Không tìm thấy đơn thuê.");
+        }
+        VehicleRental rental = rentalOpt.get();
+
+        // Kiểm tra quyền
+        Optional<Customer> custOpt = customerRepository.findByUserId(customerUserId);
+        if (custOpt.isEmpty() || !custOpt.get().getId().equals(rental.getCustomerId())) {
+            return ServiceResult.error("Bạn không có quyền hủy đơn này.");
+        }
+
+        // Chỉ cho hủy khi PENDING hoặc CONFIRMED (chưa bắt đầu)
+        if (rental.getStatus() != VehicleRental.RentalStatus.PENDING
+            && rental.getStatus() != VehicleRental.RentalStatus.CONFIRMED) {
+            return ServiceResult.error("Không thể hủy đơn đã bắt đầu hoặc đã hoàn thành.");
+        }
+
+        rental.setStatus(VehicleRental.RentalStatus.CANCELLED);
+        rental.setCancelReason("Khách hàng tự hủy đơn.");
+        vehicleRentalRepository.save(rental);
+
+        // Giải phóng tài xế
+        if (rental.getDriverId() != null) {
+            driverRepository.findById(rental.getDriverId()).ifPresent(d -> {
+                d.setIsAvailable(true);
+                driverRepository.save(d);
+            });
+        }
+        // Giải phóng xe
+        vehicleRepository.findById(rental.getVehicleId()).ifPresent(v -> {
+            if (v.getStatus() != VehicleStatus.MAINTENANCE) {
+                v.setStatus(VehicleStatus.AVAILABLE);
+            }
+            vehicleRepository.save(v);
+        });
+
+        bookingRealtimeService.publishRentalUpdate(rental, "TRIP_CANCELLED", "Khách hàng đã hủy đơn thuê xe.");
+
+        // Thông báo cho tài xế
+        try {
+            if (rental.getDriverId() != null) {
+                Driver driver = driverRepository.findById(rental.getDriverId()).orElse(null);
+                if (driver != null) {
+                    notificationService.createNotification(
+                            driver.getUserId(), "Khách hàng hủy đơn thuê",
+                            "Đơn thuê xe #" + rental.getId() + " đã bị khách hàng hủy.",
+                            NotificationType.RENTAL_REJECTED,
+                            NotificationRefType.RENTAL, rental.getId());
+                }
+            }
+        } catch (Exception ignored) {}
+
+        return ServiceResult.success("Đã hủy đơn thuê xe thành công.", rental.getId());
     }
 
     public ServiceResult startTrip(Long rentalId, Long driverUserId) {
@@ -351,6 +496,17 @@ public class VehicleRentalService {
                 "TRIP_STARTED",
                 "Tai xe da bat dau chuyen."
         );
+        // In-app notification for customer
+        try {
+            Customer cust = customerRepository.findById(rental.getCustomerId()).orElse(null);
+            if (cust != null) {
+                notificationService.createNotification(
+                        cust.getUserId(), "Chuyến thuê xe bắt đầu",
+                        "Đơn thuê xe #" + rental.getId() + " đã bắt đầu.",
+                        NotificationType.TRIP_STARTED,
+                        NotificationRefType.RENTAL, rental.getId());
+            }
+        } catch (Exception ignored) {}
         return ServiceResult.success("Da bat dau chuyen.", rental.getId());
     }
 
@@ -396,8 +552,35 @@ public class VehicleRentalService {
             rental.setNotes(notes.trim());
         }
         rental.setStatus(VehicleRental.RentalStatus.COMPLETED);
+
+        // ── Tự động thanh toán khi hoàn thành (trường hợp trả tiền mặt) ──
         if (rental.getPaymentStatus() != PaymentStatus.PAID) {
-            rental.setPaymentStatus(PaymentStatus.PENDING);
+            rental.setPaymentStatus(PaymentStatus.PAID);
+
+            // Chia tiền: 60% tài xế, 40% hệ thống
+            if (totalPrice.compareTo(BigDecimal.ZERO) > 0) {
+                BigDecimal driverShare = totalPrice.multiply(new BigDecimal("0.60")).setScale(2, RoundingMode.HALF_UP);
+                BigDecimal systemShare = totalPrice.subtract(driverShare);
+
+                walletService.credit(
+                        driver.getUserId(),
+                        driverShare,
+                        TransactionType.DRIVER_EARNING,
+                        ReferenceType.RENTAL,
+                        rental.getId(),
+                        "Thu nhap tai xe tu don thue #" + rental.getId()
+                );
+                userRepository.findFirstByRole(Role.ADMIN).ifPresent(admin ->
+                        walletService.credit(
+                                admin.getId(),
+                                systemShare,
+                                TransactionType.SYSTEM_FEE,
+                                ReferenceType.RENTAL,
+                                rental.getId(),
+                                "He thong nhan phi tu don thue #" + rental.getId()
+                        )
+                );
+            }
         }
         vehicleRentalRepository.save(rental);
 
@@ -413,7 +596,7 @@ public class VehicleRentalService {
         bookingRealtimeService.publishRentalUpdate(
                 rental,
                 "TRIP_COMPLETED",
-                "Chuyen di da hoan thanh."
+                "Chuyen di da hoan thanh. Da thanh toan."
         );
         // In-app notification cho customer
         try {
@@ -421,12 +604,12 @@ public class VehicleRentalService {
             if (customer != null) {
                 notificationService.createNotification(
                         customer.getUserId(), "Chuyến đi hoàn thành",
-                        "Chuyến thuê xe #" + rental.getId() + " đã hoàn thành. Vui lòng thanh toán.",
+                        "Chuyến thuê xe #" + rental.getId() + " đã hoàn thành và đã thanh toán.",
                         NotificationType.TRIP_COMPLETED,
                         NotificationRefType.RENTAL, rental.getId());
             }
         } catch (Exception ignored) {}
-        return ServiceResult.success("Da hoan thanh chuyen. Cho khach hang thanh toan.", rental.getId());
+        return ServiceResult.success("Da hoan thanh chuyen va da thanh toan.", rental.getId());
     }
 
     public ServiceResult payRental(Long rentalId, Long customerUserId) {
@@ -499,6 +682,19 @@ public class VehicleRentalService {
 
         rental.setPaymentStatus(PaymentStatus.PAID);
         vehicleRentalRepository.save(rental);
+        // Notifications: customer + driver
+        try {
+            notificationService.createNotification(
+                    customerUserId, "Thanh toán thành công",
+                    "Đơn thuê xe #" + rental.getId() + " đã thanh toán thành công.",
+                    NotificationType.RENTAL_PAID,
+                    NotificationRefType.RENTAL, rental.getId());
+            notificationService.createNotification(
+                    driver.getUserId(), "Nhận tiền đơn thuê xe",
+                    "Bạn đã nhận tiền cho đơn thuê xe #" + rental.getId() + ".",
+                    NotificationType.PAYMENT_DONE,
+                    NotificationRefType.RENTAL, rental.getId());
+        } catch (Exception ignored) {}
         return ServiceResult.success("Thanh toan thanh cong. Da tru vi khach hang.", rental.getId());
     }
 
@@ -547,6 +743,23 @@ public class VehicleRentalService {
                 "TRIP_CANCELLED",
                 "Don cua ban da duoc huy."
         );
+        // In-app notification for customer + driver
+        try {
+            notificationService.createNotification(
+                    customerUserId, "Đã hủy đơn thuê xe",
+                    "Đơn thuê xe #" + rental.getId() + " đã hủy thành công.",
+                    NotificationType.RENTAL_CANCELLED,
+                    NotificationRefType.RENTAL, rental.getId());
+            if (rental.getDriverId() != null) {
+                driverRepository.findById(rental.getDriverId()).ifPresent(d ->
+                    notificationService.createNotification(
+                            d.getUserId(), "Khách hủy đơn thuê xe",
+                            "Đơn thuê xe #" + rental.getId() + " đã bị khách hàng hủy.",
+                            NotificationType.RENTAL_CANCELLED,
+                            NotificationRefType.RENTAL, rental.getId())
+                );
+            }
+        } catch (Exception ignored) {}
         return ServiceResult.success("Huy don thanh cong.", rental.getId());
     }
 
