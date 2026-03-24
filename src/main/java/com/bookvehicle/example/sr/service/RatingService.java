@@ -116,5 +116,13 @@ public class RatingService {
 
         return null;
     }
+
+    public void replyToRating(Long ratingId, String reply) {
+        ratingRepository.findById(ratingId).ifPresent(r -> {
+            r.setAdminComment(reply);
+            r.setRepliedAt(java.time.LocalDateTime.now());
+            ratingRepository.save(r);
+        });
+    }
 }
 

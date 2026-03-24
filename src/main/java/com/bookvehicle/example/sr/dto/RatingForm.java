@@ -9,9 +9,11 @@ public class RatingForm {
     private String refType;      // RENTAL / BOOKING
     private Long refId;
 
-    // Optional fields for rating the driver at the same time as the vehicle
+    // Optional fields for rating the driver at the same time as the vehicle (or vice versa)
     private Integer driverStars;
     private String driverComment;
+    private Integer vehicleStars;
+    private String vehicleComment;
 
     // ─── Getters & Setters ────────────────────────────────────────
 
@@ -38,4 +40,10 @@ public class RatingForm {
 
     public String getDriverComment() { return driverComment; }
     public void setDriverComment(String driverComment) { this.driverComment = driverComment; }
+
+    public Integer getVehicleStars() { return vehicleStars; }
+    public void setVehicleStars(Integer vehicleStars) { this.vehicleStars = vehicleStars; }
+
+    public String getVehicleComment() { return vehicleComment; }
+    public void setVehicleComment(String vehicleComment) { this.vehicleComment = vehicleComment; }
 }

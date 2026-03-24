@@ -4,6 +4,8 @@ import com.bookvehicle.example.sr.config.SecurityUtil;
 import com.bookvehicle.example.sr.dto.RatingForm;
 import com.bookvehicle.example.sr.model.*;
 import com.bookvehicle.example.sr.repository.DriverRepository;
+import com.bookvehicle.example.sr.repository.RatingRepository;
+import com.bookvehicle.example.sr.repository.VehicleRentalRepository;
 import com.bookvehicle.example.sr.repository.VehicleRepository;
 import com.bookvehicle.example.sr.service.RatingService;
 import jakarta.servlet.http.HttpSession;
@@ -21,13 +23,19 @@ public class RatingController {
     private final RatingService ratingService;
     private final DriverRepository driverRepository;
     private final VehicleRepository vehicleRepository;
+    private final RatingRepository ratingRepository;
+    private final VehicleRentalRepository vehicleRentalRepository;
 
     public RatingController(RatingService ratingService,
                             DriverRepository driverRepository,
-                            VehicleRepository vehicleRepository) {
+                            VehicleRepository vehicleRepository,
+                            RatingRepository ratingRepository,
+                            VehicleRentalRepository vehicleRentalRepository) {
         this.ratingService = ratingService;
         this.driverRepository = driverRepository;
         this.vehicleRepository = vehicleRepository;
+        this.ratingRepository = ratingRepository;
+        this.vehicleRentalRepository = vehicleRentalRepository;
     }
 
     // ── Form đánh giá ───────────────────────────────────────────────
@@ -37,9 +45,16 @@ public class RatingController {
                                 @RequestParam(name = "targetId") Long targetId,
                                 @RequestParam(name = "refType", required = false, defaultValue = "OTHER") String refType,
                                 @RequestParam(name = "refId", required = false, defaultValue = "0") Long refId,
-                                Model model, HttpSession session) {
+                                Model model, HttpSession session, RedirectAttributes ra) {
         User loggedUser = SecurityUtil.getLoggedUser(session);
         if (loggedUser == null) return "redirect:/auth/login";
+
+        // Admin cannot write ratings
+        if (loggedUser.getRole() == Role.ADMIN) {
+            ra.addFlashAttribute("error", "Admin không được viết đánh giá, chỉ được trả lời khách hàng.");
+            if ("DRIVER".equalsIgnoreCase(targetType)) return "redirect:/ratings/driver/" + targetId;
+            return "redirect:/ratings/vehicle/" + targetId;
+        }
 
         if (loggedUser.getRole().name().equals("DRIVER")) {
             Driver d = driverRepository.findByUserId(loggedUser.getId()).orElse(null);
@@ -66,8 +81,19 @@ public class RatingController {
 
         // Load tên target để hiển thị trên form
         if ("DRIVER".equalsIgnoreCase(targetType)) {
-            driverRepository.findById(targetId).ifPresent(d ->
-                    model.addAttribute("targetName", d.getFullName()));
+            driverRepository.findById(targetId).ifPresent(d -> {
+                model.addAttribute("targetName", d.getFullName());
+                // If rating a driver from a rental, we might want to offer rating the vehicle too
+                if ("RENTAL".equalsIgnoreCase(refType) && refId > 0) {
+                    vehicleRentalRepository.findById(refId).ifPresent(vr -> {
+                        if (vr.getVehicleId() != null) {
+                            vehicleRepository.findById(vr.getVehicleId()).ifPresent(v -> 
+                                model.addAttribute("associatedVehicle", v)
+                            );
+                        }
+                    });
+                }
+            });
         } else if ("VEHICLE".equalsIgnoreCase(targetType)) {
             vehicleRepository.findById(targetId).ifPresent(v -> {
                 model.addAttribute("targetName", v.getName() + " (" + v.getLicensePlate() + ")");
@@ -89,6 +115,13 @@ public class RatingController {
                               RedirectAttributes ra) {
         User loggedUser = SecurityUtil.getLoggedUser(session);
         if (loggedUser == null) return "redirect:/auth/login";
+
+        // Admin cannot write ratings
+        if (loggedUser.getRole() == Role.ADMIN) {
+            ra.addFlashAttribute("error", "Admin không được viết đánh giá.");
+            if ("DRIVER".equalsIgnoreCase(form.getTargetType())) return "redirect:/ratings/driver/" + form.getTargetId();
+            return "redirect:/ratings/vehicle/" + form.getTargetId();
+        }
 
         if (loggedUser.getRole().name().equals("DRIVER")) {
             Driver d = driverRepository.findByUserId(loggedUser.getId()).orElse(null);
@@ -128,6 +161,24 @@ public class RatingController {
                 driverForm.setRefType(form.getRefType());
                 driverForm.setRefId(form.getRefId());
                 ratingService.rate(loggedUser.getId(), driverForm);
+            }
+        }
+
+        // Symmetric: If rating DRIVER from a RENTAL, and there are vehicle rating fields
+        if ("DRIVER".equalsIgnoreCase(form.getTargetType()) && form.getVehicleStars() != null) {
+            if ("RENTAL".equalsIgnoreCase(form.getRefType()) && form.getRefId() > 0) {
+                vehicleRentalRepository.findById(form.getRefId()).ifPresent(vr -> {
+                    if (vr.getVehicleId() != null) {
+                        RatingForm vehicleForm = new RatingForm();
+                        vehicleForm.setTargetType("VEHICLE");
+                        vehicleForm.setTargetId(vr.getVehicleId());
+                        vehicleForm.setStars(form.getVehicleStars());
+                        vehicleForm.setComment(form.getVehicleComment());
+                        vehicleForm.setRefType(form.getRefType());
+                        vehicleForm.setRefId(form.getRefId());
+                        ratingService.rate(loggedUser.getId(), vehicleForm);
+                    }
+                });
             }
         }
 
@@ -174,5 +225,26 @@ public class RatingController {
             model.addAttribute("error", "Tài xế không thể tự đánh giá xe mình đang lái.");
         }
         return "ratings/vehicle-ratings";
+    }
+
+    // ── Admin Reply ────────────────────────────────────────────────
+    @PostMapping("/reply")
+    public String handleReply(@RequestParam Long ratingId,
+                               @RequestParam String reply,
+                               HttpSession session,
+                               RedirectAttributes ra) {
+        User loggedUser = SecurityUtil.getLoggedUser(session);
+        if (loggedUser == null) return "redirect:/auth/login";
+        if (loggedUser.getRole() != Role.ADMIN) {
+            ra.addFlashAttribute("error", "Chỉ Admin mới có quyền phản hồi.");
+            return "redirect:/";
+        }
+
+        ratingService.replyToRating(ratingId, reply);
+        ra.addFlashAttribute("success", "Đã gửi phản hồi thành công.");
+
+        return ratingRepository.findById(ratingId)
+                .map(r -> "redirect:" + (r.getTargetType() == RatingTargetType.DRIVER ? "/ratings/driver/" + r.getTargetId() : "/ratings/vehicle/" + r.getTargetId()))
+                .orElse("redirect:/");
     }
 }

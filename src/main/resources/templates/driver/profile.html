@@ -53,6 +53,15 @@
                         </div>
                     </div>
 
+                    <!-- Link to full ratings page -->
+                    <div th:if="${driver != null}" class="mt-4">
+                        <a th:href="@{/ratings/driver/{id}(id=${driver.id})}"
+                           class="w-full flex items-center justify-center gap-2 py-2 px-4 bg-amber-50 text-amber-600 rounded-xl text-sm font-semibold hover:bg-amber-100 transition-colors">
+                            <span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+                            Xem tất cả đánh giá
+                        </a>
+                    </div>
+
                     <!-- Verification Status -->
                     <div th:if="${driver != null}" class="mt-4 pt-4 border-t border-surface-container">
                         <div class="flex items-center justify-center gap-2">
