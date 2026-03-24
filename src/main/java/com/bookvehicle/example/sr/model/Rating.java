@@ -38,6 +38,12 @@ public class Rating {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "admin_comment", columnDefinition = "TEXT")
+    private String adminComment;
+
+    @Column(name = "replied_at")
+    private LocalDateTime repliedAt;
+
     // Convenience join – reviewer user
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reviewer_id", insertable = false, updatable = false)
@@ -76,6 +82,12 @@ public class Rating {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public String getAdminComment() { return adminComment; }
+    public void setAdminComment(String adminComment) { this.adminComment = adminComment; }
+
+    public LocalDateTime getRepliedAt() { return repliedAt; }
+    public void setRepliedAt(LocalDateTime repliedAt) { this.repliedAt = repliedAt; }
 
     public User getReviewer() { return reviewer; }
     public void setReviewer(User reviewer) { this.reviewer = reviewer; }

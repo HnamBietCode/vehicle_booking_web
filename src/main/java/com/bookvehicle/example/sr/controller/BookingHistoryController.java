@@ -4,6 +4,7 @@ import com.bookvehicle.example.sr.config.SecurityUtil;
 import com.bookvehicle.example.sr.model.*;
 import com.bookvehicle.example.sr.repository.CustomerRepository;
 import com.bookvehicle.example.sr.repository.DriverBookingRepository;
+import com.bookvehicle.example.sr.repository.RatingRepository;
 import com.bookvehicle.example.sr.repository.VehicleRentalRepository;
 import com.bookvehicle.example.sr.service.VehicleRentalService;
 import jakarta.servlet.http.HttpSession;
@@ -13,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/booking-history")
@@ -22,15 +25,18 @@ public class BookingHistoryController {
     private final VehicleRentalRepository vehicleRentalRepository;
     private final DriverBookingRepository driverBookingRepository;
     private final VehicleRentalService vehicleRentalService;
+    private final RatingRepository ratingRepository;
 
     public BookingHistoryController(CustomerRepository customerRepository,
                                     VehicleRentalRepository vehicleRentalRepository,
                                     DriverBookingRepository driverBookingRepository,
-                                    VehicleRentalService vehicleRentalService) {
+                                    VehicleRentalService vehicleRentalService,
+                                    RatingRepository ratingRepository) {
         this.customerRepository = customerRepository;
         this.vehicleRentalRepository = vehicleRentalRepository;
         this.driverBookingRepository = driverBookingRepository;
         this.vehicleRentalService = vehicleRentalService;
+        this.ratingRepository = ratingRepository;
     }
 
     @GetMapping
@@ -57,12 +63,42 @@ public class BookingHistoryController {
         List<VehicleRental> rentals = vehicleRentalRepository.findByCustomerIdOrderByCreatedAtDesc(customerId);
         List<DriverBooking> driverBookings = driverBookingRepository.findByCustomerIdOrderByCreatedAtDesc(customerId);
 
+        // Build set of rental IDs where driver has already been rated by this user
+        Set<Long> ratedRentalIds = rentals.stream()
+                .filter(r -> r.getDriverId() != null
+                        && r.getStatus() == VehicleRental.RentalStatus.COMPLETED
+                        && r.getPaymentStatus() == PaymentStatus.PAID)
+                .filter(r -> ratingRepository.existsByReviewerIdAndTargetTypeAndTargetIdAndRefTypeAndRefId(
+                        loggedUser.getId(),
+                        com.bookvehicle.example.sr.model.RatingTargetType.DRIVER,
+                        r.getDriverId(),
+                        com.bookvehicle.example.sr.model.RatingRefType.RENTAL,
+                        r.getId()))
+                .map(VehicleRental::getId)
+                .collect(Collectors.toSet());
+
+        // Build set of rental IDs where vehicle has already been rated by this user
+        Set<Long> ratedVehicleIds = rentals.stream()
+                .filter(r -> r.getVehicleId() != null
+                        && r.getStatus() == VehicleRental.RentalStatus.COMPLETED
+                        && r.getPaymentStatus() == PaymentStatus.PAID)
+                .filter(r -> ratingRepository.existsByReviewerIdAndTargetTypeAndTargetIdAndRefTypeAndRefId(
+                        loggedUser.getId(),
+                        com.bookvehicle.example.sr.model.RatingTargetType.VEHICLE,
+                        r.getVehicleId(),
+                        com.bookvehicle.example.sr.model.RatingRefType.RENTAL,
+                        r.getId()))
+                .map(VehicleRental::getId)
+                .collect(Collectors.toSet());
+
         model.addAttribute("rentals", rentals);
         model.addAttribute("driverBookings", driverBookings);
         model.addAttribute("activeTab", tab);
         model.addAttribute("loggedUser", loggedUser);
         model.addAttribute("customer", customer);
         model.addAttribute("totalBookings", rentals.size() + driverBookings.size());
+        model.addAttribute("ratedRentalIds", ratedRentalIds);
+        model.addAttribute("ratedVehicleIds", ratedVehicleIds);
 
         return "bookings/history";
     }
