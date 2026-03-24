@@ -20,16 +20,46 @@ public class UserService {
     private final CustomerRepository customerRepository;
     private final DriverRepository driverRepository;
     private final DriverLicenseRepository driverLicenseRepository;
+    private final UserSessionRepository userSessionRepository;
+    private final DeviceTokenRepository deviceTokenRepository;
+    private final NotificationRepository notificationRepository;
+    private final RatingRepository ratingRepository;
+    private final WithdrawalRequestRepository withdrawalRequestRepository;
+    private final TransactionRepository transactionRepository;
+    private final WalletRepository walletRepository;
+    private final VehicleRentalRepository vehicleRentalRepository;
+    private final VehicleRepository vehicleRepository;
+    private final SoberBookingRepository soberBookingRepository;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public UserService(UserRepository userRepository,
             CustomerRepository customerRepository,
             DriverRepository driverRepository,
-            DriverLicenseRepository driverLicenseRepository) {
+            DriverLicenseRepository driverLicenseRepository,
+            UserSessionRepository userSessionRepository,
+            DeviceTokenRepository deviceTokenRepository,
+            NotificationRepository notificationRepository,
+            RatingRepository ratingRepository,
+            WithdrawalRequestRepository withdrawalRequestRepository,
+            TransactionRepository transactionRepository,
+            WalletRepository walletRepository,
+            VehicleRentalRepository vehicleRentalRepository,
+            VehicleRepository vehicleRepository,
+            SoberBookingRepository soberBookingRepository) {
         this.userRepository = userRepository;
         this.customerRepository = customerRepository;
         this.driverRepository = driverRepository;
         this.driverLicenseRepository = driverLicenseRepository;
+        this.userSessionRepository = userSessionRepository;
+        this.deviceTokenRepository = deviceTokenRepository;
+        this.notificationRepository = notificationRepository;
+        this.ratingRepository = ratingRepository;
+        this.withdrawalRequestRepository = withdrawalRequestRepository;
+        this.transactionRepository = transactionRepository;
+        this.walletRepository = walletRepository;
+        this.vehicleRentalRepository = vehicleRentalRepository;
+        this.vehicleRepository = vehicleRepository;
+        this.soberBookingRepository = soberBookingRepository;
     }
 
     // ── Read ────────────────────────────────────────────────────────
@@ -408,6 +438,55 @@ public class UserService {
      * Admin xoá user.
      */
     public void delete(Long userId) {
+        Optional<User> optUser = userRepository.findById(userId);
+        if (optUser.isEmpty()) return;
+        User user = optUser.get();
+
+        // 1. Xóa sessions & device tokens
+        userSessionRepository.deleteByUserId(userId);
+        deviceTokenRepository.deleteByUserId(userId);
+
+        // 2. Xóa notifications
+        notificationRepository.deleteByUserId(userId);
+
+        // 3. Xóa ratings (reviewer)
+        ratingRepository.deleteByReviewerId(userId);
+
+        // 4. Xóa withdrawal requests
+        withdrawalRequestRepository.deleteByUserId(userId);
+
+        // 5. Xóa transactions & wallet
+        transactionRepository.deleteByWalletUserId(userId);
+        walletRepository.deleteByUserId(userId);
+
+        // 6. Xóa các bản ghi phụ thuộc driver/customer
+        if (user.getRole() == Role.DRIVER) {
+            driverRepository.findByUserId(userId).ifPresent(driver -> {
+                // Gỡ driver khỏi vehicle_rentals (set null để không bị FK error)
+                vehicleRentalRepository.clearDriverId(driver.getId());
+                // Gỡ assigned_driver khỏi vehicles
+                vehicleRepository.clearAssignedDriver(driver.getId());
+                // Xóa driver licenses
+                driverLicenseRepository.deleteByDriverId(driver.getId());
+                // Xóa sober bookings của driver
+                soberBookingRepository.clearDriverId(driver.getId());
+                // Xóa driver
+                driverRepository.delete(driver);
+            });
+        }
+
+        if (user.getRole() == Role.CUSTOMER) {
+            customerRepository.findByUserId(userId).ifPresent(customer -> {
+                // Xóa vehicle_rentals của customer
+                vehicleRentalRepository.deleteByCustomerId(customer.getId());
+                // Xóa sober bookings của customer
+                soberBookingRepository.deleteByCustomerId(customer.getId());
+                // Xóa customer
+                customerRepository.delete(customer);
+            });
+        }
+
+        // 7. Cuối cùng xóa user
         userRepository.deleteById(userId);
     }
 

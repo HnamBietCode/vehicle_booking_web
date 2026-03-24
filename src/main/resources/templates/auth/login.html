@@ -176,6 +176,64 @@
             </button>
         </form>
 
+        <!-- Divider -->
+        <div class="flex items-center gap-4 my-6">
+            <div class="flex-1 h-px bg-outline-variant/30"></div>
+            <span class="text-xs text-outline font-semibold uppercase tracking-wider">hoặc</span>
+            <div class="flex-1 h-px bg-outline-variant/30"></div>
+        </div>
+
+        <!-- Google Sign-In Button (rendered by Google) -->
+        <div id="googleBtnContainer" class="flex justify-center"></div>
+
+        <script th:inline="javascript">
+            const GOOGLE_CLIENT_ID = /*[[${googleClientId}]]*/ '';
+        </script>
+        <script src="https://accounts.google.com/gsi/client"></script>
+        <script>
+            window.addEventListener('load', function() {
+                if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com') {
+                    document.getElementById('googleBtnContainer').innerHTML =
+                        '<p style="color:#999;font-size:12px;">Google Login chưa được cấu hình.</p>';
+                    return;
+                }
+                google.accounts.id.initialize({
+                    client_id: GOOGLE_CLIENT_ID,
+                    callback: handleGoogleResponse,
+                    ux_mode: 'popup'
+                });
+                google.accounts.id.renderButton(
+                    document.getElementById('googleBtnContainer'),
+                    {
+                        type: 'standard',
+                        theme: 'outline',
+                        size: 'large',
+                        text: 'signin_with',
+                        shape: 'rectangular',
+                        width: 400,
+                        logo_alignment: 'left'
+                    }
+                );
+            });
+            async function handleGoogleResponse(response) {
+                try {
+                    const res = await fetch('/auth/google', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ idToken: response.credential })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        window.location.href = data.redirect;
+                    } else {
+                        alert(data.error || 'Đăng nhập Google thất bại.');
+                    }
+                } catch (e) {
+                    alert('Lỗi kết nối. Vui lòng thử lại.');
+                }
+            }
+        </script>
+
         <!-- Registration Form Hint -->
         <div class="mt-12 p-6 rounded-2xl bg-secondary-fixed/30 border-l-4 border-secondary cursor-pointer hover:bg-secondary-fixed/50 transition-colors" onclick="document.getElementById('registerModal').classList.remove('hidden')">
             <h3 class="font-bold text-on-secondary-fixed mb-2 flex items-center gap-2">
