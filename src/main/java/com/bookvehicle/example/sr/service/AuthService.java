@@ -19,14 +19,17 @@ public class AuthService {
     private final CustomerRepository customerRepository;
     private final DriverRepository driverRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     public AuthService(UserRepository userRepository,
             CustomerRepository customerRepository,
-            DriverRepository driverRepository) {
+            DriverRepository driverRepository,
+            EmailService emailService) {
         this.userRepository = userRepository;
         this.customerRepository = customerRepository;
         this.driverRepository = driverRepository;
         this.passwordEncoder = new BCryptPasswordEncoder();
+        this.emailService = emailService;
     }
 
     /**
@@ -177,9 +180,8 @@ public class AuthService {
         otpStorage.put(email.toLowerCase(), otp);
         otpExpiry.put(email.toLowerCase(), expiryTime);
         
-        System.out.println("==================================================");
-        System.out.println("OTP YÊU CẦU ĐẶT LẠI MẬT KHẨU CHO " + email + " LÀ: " + otp);
-        System.out.println("==================================================");
+        // Gửi OTP qua email
+        emailService.sendPasswordResetOtp(email.toLowerCase(), otp);
         
         return null; // Success
     }

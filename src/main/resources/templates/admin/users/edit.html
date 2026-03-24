@@ -317,7 +317,7 @@
                                 </div>
                                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.7rem;">
                                     <div class="form-group" style="margin:0;"><label class="form-label">Số bằng lái</label>
-                                        <input type="text" class="form-control" name="licenseNumbers" th:value="${lic.licenseNumber}" required></div>
+                                        <input type="text" class="form-control license-number-input" name="licenseNumbers" th:value="${lic.licenseNumber}" required maxlength="12" minlength="12" pattern="[0-9]{12}" placeholder="12 chữ số" oninput="this.value=this.value.replace(/[^0-9]/g,'');"></div>
                                     <div class="form-group" style="margin:0;"><label class="form-label">Hạng bằng</label>
                                         <select class="form-control license-class-select" name="licenseClasses" onchange="onClassChange(this)">
                                             <option value="A1" th:selected="${lic.licenseClass == 'A1'}">A1 – Xe máy</option>
@@ -422,7 +422,7 @@
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.7rem;">
                     <div class="form-group" style="margin:0;"><label class="form-label">Số bằng lái</label>
-                        <input type="text" class="form-control" name="licenseNumbers" required></div>
+                        <input type="text" class="form-control license-number-input" name="licenseNumbers" required maxlength="12" minlength="12" pattern="[0-9]{12}" placeholder="12 chữ số" oninput="this.value=this.value.replace(/[^0-9]/g,'');"></div>
                     <div class="form-group" style="margin:0;"><label class="form-label">Hạng bằng</label>
                         <select class="form-control license-class-select" name="licenseClasses" onchange="onClassChange(this)">
                             <option value="A1">A1 – Xe máy</option>

@@ -204,12 +204,10 @@
                                         </button>
                                     </form>
                                 </span>
-                                <form th:action="@{/admin/users/{id}/delete(id=${u.id})}" method="post" style="display:inline;" th:if="${u.id != loggedUser.id}"
-                                      onsubmit="return confirm('Xoá tài khoản này?')">
-                                    <button type="submit" class="btn btn-danger btn-sm">
-                                        <span class="material-symbols-outlined" style="font-size:15px;">delete</span>
-                                    </button>
-                                </form>
+                                <button type="button" class="btn btn-danger btn-sm delete-btn"
+                                    th:data-id="${u.id}" th:data-email="${u.email}" title="Xoá tài khoản">
+                                    <span class="material-symbols-outlined" style="font-size:15px;">delete</span>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -282,6 +280,54 @@
             tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
         });
     }
+</script>
+
+<!-- Modal Xoá -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-box">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <div style="width:40px;height:40px;background:#FEE2E2;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                <span class="material-symbols-outlined" style="color:#EF4444;">delete_forever</span>
+            </div>
+            <h3 style="font-size:1.1rem;font-weight:800;color:#0A2463;">Xoá tài khoản</h3>
+        </div>
+        <p style="font-size:.875rem;color:#64748b;margin-bottom:8px;">Bạn có chắc chắn muốn xoá tài khoản:</p>
+        <p style="font-size:.95rem;font-weight:700;color:#EF4444;margin-bottom:16px;" id="deleteEmail"></p>
+        <div style="background:#FEF2F2;border-radius:10px;padding:12px 16px;margin-bottom:20px;">
+            <p style="font-size:.82rem;color:#991B1B;font-weight:600;">⚠️ Hành động này không thể hoàn tác. Toàn bộ dữ liệu liên quan sẽ bị xóa vĩnh viễn.</p>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;">
+            <button type="button" class="btn btn-outline" onclick="closeDeleteModal()">Hủy</button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteBtn" onclick="confirmDelete()">
+                <span class="material-symbols-outlined" style="font-size:15px;">delete_forever</span>Xác nhận xoá
+            </button>
+        </div>
+    </div>
+</div>
+<form id="deleteForm" method="post" style="display:none;"></form>
+
+<script>
+    let deleteUserId = null;
+    function openDeleteModal(userId, email) {
+        deleteUserId = userId;
+        document.getElementById('deleteEmail').textContent = email;
+        document.getElementById('deleteModal').classList.add('show');
+    }
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('show');
+        deleteUserId = null;
+    }
+    function confirmDelete() {
+        if (!deleteUserId) return;
+        const form = document.getElementById('deleteForm');
+        form.action = '/admin/users/' + deleteUserId + '/delete';
+        form.submit();
+    }
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => openDeleteModal(btn.dataset.id, btn.dataset.email));
+    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDeleteModal(); });
+    document.getElementById('deleteModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeDeleteModal(); });
 </script>
 <style>@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }</style>
 </body>
