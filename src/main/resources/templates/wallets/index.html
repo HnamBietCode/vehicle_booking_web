@@ -4,76 +4,8 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Navigator Pay - Wallet</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&amp;display=swap"
-        rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-        rel="stylesheet" />
-    <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "on-error-container": "#93000a",
-                        "background": "#faf8ff",
-                        "on-surface-variant": "#444650",
-                        "secondary-fixed-dim": "#ffb59d",
-                        "on-surface": "#1b1b20",
-                        "surface-bright": "#faf8ff",
-                        "on-tertiary-container": "#409f90",
-                        "error-container": "#ffdad6",
-                        "primary-fixed": "#dce1ff",
-                        "on-secondary-fixed": "#390c00",
-                        "surface-container-low": "#f5f3f9",
-                        "on-tertiary-fixed-variant": "#005047",
-                        "primary-fixed-dim": "#b5c4ff",
-                        "primary-container": "#0a2463",
-                        "surface-dim": "#dbd9df",
-                        "inverse-primary": "#b5c4ff",
-                        "surface-tint": "#475b9c",
-                        "on-background": "#1b1b20",
-                        "primary": "#00103e",
-                        "tertiary-fixed-dim": "#7ad7c6",
-                        "inverse-on-surface": "#f2f0f6",
-                        "tertiary": "#001814",
-                        "surface-container-high": "#e9e7ed",
-                        "tertiary-container": "#002f29",
-                        "surface-container": "#efedf3",
-                        "outline": "#757681",
-                        "surface-container-lowest": "#ffffff",
-                        "on-secondary-fixed-variant": "#832600",
-                        "surface": "#faf8ff",
-                        "on-primary-fixed-variant": "#2e4382",
-                        "on-tertiary-fixed": "#00201b",
-                        "on-primary": "#ffffff",
-                        "inverse-surface": "#303035",
-                        "secondary-fixed": "#ffdbd0",
-                        "tertiary-fixed": "#97f3e2",
-                        "error": "#ba1a1a",
-                        "on-primary-fixed": "#00164d",
-                        "on-tertiary": "#ffffff",
-                        "on-secondary-container": "#5d1900",
-                        "secondary-container": "#fe6a34",
-                        "surface-container-highest": "#e3e2e8",
-                        "on-primary-container": "#7a8ed2",
-                        "surface-variant": "#e3e2e8",
-                        "outline-variant": "#c5c6d2",
-                        "on-error": "#ffffff",
-                        "secondary": "#ab3500",
-                        "on-secondary": "#ffffff"
-                    },
-                    fontFamily: {
-                        "headline": ["Be Vietnam Pro"],
-                        "body": ["Be Vietnam Pro"],
-                        "label": ["Be Vietnam Pro"]
-                    },
-                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
-                },
-            },
-        }
-    </script>
+    <title>SR-Booking - Ví</title>
+    <style th:replace="~{layout/base :: head}"></style>
     <style>
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -82,11 +14,6 @@
         .glass-effect {
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-        }
-
-        body {
-            font-family: 'Be Vietnam Pro', sans-serif;
-            background-color: #faf8ff;
         }
     </style>
 </head>

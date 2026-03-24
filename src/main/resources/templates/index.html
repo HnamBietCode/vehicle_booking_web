@@ -4,117 +4,25 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>SR-Booking - Đặt xe nhanh, An toàn, Tiện lợi</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            colors: {
-              "on-primary-fixed-variant": "#2e4382",
-              "on-tertiary": "#ffffff",
-              "surface-container-lowest": "#ffffff",
-              "on-secondary-fixed-variant": "#832600",
-              "surface-bright": "#faf8ff",
-              "surface-container-highest": "#e3e2e8",
-              "on-error-container": "#93000a",
-              "outline": "#757681",
-              "inverse-surface": "#303035",
-              "surface-container-high": "#e9e7ed",
-              "on-background": "#1b1b20",
-              "surface-dim": "#dbd9df",
-              "outline-variant": "#c5c6d2",
-              "primary-fixed": "#dce1ff",
-              "surface-tint": "#475b9c",
-              "error": "#ba1a1a",
-              "tertiary-fixed-dim": "#7ad7c6",
-              "tertiary-fixed": "#97f3e2",
-              "tertiary-container": "#002f29",
-              "surface": "#faf8ff",
-              "inverse-primary": "#b5c4ff",
-              "on-secondary-container": "#5d1900",
-              "secondary-fixed-dim": "#ffb59d",
-              "on-tertiary-fixed-variant": "#005047",
-              "on-primary": "#ffffff",
-              "surface-variant": "#e3e2e8",
-              "on-secondary-fixed": "#390c00",
-              "background": "#faf8ff",
-              "secondary": "#ab3500",
-              "primary": "#00103e",
-              "on-secondary": "#ffffff",
-              "on-tertiary-container": "#409f90",
-              "on-surface": "#1b1b20",
-              "secondary-fixed": "#ffdbd0",
-              "on-tertiary-fixed": "#00201b",
-              "on-surface-variant": "#444650",
-              "inverse-on-surface": "#f2f0f6",
-              "on-error": "#ffffff",
-              "error-container": "#ffdad6",
-              "primary-container": "#0a2463",
-              "surface-container-low": "#f5f3f9",
-              "tertiary": "#001814",
-              "secondary-container": "#fe6a34",
-              "on-primary-container": "#7a8ed2",
-              "surface-container": "#efedf3",
-              "primary-fixed-dim": "#b5c4ff",
-              "on-primary-fixed": "#00164d"
-            },
-            fontFamily: {
-              "headline": ["Be Vietnam Pro"],
-              "body": ["Be Vietnam Pro"],
-              "label": ["Be Vietnam Pro"]
-            },
-            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
-          },
-        },
-      }
-    </script>
+<style th:replace="~{layout/base :: head}"></style>
 <style>
-        body { font-family: 'Be Vietnam Pro', sans-serif; }
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-            vertical-align: middle;
-        }
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-        }
-        .ambient-shadow {
-            box-shadow: 0 4px 24px rgba(0, 16, 62, 0.08);
-        }
-    </style>
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        vertical-align: middle;
+    }
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+    }
+    .ambient-shadow {
+        box-shadow: 0 4px 24px rgba(0, 16, 62, 0.08);
+    }
+</style>
 </head>
-<body class="bg-surface text-on-surface selection:bg-secondary-container selection:text-white">
-<!-- Top Navigation Bar -->
-<header class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200/15 shadow-sm">
-<nav class="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
-<div class="flex items-center gap-8">
-<a class="text-2xl font-bold tracking-tighter text-[#0A2463] dark:text-white" th:href="@{/}">SR-Booking</a>
-<div class="hidden md:flex gap-6 items-center">
-<a class="text-[#FE6A34] font-semibold border-b-2 border-[#FE6A34] pb-1 font-medium text-base" th:href="@{/}">Trang chủ</a>
-<a class="text-slate-600 dark:text-slate-400 hover:text-[#0A2463] dark:hover:text-white transition-colors font-medium text-base" th:href="@{/vehicles/search}">Thuê xe</a>
-<a class="text-slate-600 dark:text-slate-400 hover:text-[#0A2463] dark:hover:text-white transition-colors font-medium text-base" th:href="@{/sober-bookings/new}">Lái hộ</a>
-<a class="text-slate-600 dark:text-slate-400 hover:text-[#0A2463] dark:hover:text-white transition-colors font-medium text-base" th:href="@{/wallet}">Ví</a>
-</div>
-</div>
-<div class="flex items-center gap-4">
-    <!-- User is NOT logged in -->
-    <th:block th:if="${session.loggedUser == null}">
-        <a th:href="@{/auth/login}" class="px-4 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-xl transition-all">Đăng nhập</a>
-        <a th:href="@{/auth/register}" class="px-6 py-2.5 bg-primary-container text-white font-semibold rounded-xl hover:scale-[1.02] active:scale-95 transition-all ambient-shadow">Đăng ký</a>
-    </th:block>
-    <!-- User is logged in -->
-    <th:block th:if="${session.loggedUser != null}">
-        <a th:if="${session.loggedUser.role.name() == 'ADMIN'}" th:href="@{/admin/users}" class="px-4 py-2 font-bold text-primary hover:bg-slate-50 rounded-xl transition-all">Dashboard</a>
-        <a th:if="${session.loggedUser.role.name() != 'ADMIN'}" th:href="@{/profile}" class="px-4 py-2 font-bold text-primary hover:bg-slate-50 rounded-xl transition-all">Hồ sơ cá nhân</a>
-        <a th:href="@{/auth/logout}" class="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-all"><span class="material-symbols-outlined">logout</span></a>
-    </th:block>
-</div>
-</nav>
-</header>
+<body class="bg-background text-on-surface selection:bg-secondary-container selection:text-white">
+<!-- Shared Navbar -->
+<nav th:replace="~{layout/base :: navbar}"></nav>
 <main class="pt-20">
 <!-- Hero Section -->
 <section class="relative min-h-[870px] flex items-center justify-center px-6 overflow-hidden">

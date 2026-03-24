@@ -26,5 +26,7 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
 
     long countByTargetTypeAndTargetId(RatingTargetType targetType, Long targetId);
 
+    List<Rating> findByTargetTypeOrderByCreatedAtDesc(RatingTargetType targetType);
+
     void deleteByReviewerId(Long reviewerId);
 }

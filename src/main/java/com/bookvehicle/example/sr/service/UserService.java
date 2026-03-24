@@ -123,7 +123,31 @@ public class UserService {
         } else if (user.getRole() == Role.DRIVER) {
             driverRepository.findByUserId(userId).ifPresent(d -> {
                 d.setFullName(form.getFullName().trim());
+                if (form.getVehicleTypes() != null && !form.getVehicleTypes().isBlank()) {
+                    d.setVehicleTypes(form.getVehicleTypes().trim());
+                }
                 driverRepository.save(d);
+
+                // Update or create license class in driver_licenses table
+                if (form.getLicenseClass() != null && !form.getLicenseClass().isBlank()) {
+                    java.util.List<DriverLicense> licenses = driverLicenseRepository.findByDriverId(d.getId());
+                    if (!licenses.isEmpty()) {
+                        DriverLicense dl = licenses.get(0);
+                        dl.setLicenseClass(form.getLicenseClass().trim());
+                        if (form.getVehicleTypes() != null && !form.getVehicleTypes().isBlank()) {
+                            dl.setVehicleTypes(form.getVehicleTypes().trim());
+                        }
+                        driverLicenseRepository.save(dl);
+                    } else {
+                        DriverLicense dl = new DriverLicense();
+                        dl.setDriverId(d.getId());
+                        dl.setLicenseNumber(d.getDriverLicense());
+                        dl.setLicenseClass(form.getLicenseClass().trim());
+                        dl.setLicenseExpiry(d.getLicenseExpiry());
+                        dl.setVehicleTypes(form.getVehicleTypes() != null ? form.getVehicleTypes().trim() : d.getVehicleTypes());
+                        driverLicenseRepository.save(dl);
+                    }
+                }
             });
         }
         return null;

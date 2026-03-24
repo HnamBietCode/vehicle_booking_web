@@ -51,12 +51,14 @@ public class DriverSoberBookingController {
 
         List<SoberBooking> pendingBookings = soberBookingRepository.findPendingBookings();
         List<SoberBooking> myBookings = soberBookingRepository.findByDriverId(driver.getId());
+        List<SoberBooking> historyBookings = soberBookingRepository.findDriverHistory(driver.getId());
 
         // Add daily stats for the dashboard header
         ReportDashboardDTO todayStats = driverReportService.getDashboardData(loggedUser.getId(), "daily");
 
         model.addAttribute("pendingBookings", pendingBookings);
         model.addAttribute("myBookings", myBookings);
+        model.addAttribute("historyBookings", historyBookings);
         model.addAttribute("todayStats", todayStats);
         model.addAttribute("driver", driver);
         model.addAttribute("loggedUser", loggedUser);

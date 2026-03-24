@@ -1,183 +1,68 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <title>Chá»n dá»‹ch vá»¥</title>
-    <style>
-        :root {
-            --primary: #4F46E5;
-            --primary-dark: #3730A3;
-            --border: #E2E8F0;
-            --bg: #F8FAFC;
-            --surface: #fff;
-            --muted: #64748B;
-            --text: #1E293B;
-            --accent: #F59E0B;
-            --radius: 14px;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-        }
-
-        .navbar {
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-            padding: 0 2rem;
-            display: flex;
-            align-items: center;
-            height: 64px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
-        }
-
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.3rem;
-            color: var(--primary);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: .5rem;
-        }
-
-        .navbar-nav {
-            display: flex;
-            align-items: center;
-            gap: .25rem;
-            margin-left: auto;
-            list-style: none;
-            flex-wrap: nowrap;
-            padding-left: 0;
-        }
-
-        .nav-link {
-            padding: .5rem .85rem;
-            border-radius: 8px;
-            text-decoration: none;
-            color: var(--muted);
-            font-size: .9rem;
-            font-weight: 500;
-            transition: all .2s;
-            white-space: nowrap;
-        }
-
-        .nav-link:hover,
-        .nav-link.active {
-            background: var(--primary);
-            color: #fff;
-        }
-
-        .nav-badge {
-            background: var(--accent);
-            color: #fff;
-            font-size: .7rem;
-            padding: .15rem .45rem;
-            border-radius: 999px;
-            margin-left: .3rem;
-            font-weight: 700;
-        }
-
-        .main {
-            max-width: 980px;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
-        }
-
-        .page-title {
-            font-size: 1.6rem;
-            font-weight: 800;
-            margin-bottom: .35rem;
-        }
-
-        .page-sub {
-            color: var(--muted);
-            margin-bottom: 1.5rem;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 1.2rem;
-        }
-
-        .card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 1.4rem;
-            transition: box-shadow .2s, transform .2s;
-        }
-
-        .card:hover {
-            box-shadow: 0 8px 28px rgba(79, 70, 229, .12);
-            transform: translateY(-2px);
-        }
-
-        .card h3 {
-            font-size: 1.05rem;
-            margin-bottom: .4rem;
-        }
-
-        .card p {
-            color: var(--muted);
-            font-size: .9rem;
-            margin-bottom: 1rem;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: .4rem;
-            padding: .6rem 1.2rem;
-            border-radius: 8px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            background: var(--primary);
-            color: #fff;
-        }
-
-        .btn:hover {
-            background: var(--primary-dark);
-        }
-    </style>
+    <title>Chọn dịch vụ</title>
+    <style th:replace="~{layout/base :: head}"></style>
 </head>
-<body>
+<body class="bg-background text-on-surface">
 <nav th:replace="~{layout/base :: navbar}"></nav>
 
-<main class="main">
-    <h1 class="page-title">Chọn dịch vụ</h1>
-    <p class="page-sub">Bạn có 3 lựa chọn: thuê tài xế, thuê xe, hoặc thuê xe kèm tài xế.</p>
+<main class="max-w-5xl mx-auto px-6 pt-28 pb-16">
 
-    <div class="grid">
-        <div class="card">
-            <h3>🚗 Thuê tài xế</h3>
-            <p>Tài xế đến đón và lái xe cho bạn. Tài xế bất kỳ sẽ nhận đơn.</p>
-            <a class="btn" th:href="@{/sober-bookings/new}">Đặt tài xế</a>
+    <!-- Page Header -->
+    <div class="mb-10">
+        <h1 class="text-3xl font-extrabold text-primary-container tracking-tight">Chọn dịch vụ</h1>
+        <p class="text-sm text-on-surface-variant mt-1">Bạn có 3 lựa chọn: thuê tài xế, thuê xe, hoặc thuê xe kèm tài xế.</p>
+    </div>
+
+    <!-- Service Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <!-- Card 1: Thuê tài xế (Lái hộ) -->
+        <div class="bg-white rounded-2xl border border-white shadow-[0_4px_24px_rgba(0,16,62,0.06)] p-8 hover:shadow-[0_8px_32px_rgba(79,70,229,0.12)] hover:-translate-y-1 transition-all group">
+            <div class="w-14 h-14 bg-gradient-to-br from-[#7C3AED] to-[#A855F7] rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                <span class="material-symbols-outlined text-white text-2xl">hail</span>
+            </div>
+            <h3 class="text-lg font-bold text-primary-container mb-2">Thuê tài xế</h3>
+            <p class="text-sm text-on-surface-variant leading-relaxed mb-6">Tài xế đến đón và lái xe cho bạn. Tài xế bất kỳ sẽ nhận đơn.</p>
+            <a th:href="@{/sober-bookings/new}"
+               class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-container text-white rounded-lg text-sm font-bold hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary-container/20">
+                <span class="material-symbols-outlined text-sm">person_search</span>
+                Đặt tài xế
+            </a>
         </div>
-        <div class="card">
-            <h3>🚙 Thuê xe (giao xe)</h3>
-            <p>Chọn xe, tài xế bất kỳ sẽ lái xe đến giao cho bạn.</p>
-            <a class="btn" th:href="@{/vehicles/search(mode='VEHICLE_ONLY')}">Chọn xe</a>
+
+        <!-- Card 2: Thuê xe (giao xe) -->
+        <div class="bg-white rounded-2xl border border-white shadow-[0_4px_24px_rgba(0,16,62,0.06)] p-8 hover:shadow-[0_8px_32px_rgba(79,70,229,0.12)] hover:-translate-y-1 transition-all group">
+            <div class="w-14 h-14 bg-gradient-to-br from-[#0EA5E9] to-[#06B6D4] rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                <span class="material-symbols-outlined text-white text-2xl">local_shipping</span>
+            </div>
+            <h3 class="text-lg font-bold text-primary-container mb-2">Thuê xe (giao xe)</h3>
+            <p class="text-sm text-on-surface-variant leading-relaxed mb-6">Chọn xe, tài xế bất kỳ sẽ lái xe đến giao cho bạn.</p>
+            <a th:href="@{/vehicles/search(mode='VEHICLE_ONLY')}"
+               class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-container text-white rounded-lg text-sm font-bold hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary-container/20">
+                <span class="material-symbols-outlined text-sm">directions_car</span>
+                Chọn xe
+            </a>
         </div>
-        <div class="card">
-            <h3>🚘 Thuê xe + tài xế</h3>
-            <p>Xe có tài xế riêng, chỉ hiển thị khi tài xế đang online.</p>
-            <a class="btn" th:href="@{/vehicles/search(mode='WITH_DRIVER')}">Chọn xe + tài xế</a>
+
+        <!-- Card 3: Thuê xe + tài xế -->
+        <div class="bg-white rounded-2xl border border-white shadow-[0_4px_24px_rgba(0,16,62,0.06)] p-8 hover:shadow-[0_8px_32px_rgba(79,70,229,0.12)] hover:-translate-y-1 transition-all group">
+            <div class="w-14 h-14 bg-gradient-to-br from-[#059669] to-[#34D399] rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                <span class="material-symbols-outlined text-white text-2xl">car_rental</span>
+            </div>
+            <h3 class="text-lg font-bold text-primary-container mb-2">Thuê xe + tài xế</h3>
+            <p class="text-sm text-on-surface-variant leading-relaxed mb-6">Xe có tài xế riêng, chỉ hiển thị khi tài xế đang online.</p>
+            <a th:href="@{/vehicles/search(mode='WITH_DRIVER')}"
+               class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-container text-white rounded-lg text-sm font-bold hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary-container/20">
+                <span class="material-symbols-outlined text-sm">car_rental</span>
+                Chọn xe + tài xế
+            </a>
         </div>
+
     </div>
 </main>
 </body>
 </html>
-
-

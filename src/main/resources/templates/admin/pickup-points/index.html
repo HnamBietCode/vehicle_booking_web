@@ -1,92 +1,176 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý điểm đón - Admin</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Quản lý Điểm đón – SR-Booking Admin</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; }
-        body { margin: 0; font-family: 'Inter', sans-serif; background: #f8fafc; color: #1e293b; }
-        .navbar { background: #fff; border-bottom: 1px solid #e2e8f0; padding: 0 2rem; display:flex; align-items:center; height:64px; }
-        .navbar-brand { font-weight:700; font-size:1.3rem; color:#4f46e5; text-decoration:none; }
-        .navbar-nav { margin-left:auto; list-style:none; display:flex; gap:.25rem; }
-        .nav-link { padding:.5rem .85rem; border-radius:8px; text-decoration:none; color:#64748b; font-size:.9rem; font-weight:500; }
-        .nav-link.active, .nav-link:hover { background:#4f46e5; color:#fff; }
-        .main { max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem; }
-        .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; }
-        .page-title { font-size:1.5rem; font-weight:700; }
-        .btn { border:none; border-radius:8px; padding:.55rem 1rem; text-decoration:none; font-weight:600; cursor:pointer; }
-        .btn-primary { background:#4f46e5; color:#fff; }
-        .btn-outline { background:#fff; color:#475569; border:1px solid #dbe2ea; }
-        .btn-danger { background:#ef4444; color:#fff; }
-        .btn-sm { padding:.35rem .7rem; font-size:.8rem; }
-        .alert { padding:.85rem 1rem; border-radius:8px; margin-bottom:1rem; }
-        .alert-success { background:#f0fdf4; color:#166534; border-left:4px solid #10b981; }
-        .alert-danger { background:#fef2f2; color:#991b1b; border-left:4px solid #ef4444; }
-        .card { background:#fff; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; }
-        table { width:100%; border-collapse:collapse; font-size:.9rem; }
-        th { background:#f8fafc; color:#64748b; text-align:left; padding:.75rem 1rem; border-bottom:2px solid #e2e8f0; }
-        td { padding:.75rem 1rem; border-bottom:1px solid #e2e8f0; vertical-align:middle; }
-        .badge { display:inline-block; padding:.2rem .6rem; border-radius:999px; font-size:.72rem; font-weight:700; }
-        .badge-active { background:#d1fae5; color:#065f46; }
-        .badge-inactive { background:#fee2e2; color:#991b1b; }
-        .action-group { display:flex; gap:.4rem; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Be Vietnam Pro', sans-serif; background: #f5f3f9; color: #1b1b20; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .sidebar-link { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 12px; color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 600; transition: all .2s; }
+        .sidebar-link:hover { background: rgba(255,255,255,.1); color: white; }
+        .sidebar-link.active { background: #FE6A34; color: white; transform: scale(1.02); }
+        .badge { display: inline-block; padding: .2rem .6rem; border-radius: 999px; font-size: .7rem; font-weight: 700; white-space: nowrap; }
+        .badge-active { background: #D1FAE5; color: #065F46; }
+        .badge-inactive { background: #FEE2E2; color: #991B1B; }
+        table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+        th { background: #f8f7fc; font-weight: 700; color: #64748b; padding: .7rem 1.25rem; text-align: left; border-bottom: 1px solid #e9e7ed; white-space: nowrap; font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; }
+        td { padding: .8rem 1.25rem; border-bottom: 1px solid #f0eef5; vertical-align: middle; }
+        tr:hover td { background: #faf9ff; }
+        .btn { display: inline-flex; align-items: center; gap: .35rem; padding: .45rem 1rem; border: none; border-radius: 8px; font-size: .8rem; font-weight: 600; cursor: pointer; text-decoration: none; transition: all .2s; font-family: inherit; }
+        .btn-primary { background: #0A2463; color: #fff; }
+        .btn-primary:hover { background: #0d2d78; transform: translateY(-1px); }
+        .btn-danger { background: #EF4444; color: #fff; }
+        .btn-danger:hover { opacity: .9; }
+        .btn-outline { background: transparent; border: 1.5px solid #e9e7ed; color: #64748b; }
+        .btn-outline:hover { border-color: #0A2463; color: #0A2463; }
+        .btn-sm { padding: .3rem .6rem; font-size: .72rem; }
+        .alert { padding: .8rem 1.1rem; border-radius: 10px; margin-bottom: 1.1rem; font-size: .875rem; font-weight: 500; }
+        .alert-danger { background: #FEF2F2; color: #991B1B; border-left: 3px solid #EF4444; }
+        .alert-success { background: #F0FDF4; color: #166534; border-left: 3px solid #10B981; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
     </style>
 </head>
 <body>
-<nav th:replace="~{layout/base :: navbar}"></nav>
 
-<main class="main">
+<!-- Sidebar -->
+<aside style="position:fixed;left:0;top:0;height:100%;width:256px;background:#0A2463;display:flex;flex-direction:column;padding:24px 0;z-index:50;box-shadow:4px 0 24px rgba(0,16,62,.15);">
+    <div style="padding:0 24px;margin-bottom:32px;">
+        <h1 style="color:white;font-size:1.4rem;font-weight:800;font-style:italic;letter-spacing:-.02em;">SR-Booking</h1>
+        <p style="color:#93c5fd;font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;opacity:.7;">Mobility Admin</p>
+    </div>
+    <nav style="flex:1;padding:0 8px;display:flex;flex-direction:column;gap:2px;">
+        <a class="sidebar-link" href="/admin/dashboard"><span class="material-symbols-outlined" style="font-size:20px;">dashboard</span>Dashboard</a>
+        <a class="sidebar-link" href="/admin/users"><span class="material-symbols-outlined" style="font-size:20px;">group</span>Quản lý Users</a>
+        <a class="sidebar-link" href="/admin/vehicles"><span class="material-symbols-outlined" style="font-size:20px;">directions_car</span>Quản lý Xe</a>
+        <a class="sidebar-link" href="/admin/sober-bookings"><span class="material-symbols-outlined" style="font-size:20px;">assignment</span>Quản lý Lái hộ</a>
+        <a class="sidebar-link" href="/admin/withdrawals"><span class="material-symbols-outlined" style="font-size:20px;">payments</span>Rút tiền</a>
+        <a class="sidebar-link active" href="/admin/pickup-points"><span class="material-symbols-outlined" style="font-size:20px;">location_on</span>Điểm đón</a>
+            <a class="sidebar-link" href="/admin/ratings"><span class="material-symbols-outlined" style="font-size:20px;">star</span>Đánh giá</a>
+        <a class="sidebar-link" href="/admin/realtime">
+            <span class="material-symbols-outlined" style="font-size:20px;">monitoring</span>Realtime
+            <span style="margin-left:auto;width:8px;height:8px;background:#4ade80;border-radius:50%;animation:pulse 1.5s infinite;"></span>
+        </a>
+    </nav>
+    <div style="padding:0 8px;border-top:1px solid rgba(255,255,255,.1);padding-top:12px;margin-top:8px;">
+        <a class="sidebar-link" href="/auth/logout" style="color:#fca5a5;" onmouseover="this.style.color='#f87171'" onmouseout="this.style.color='#fca5a5'">
+            <span class="material-symbols-outlined" style="font-size:18px;">logout</span>Đăng xuất
+        </a>
+    </div>
+</aside>
+
+<!-- Top Header -->
+<header style="position:fixed;top:0;right:0;width:calc(100% - 256px);height:64px;background:rgba(255,255,255,.85);backdrop-filter:blur(16px);display:flex;justify-content:space-between;align-items:center;padding:0 32px;z-index:40;border-bottom:1px solid #f0eef5;">
+    <div style="display:flex;align-items:center;gap:12px;">
+        <h2 style="font-weight:800;color:#0A2463;font-size:.95rem;">Quản lý Điểm đón</h2>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+        <a href="/admin/pickup-points/add" class="btn btn-primary" style="border-radius:20px;padding:.45rem 1.1rem;font-size:.8rem;">
+            <span class="material-symbols-outlined" style="font-size:16px;">add_location</span>Thêm điểm đón
+        </a>
+        <div style="width:34px;height:34px;border-radius:50%;background:#0A2463;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:12px;cursor:pointer;">AD</div>
+    </div>
+</header>
+
+<!-- Main -->
+<main style="margin-left:256px;padding:88px 32px 48px;">
     <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
     <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
 
-    <div class="page-header">
-        <h1 class="page-title">📍 Quản lý điểm đón</h1>
-        <a class="btn btn-primary" th:href="@{/admin/pickup-points/add}">➕ Thêm điểm đón</a>
+    <!-- Page title -->
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px;">
+        <div>
+            <h1 style="font-size:1.6rem;font-weight:800;color:#0A2463;margin-bottom:4px;">📍 Quản lý Điểm đón</h1>
+            <p style="color:#64748b;font-size:.875rem;">Quản lý các điểm đón xe của hệ thống</p>
+        </div>
     </div>
 
-    <div class="card">
-        <table>
-            <thead>
-            <tr>
-                <th>#</th>
-                <th>Tên điểm</th>
-                <th>Địa chỉ</th>
-                <th>Tọa độ</th>
-                <th>Trạng thái</th>
-                <th>Thao tác</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="p,iter : ${points}">
-                <td th:text="${iter.count}"></td>
-                <td th:text="${p.name}"></td>
-                <td th:text="${p.address}"></td>
-                <td th:text="${(p.latitude != null ? p.latitude : '—') + ' / ' + (p.longitude != null ? p.longitude : '—')}"></td>
-                <td>
-                    <span th:if="${p.isActive}" class="badge badge-active">ACTIVE</span>
-                    <span th:unless="${p.isActive}" class="badge badge-inactive">INACTIVE</span>
-                </td>
-                <td>
-                    <div class="action-group">
-                        <a class="btn btn-outline btn-sm" th:href="@{/admin/pickup-points/{id}/edit(id=${p.id})}">Sửa</a>
-                        <form th:if="${p.isActive}" th:action="@{/admin/pickup-points/{id}/delete(id=${p.id})}" method="post" onsubmit="return confirm('Ẩn điểm đón này?')" style="display:inline;">
-                            <button class="btn btn-danger btn-sm" type="submit">Ẩn</button>
-                        </form>
-                        <form th:unless="${p.isActive}" th:action="@{/admin/pickup-points/{id}/activate(id=${p.id})}" method="post" style="display:inline;">
-                            <button class="btn btn-primary btn-sm" type="submit">Mở</button>
-                        </form>
-                    </div>
-                </td>
-            </tr>
-            <tr th:if="${#lists.isEmpty(points)}">
-                <td colspan="6" style="text-align:center; color:#64748b; padding:1.5rem;">Chưa có điểm đón nào.</td>
-            </tr>
-            </tbody>
-        </table>
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px;margin-bottom:24px;">
+        <div style="background:white;border-radius:16px;padding:20px;text-align:center;border:1px solid #f0eef5;box-shadow:0 2px 8px rgba(0,16,62,.04);">
+            <div style="font-size:1.8rem;font-weight:800;color:#0A2463;" th:text="${points.size()}">0</div>
+            <div style="font-size:.78rem;color:#64748b;font-weight:600;margin-top:4px;">Tổng điểm đón</div>
+        </div>
+        <div style="background:white;border-radius:16px;padding:20px;text-align:center;border:1px solid #f0eef5;box-shadow:0 2px 8px rgba(0,16,62,.04);">
+            <div style="font-size:1.8rem;font-weight:800;color:#065f46;" th:text="${#lists.size(points.?[isActive])}">0</div>
+            <div style="font-size:.78rem;color:#64748b;font-weight:600;margin-top:4px;">Đang hoạt động</div>
+        </div>
+        <div style="background:white;border-radius:16px;padding:20px;text-align:center;border:1px solid #f0eef5;box-shadow:0 2px 8px rgba(0,16,62,.04);">
+            <div style="font-size:1.8rem;font-weight:800;color:#991b1b;" th:text="${#lists.size(points.?[!isActive])}">0</div>
+            <div style="font-size:.78rem;color:#64748b;font-weight:600;margin-top:4px;">Đã ẩn</div>
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div style="background:white;border-radius:20px;overflow:hidden;border:1px solid #f0eef5;box-shadow:0 4px 16px rgba(0,16,62,.05);">
+        <div style="padding:16px 20px;border-bottom:1px solid #f0eef5;display:flex;align-items:center;gap:12px;">
+            <div style="position:relative;flex:1;max-width:400px;">
+                <span class="material-symbols-outlined" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:18px;color:#94a3b8;">search</span>
+                <input type="text" id="searchInput" placeholder="Tìm điểm đón…" oninput="filterTable(this.value)"
+                    style="width:100%;padding:.55rem .9rem .55rem 2.4rem;border:1.5px solid #e9e7ed;border-radius:10px;font-size:.875rem;font-family:inherit;outline:none;transition:border-color .2s;"
+                    onfocus="this.style.borderColor='#0A2463'" onblur="this.style.borderColor='#e9e7ed'">
+            </div>
+        </div>
+        <div style="overflow-x:auto;">
+            <table id="pointsTable">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Tên điểm</th>
+                    <th>Địa chỉ</th>
+                    <th>Tọa độ</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="p,iter : ${points}">
+                    <td style="color:#94a3b8;font-weight:600;font-size:.8rem;" th:text="${iter.count}"></td>
+                    <td style="font-weight:600;" th:text="${p.name}"></td>
+                    <td style="color:#64748b;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" th:text="${p.address}" th:title="${p.address}"></td>
+                    <td style="font-size:.8rem;color:#64748b;" th:text="${(p.latitude != null ? p.latitude : '—') + ' / ' + (p.longitude != null ? p.longitude : '—')}"></td>
+                    <td>
+                        <span th:if="${p.isActive}" class="badge badge-active">ACTIVE</span>
+                        <span th:unless="${p.isActive}" class="badge badge-inactive">INACTIVE</span>
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:4px;flex-wrap:nowrap;">
+                            <a class="btn btn-outline btn-sm" th:href="@{/admin/pickup-points/{id}/edit(id=${p.id})}" title="Sửa">
+                                <span class="material-symbols-outlined" style="font-size:15px;">edit</span>
+                            </a>
+                            <form th:if="${p.isActive}" th:action="@{/admin/pickup-points/{id}/delete(id=${p.id})}" method="post" onsubmit="return confirm('Ẩn điểm đón này?')" style="display:inline;">
+                                <button class="btn btn-danger btn-sm" type="submit" title="Ẩn">
+                                    <span class="material-symbols-outlined" style="font-size:15px;">visibility_off</span>
+                                </button>
+                            </form>
+                            <form th:unless="${p.isActive}" th:action="@{/admin/pickup-points/{id}/activate(id=${p.id})}" method="post" style="display:inline;">
+                                <button class="btn btn-primary btn-sm" type="submit" title="Mở lại">
+                                    <span class="material-symbols-outlined" style="font-size:15px;">visibility</span>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(points)}">
+                    <td colspan="6" style="text-align:center;color:#94a3b8;padding:3rem;font-size:.9rem;">Chưa có điểm đón nào.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </main>
+
+<script>
+function filterTable(query) {
+    const q = query.toLowerCase();
+    document.querySelectorAll('#pointsTable tbody tr').forEach(tr => {
+        tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+}
+</script>
 </body>
 </html>

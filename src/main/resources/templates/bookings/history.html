@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch sử đặt xe</title>
+    <style th:replace="~{layout/base :: head}"></style>
+    <style>
+        .velocity-gradient {
+            background: linear-gradient(135deg, #0A2463 0%, #1a3a7a 50%, #fe6a34 100%);
+        }
+        .sober-gradient {
+            background: linear-gradient(135deg, #7C3AED 0%, #A855F7 50%, #C084FC 100%);
+        }
+        .driver-gradient {
+            background: linear-gradient(135deg, #059669 0%, #10B981 50%, #34D399 100%);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<nav th:replace="~{layout/base :: navbar}"></nav>
+
+<main class="max-w-7xl mx-auto px-6 pt-28 pb-16">
+
+    <!-- Page Header -->
+    <div class="flex flex-wrap justify-between items-center gap-4 mb-8">
+        <div>
+            <h1 class="text-3xl font-extrabold text-primary-container tracking-tight">Lịch sử đặt xe</h1>
+            <p class="text-sm text-on-surface-variant mt-1">Xem lại tất cả các chuyến đi đã đặt của bạn</p>
+        </div>
+        <a th:href="@{/bookings/options}"
+           class="px-6 py-2.5 bg-primary-container text-white rounded-lg text-sm font-bold hover:scale-105 transition-all active:scale-95 shadow-lg shadow-primary-container/20">
+            <span class="material-symbols-outlined text-sm align-middle mr-1">add</span> Đặt xe mới
+        </a>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="grid grid-cols-3 gap-4 mb-8">
+        <div class="bg-white rounded-xl p-5 border border-white shadow-[0_4px_24px_rgba(0,16,62,0.06)] relative overflow-hidden">
+            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#0A2463] to-[#7C3AED]"></div>
+            <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">Tổng đơn</p>
+            <p class="text-3xl font-black text-primary-container" th:text="${totalBookings}">0</p>
+        </div>
+        <div class="bg-white rounded-xl p-5 border border-white shadow-[0_4px_24px_rgba(0,16,62,0.06)] relative overflow-hidden">
+            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#0EA5E9] to-[#06B6D4]"></div>
+            <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">Thuê xe</p>
+            <p class="text-3xl font-black text-[#0EA5E9]" th:text="${#lists.size(rentals)}">0</p>
+        </div>
+        <div class="bg-white rounded-xl p-5 border border-white shadow-[0_4px_24px_rgba(0,16,62,0.06)] relative overflow-hidden">
+            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#059669] to-[#34D399]"></div>
+            <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">Đặt tài xế</p>
+            <p class="text-3xl font-black text-[#059669]" th:text="${#lists.size(driverBookings)}">0</p>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="flex flex-wrap gap-2 mb-8">
+        <button class="tab-filter px-6 py-2.5 rounded-full text-sm font-medium transition-colors"
+                data-tab="all"
+                th:classappend="${activeTab == 'all' ? 'bg-primary-container text-white' : 'bg-slate-100 text-on-surface-variant hover:bg-slate-200'}"
+                onclick="switchTab('all')">
+            Tất cả
+        </button>
+        <button class="tab-filter px-6 py-2.5 rounded-full text-sm font-medium transition-colors"
+                data-tab="rental"
+                th:classappend="${activeTab == 'rental' ? 'bg-primary-container text-white' : 'bg-slate-100 text-on-surface-variant hover:bg-slate-200'}"
+                onclick="switchTab('rental')">
+            Thuê xe
+        </button>
+        <button class="tab-filter px-6 py-2.5 rounded-full text-sm font-medium transition-colors"
+                data-tab="driver"
+                th:classappend="${activeTab == 'driver' ? 'bg-primary-container text-white' : 'bg-slate-100 text-on-surface-variant hover:bg-slate-200'}"
+                onclick="switchTab('driver')">
+            Đặt tài xế
+        </button>
+    </div>
+
+    <!-- Empty State -->
+    <div th:if="${totalBookings == 0}" class="bg-white rounded-xl shadow-[0_4px_24px_rgba(0,16,62,0.06)] border border-white p-16 text-center">
+        <span class="material-symbols-outlined text-6xl text-slate-200" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+        <p class="text-lg font-bold text-primary-container mt-4">Chưa có đơn đặt xe nào</p>
+        <p class="text-sm text-on-surface-variant mt-1">Hãy đặt chuyến đi đầu tiên ngay!</p>
+        <a th:href="@{/bookings/options}" class="inline-block mt-6 px-8 py-3 bg-primary-container text-white rounded-lg text-sm font-bold hover:scale-105 transition-all">Đặt xe ngay</a>
+    </div>
+
+    <!-- Booking List -->
+    <div class="space-y-6" th:if="${totalBookings > 0}">
+
+        <!-- ═══════ VEHICLE RENTAL CARDS ═══════ -->
+        <div th:each="r : ${rentals}" class="booking-item" data-type="rental">
+            <div class="bg-white rounded-xl shadow-[0_4px_24px_rgba(0,16,62,0.06)] overflow-hidden border border-white">
+                <div class="p-6">
+                    <!-- Header: ID + Type Badge + Status -->
+                    <div class="flex flex-wrap justify-between items-start gap-4 mb-6">
+                        <div class="flex items-center gap-3">
+                            <span class="text-lg font-bold text-primary-container" th:text="'#R-' + ${r.id}">#R-1</span>
+                            <span class="px-3 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-wider rounded-full">THUÊ XE</span>
+                            <span class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full"
+                                  th:classappend="${r.status.name() == 'PENDING' ? 'bg-amber-50 text-amber-700' :
+                                                   (r.status.name() == 'CONFIRMED' or r.status.name() == 'ACTIVE') ? 'bg-blue-50 text-blue-700' :
+                                                   r.status.name() == 'COMPLETED' ? 'bg-emerald-50 text-emerald-700' :
+                                                   'bg-red-50 text-red-700'}"
+                                  th:text="${r.status}">STATUS</span>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] text-slate-400 font-medium uppercase"
+                               th:text="'Ngày tạo: ' + ${r.createdAt != null ? r.createdAt.toString().replace('T', ' ').substring(0, 16) : 'N/A'}">Ngày tạo</p>
+                        </div>
+                    </div>
+
+                    <!-- 3-Column Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        <!-- Col 1: Vehicle Image + Info -->
+                        <div class="lg:col-span-4 flex gap-4">
+                            <img th:if="${r.vehicle != null and r.vehicle.imageUrl != null and !#strings.isEmpty(r.vehicle.imageUrl)}"
+                                 th:src="${r.vehicle.imageUrl}"
+                                 th:alt="${r.vehicle.name}"
+                                 class="w-24 h-24 rounded-lg object-cover shadow-sm flex-shrink-0"/>
+                            <div th:if="${r.vehicle == null or r.vehicle.imageUrl == null or #strings.isEmpty(r.vehicle.imageUrl)}"
+                                 class="w-24 h-24 rounded-lg velocity-gradient flex items-center justify-center shadow-lg flex-shrink-0">
+                                <span class="material-symbols-outlined text-white text-4xl">directions_car</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-primary-container text-lg" th:text="${r.vehicle != null ? r.vehicle.name : 'N/A'}">Vehicle</h3>
+                                <div class="flex items-center gap-2 mt-2">
+                                    <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-xs text-slate-500">person</span>
+                                    </div>
+                                    <span class="text-sm text-on-surface-variant font-medium" th:text="'Tài xế: ' + ${r.driver != null ? r.driver.fullName : 'Chưa có'}">Driver</span>
+                                </div>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="material-symbols-outlined text-sm text-secondary-container">schedule</span>
+                                    <span class="text-xs text-slate-500"
+                                          th:text="${(r.plannedStart != null ? r.plannedStart.toString().replace('T', ' ').substring(0, 16) : '') + ' → ' + (r.plannedEnd != null ? r.plannedEnd.toString().replace('T', ' ').substring(0, 16) : '')}">Time</span>
+                                </div>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="material-symbols-outlined text-sm text-slate-400">sell</span>
+                                    <span class="text-xs text-slate-500" th:text="${r.rentalMode.name() == 'WITH_DRIVER' ? 'Có tài xế' : 'Tự lái'} + ' · ' + ${r.rentalType.name() == 'HOURLY' ? 'Theo giờ' : 'Theo ngày'}">Mode</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Col 2: Location -->
+                        <div class="lg:col-span-5 border-l-0 lg:border-l border-slate-100 lg:pl-8">
+                            <div class="flex gap-3">
+                                <div class="flex flex-col items-center gap-1">
+                                    <span class="material-symbols-outlined text-secondary-container text-lg" style="font-variation-settings: 'FILL' 1;">location_on</span>
+                                    <div class="w-0.5 h-8 bg-slate-200"></div>
+                                    <span class="material-symbols-outlined text-primary-container text-lg">flag</span>
+                                </div>
+                                <div class="space-y-4">
+                                    <div>
+                                        <p class="text-[10px] uppercase font-bold text-slate-400 tracking-tighter leading-none mb-1">Điểm đón</p>
+                                        <p class="text-sm font-medium text-on-surface" th:text="${r.pickupAddress ?: 'N/A'}">Pickup</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] uppercase font-bold text-slate-400 tracking-tighter leading-none mb-1">Thời gian</p>
+                                        <p class="text-sm font-medium text-on-surface"
+                                           th:text="${(r.plannedStart != null ? r.plannedStart.toString().replace('T', ' ').substring(0, 16) : 'N/A') + ' → ' + (r.plannedEnd != null ? r.plannedEnd.toString().replace('T', ' ').substring(0, 16) : 'N/A')}">Time range</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Col 3: Price + Payment -->
+                        <div class="lg:col-span-3 flex flex-col justify-between items-end">
+                            <div class="text-right">
+                                <span class="text-2xl font-black text-primary-container" th:text="${#numbers.formatDecimal(r.totalPrice, 0, 'COMMA', 0, 'POINT') + 'đ'}">0đ</span>
+                                <div class="flex items-center justify-end gap-1.5 mt-1">
+                                    <span class="w-1.5 h-1.5 rounded-full" th:classappend="${r.paymentStatus.name() == 'PAID' ? 'bg-emerald-500' : 'bg-amber-500'}"></span>
+                                    <span class="text-xs font-bold uppercase"
+                                          th:classappend="${r.paymentStatus.name() == 'PAID' ? 'text-emerald-600' : 'text-amber-600'}"
+                                          th:text="${r.paymentStatus.name() == 'PAID' ? 'Đã TT' : 'Chưa TT'}">Payment</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="mt-6 flex justify-end gap-3">
+                        <!-- Pay Button for COMPLETED + unpaid -->
+                        <form th:if="${r.status.name() == 'COMPLETED' and r.paymentStatus.name() != 'PAID'}"
+                              th:action="@{/booking-history/{id}/pay(id=${r.id})}" method="post"
+                              onsubmit="return confirm('Xác nhận thanh toán đơn thuê xe #' + this.closest('.booking-item').querySelector('.text-primary-container').textContent.trim() + '?')">
+                            <button type="submit" class="px-5 py-2.5 bg-emerald-500 text-white rounded-lg text-sm font-bold hover:bg-emerald-600 active:scale-95 transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20">
+                                <span class="material-symbols-outlined text-sm">payments</span>
+                                Thanh toán
+                            </button>
+                        </form>
+                        <!-- Cancel Button for PENDING/CONFIRMED -->
+                        <form th:if="${r.status.name() == 'PENDING' or r.status.name() == 'CONFIRMED'}"
+                              th:action="@{/booking-history/{id}/cancel(id=${r.id})}" method="post"
+                              onsubmit="return confirm('Bạn có chắc muốn hủy đơn thuê xe #' + this.closest('.booking-item').querySelector('.text-primary-container').textContent.trim() + '?')">
+                            <button type="submit" class="px-5 py-2.5 bg-red-500 text-white rounded-lg text-sm font-bold hover:bg-red-600 active:scale-95 transition-all flex items-center gap-2 shadow-lg shadow-red-500/20">
+                                <span class="material-symbols-outlined text-sm">cancel</span>
+                                Hủy đơn
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Cancel Reason -->
+                    <div th:if="${r.cancelReason != null and !#strings.isEmpty(r.cancelReason)}"
+                         class="mt-6 p-4 bg-red-50/60 rounded-lg flex items-start gap-3 border border-red-100">
+                        <span class="material-symbols-outlined text-red-500 text-lg">info</span>
+                        <div>
+                            <p class="text-xs font-bold text-red-600 uppercase mb-0.5">Lý do hủy</p>
+                            <p class="text-xs text-red-700 leading-relaxed" th:text="${r.cancelReason}">Reason</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- ═══════ DRIVER BOOKING CARDS ═══════ -->
+        <div th:each="db : ${driverBookings}" class="booking-item" data-type="driver">
+            <div class="bg-white rounded-xl shadow-[0_4px_24px_rgba(0,16,62,0.06)] overflow-hidden border border-white">
+                <div class="p-6">
+                    <!-- Header -->
+                    <div class="flex flex-wrap justify-between items-start gap-4 mb-6">
+                        <div class="flex items-center gap-3">
+                            <span class="text-lg font-bold text-primary-container" th:text="'#D-' + ${db.id}">#D-1</span>
+                            <span class="px-3 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-wider rounded-full">ĐẶT TÀI XẾ</span>
+                            <span class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full"
+                                  th:classappend="${db.status.name() == 'FINDING_DRIVER' ? 'bg-amber-50 text-amber-700' :
+                                                   (db.status.name() == 'ACCEPTED' or db.status.name() == 'PICKING_UP' or db.status.name() == 'IN_PROGRESS') ? 'bg-blue-50 text-blue-700' :
+                                                   db.status.name() == 'COMPLETED' ? 'bg-emerald-50 text-emerald-700' :
+                                                   'bg-red-50 text-red-700'}"
+                                  th:text="${db.status}">STATUS</span>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] text-slate-400 font-medium uppercase"
+                               th:text="'Ngày tạo: ' + ${db.createdAt != null ? db.createdAt.toString().replace('T', ' ').substring(0, 16) : 'N/A'}">Ngày tạo</p>
+                        </div>
+                    </div>
+
+                    <!-- 3 Column Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        <!-- Col 1: Icon + Info -->
+                        <div class="lg:col-span-4 flex gap-4">
+                            <div class="w-24 h-24 rounded-lg driver-gradient flex items-center justify-center shadow-lg flex-shrink-0">
+                                <span class="material-symbols-outlined text-white text-4xl">two_wheeler</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-primary-container text-lg">Đặt tài xế</h3>
+                                <div class="flex items-center gap-2 mt-2">
+                                    <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-xs text-slate-500">person</span>
+                                    </div>
+                                    <span class="text-sm text-on-surface-variant font-medium" th:text="'Tài xế: ' + ${db.driver != null ? db.driver.fullName : 'Đang tìm...'}">Driver</span>
+                                </div>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="material-symbols-outlined text-sm text-slate-400">sell</span>
+                                    <span class="text-xs text-slate-500" th:text="${db.vehicleType}">Category</span>
+                                </div>
+                                <div th:if="${db.distanceKm != null}" class="flex items-center gap-2 mt-1">
+                                    <span class="material-symbols-outlined text-sm text-secondary-container">straighten</span>
+                                    <span class="text-xs text-slate-500" th:text="${db.distanceKm + ' km'}">Distance</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Col 2: Route -->
+                        <div class="lg:col-span-5 border-l-0 lg:border-l border-slate-100 lg:pl-8">
+                            <div class="flex gap-3">
+                                <div class="flex flex-col items-center gap-1">
+                                    <span class="material-symbols-outlined text-secondary-container text-lg" style="font-variation-settings: 'FILL' 1;">location_on</span>
+                                    <div class="w-0.5 h-8 bg-slate-200"></div>
+                                    <span class="material-symbols-outlined text-primary-container text-lg">flag</span>
+                                </div>
+                                <div class="space-y-4">
+                                    <div>
+                                        <p class="text-[10px] uppercase font-bold text-slate-400 tracking-tighter leading-none mb-1">Điểm đón</p>
+                                        <p class="text-sm font-medium text-on-surface" th:text="${db.pickupAddress ?: 'N/A'}">Pickup</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] uppercase font-bold text-slate-400 tracking-tighter leading-none mb-1">Điểm đến</p>
+                                        <p class="text-sm font-medium text-on-surface" th:text="${db.destination ?: 'N/A'}">Destination</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Col 3: Price -->
+                        <div class="lg:col-span-3 flex flex-col justify-between items-end">
+                            <div class="text-right">
+                                <span class="text-2xl font-black text-primary-container"
+                                      th:text="${db.totalPrice != null ? #numbers.formatDecimal(db.totalPrice, 0, 'COMMA', 0, 'POINT') + 'đ' : 'Đang tính'}">0đ</span>
+                                <div class="flex items-center justify-end gap-1.5 mt-1">
+                                    <span class="w-1.5 h-1.5 rounded-full" th:classappend="${db.paymentStatus.name() == 'PAID' ? 'bg-emerald-500' : 'bg-amber-500'}"></span>
+                                    <span class="text-xs font-bold uppercase"
+                                          th:classappend="${db.paymentStatus.name() == 'PAID' ? 'text-emerald-600' : 'text-amber-600'}"
+                                          th:text="${db.paymentStatus.name() == 'PAID' ? 'Đã TT' : 'Chưa TT'}">Payment</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cancel Reason -->
+                    <div th:if="${db.cancelReason != null and !#strings.isEmpty(db.cancelReason)}"
+                         class="mt-6 p-4 bg-red-50/60 rounded-lg flex items-start gap-3 border border-red-100">
+                        <span class="material-symbols-outlined text-red-500 text-lg">info</span>
+                        <div>
+                            <p class="text-xs font-bold text-red-600 uppercase mb-0.5">Lý do hủy</p>
+                            <p class="text-xs text-red-700 leading-relaxed" th:text="${db.cancelReason}">Reason</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<script>
+    function switchTab(tabName) {
+        // Update tab buttons
+        document.querySelectorAll('.tab-filter').forEach(btn => {
+            if (btn.dataset.tab === tabName) {
+                btn.classList.remove('bg-slate-100', 'text-on-surface-variant', 'hover:bg-slate-200');
+                btn.classList.add('bg-primary-container', 'text-white');
+            } else {
+                btn.classList.remove('bg-primary-container', 'text-white');
+                btn.classList.add('bg-slate-100', 'text-on-surface-variant', 'hover:bg-slate-200');
+            }
+        });
+
+        // Filter booking cards
+        document.querySelectorAll('.booking-item').forEach(item => {
+            if (tabName === 'all' || item.dataset.type === tabName) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        // Update URL
+        const url = new URL(window.location);
+        url.searchParams.set('tab', tabName);
+        history.replaceState(null, '', url);
+    }
+
+    // Initialize tab filter on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const params = new URLSearchParams(window.location.search);
+        const tab = params.get('tab') || 'all';
+        switchTab(tab);
+    });
+</script>
+</body>
+</html>

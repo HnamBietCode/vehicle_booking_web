@@ -35,20 +35,38 @@ public class AuthService {
      * @return thông báo lỗi nếu thất bại, null nếu thành công.
      */
     public String register(RegisterForm form) {
-        // Validate
+        // ─── Validate chung ────────────────────────────────────────
         if (form.getFullName() == null || form.getFullName().isBlank())
             return "Họ tên không được để trống.";
+        if (form.getFullName().trim().length() < 2)
+            return "Họ tên phải có ít nhất 2 ký tự.";
+        if (form.getFullName().trim().length() > 100)
+            return "Họ tên không được vượt quá 100 ký tự.";
+
         if (form.getEmail() == null || form.getEmail().isBlank())
             return "Email không được để trống.";
+        if (form.getEmail().trim().length() > 100)
+            return "Email không được vượt quá 100 ký tự.";
+        if (!form.getEmail().trim().matches("^[\\w.%+-]+@[\\w.-]+\\.[a-zA-Z]{2,}$"))
+            return "Email không đúng định dạng.";
+
         if (form.getPhone() == null || form.getPhone().isBlank())
             return "Số điện thoại không được để trống.";
+        String phone = form.getPhone().trim().replaceAll("\\s+", "");
+        if (!phone.matches("^0[0-9]{9,10}$"))
+            return "Số điện thoại không hợp lệ (phải bắt đầu bằng 0, gồm 10-11 chữ số).";
+        form.setPhone(phone); // normalize
+
         if (form.getPassword() == null || form.getPassword().length() < 6)
             return "Mật khẩu phải từ 6 ký tự trở lên.";
+        if (form.getPassword().length() > 50)
+            return "Mật khẩu không được vượt quá 50 ký tự.";
         if (!form.getPassword().equals(form.getConfirmPassword()))
             return "Xác nhận mật khẩu không khớp.";
-        if (userRepository.existsByEmail(form.getEmail()))
+
+        if (userRepository.existsByEmail(form.getEmail().trim().toLowerCase()))
             return "Email đã được sử dụng.";
-        if (userRepository.existsByPhone(form.getPhone()))
+        if (userRepository.existsByPhone(phone))
             return "Số điện thoại đã được sử dụng.";
 
         Role role;
@@ -74,6 +92,9 @@ public class AuthService {
 
             if (form.getDriverLicense() == null || form.getDriverLicense().isBlank()) {
                 return "Bằng lái xe không được để trống.";
+            }
+            if (form.getDriverLicense().trim().length() > 12) {
+                return "Số bằng lái xe không được vượt quá 12 ký tự.";
             }
             if (form.getLicenseExpiry() == null) {
                 return "Ngày hết hạn bằng lái không được để trống.";

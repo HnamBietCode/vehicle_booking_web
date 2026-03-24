@@ -12,6 +12,7 @@ public class ProfileEditForm {
     private String driverLicense;
     private String vehicleTypes;
     private LocalDate licenseExpiry;
+    private String licenseClass;
 
     // Getters & Setters
     public String getFullName() { return fullName; }
@@ -37,4 +38,7 @@ public class ProfileEditForm {
 
     public LocalDate getLicenseExpiry() { return licenseExpiry; }
     public void setLicenseExpiry(LocalDate licenseExpiry) { this.licenseExpiry = licenseExpiry; }
+
+    public String getLicenseClass() { return licenseClass; }
+    public void setLicenseClass(String licenseClass) { this.licenseClass = licenseClass; }
 }

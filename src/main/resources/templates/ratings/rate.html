@@ -1,12 +1,11 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Đánh giá – VehicleBook</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style th:replace="~{layout/base :: head}"></style>
     <style>
         *,
         *::before,
@@ -239,10 +238,10 @@
     </style>
 </head>
 
-<body>
+<body class="bg-background text-on-surface">
     <nav th:replace="~{layout/base :: navbar}"></nav>
 
-    <main class="main">
+    <main class="main" style="padding-top:7rem;">
         <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
         <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
 

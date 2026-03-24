@@ -5,40 +5,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Thông báo – VehicleBook</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style th:replace="~{layout/base :: head}"></style>
     <style>
-        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-        :root{--primary:#4F46E5;--accent:#F59E0B;--border:#E2E8F0;--bg:#F8FAFC;--surface:#fff;--muted:#64748B;--text:#1E293B;--radius:12px}
-        body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text)}
-        .main{max-width:720px;margin:2rem auto;padding:0 1.5rem}
-        h1{font-size:1.5rem;font-weight:700;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
-        h1 span{font-size:1.8rem}
-        .header-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem}
-        .btn{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem 1.1rem;border:none;border-radius:8px;font-size:.875rem;font-weight:600;cursor:pointer;text-decoration:none;transition:all .2s}
-        .btn-primary{background:var(--primary);color:#fff}
-        .btn-primary:hover{filter:brightness(1.1)}
-        .btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--muted)}
-        .btn-outline:hover{border-color:var(--primary);color:var(--primary)}
-        .badge{display:inline-flex;align-items:center;justify-content:center;background:#EF4444;color:#fff;font-size:.7rem;font-weight:700;min-width:20px;height:20px;border-radius:10px;padding:0 6px}
-
-        .notif-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:.75rem;transition:all .2s;cursor:pointer;position:relative}
-        .notif-card:hover{border-color:var(--primary);box-shadow:0 2px 12px rgba(79,70,229,.1)}
-        .notif-card.unread{border-left:4px solid var(--primary);background:#F8F7FF}
+        .notif-main{max-width:720px;margin:0 auto;padding:0 1.5rem}
+        .notif-card{background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:1rem 1.25rem;margin-bottom:.75rem;transition:all .2s;cursor:pointer;position:relative}
+        .notif-card:hover{border-color:#4F46E5;box-shadow:0 2px 12px rgba(79,70,229,.1)}
+        .notif-card.unread{border-left:4px solid #4F46E5;background:#F8F7FF}
         .notif-card .title{font-weight:600;font-size:.95rem;margin-bottom:.25rem}
-        .notif-card .body{font-size:.85rem;color:var(--muted);line-height:1.5}
-        .notif-card .time{font-size:.75rem;color:var(--muted);margin-top:.4rem}
-        .notif-card .dot{position:absolute;top:1rem;right:1rem;width:8px;height:8px;border-radius:50%;background:var(--primary)}
-
-        .empty-state{text-align:center;padding:3rem;color:var(--muted)}
+        .notif-card .body{font-size:.85rem;color:#64748B;line-height:1.5}
+        .notif-card .time{font-size:.75rem;color:#64748B;margin-top:.4rem}
+        .notif-card .dot{position:absolute;top:1rem;right:1rem;width:8px;height:8px;border-radius:50%;background:#4F46E5}
+        .empty-state{text-align:center;padding:3rem;color:#64748B}
         .empty-state .big-icon{font-size:3rem;margin-bottom:.75rem}
     </style>
 </head>
 
-<body>
+<body class="bg-background text-on-surface">
     <nav th:replace="~{layout/base :: navbar}"></nav>
 
-    <main class="main">
+    <main class="notif-main pt-28 pb-16">
         <div class="header-bar">
             <h1><span>🔔</span> Thông báo <span class="badge" th:if="${unreadCount > 0}" th:text="${unreadCount}"></span></h1>
             <button class="btn btn-outline" id="markAllRead" th:if="${unreadCount > 0}">✓ Đọc tất cả</button>

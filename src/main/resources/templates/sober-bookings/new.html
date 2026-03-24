@@ -5,78 +5,8 @@
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Sober Driver | SR-Booking</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;300;400;500;600;700;800;900&amp;display=swap"
-        rel="stylesheet" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-        rel="stylesheet" />
+    <style th:replace="~{layout/base :: head}"></style>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "error-container": "#ffdad6",
-                        "on-primary-fixed-variant": "#2e4382",
-                        "tertiary-fixed-dim": "#7ad7c6",
-                        "outline": "#757681",
-                        "on-error-container": "#93000a",
-                        "secondary-fixed-dim": "#ffb59d",
-                        "background": "#faf8ff",
-                        "surface-container-lowest": "#ffffff",
-                        "surface-container-high": "#e9e7ed",
-                        "tertiary-fixed": "#97f3e2",
-                        "surface-variant": "#e3e2e8",
-                        "on-surface": "#1b1b20",
-                        "surface-container": "#efedf3",
-                        "inverse-primary": "#b5c4ff",
-                        "primary": "#00103e",
-                        "on-primary-fixed": "#00164d",
-                        "surface": "#faf8ff",
-                        "on-tertiary-container": "#409f90",
-                        "surface-container-highest": "#e3e2e8",
-                        "tertiary-container": "#002f29",
-                        "on-surface-variant": "#444650",
-                        "on-primary-container": "#7a8ed2",
-                        "surface-dim": "#dbd9df",
-                        "surface-container-low": "#f5f3f9",
-                        "secondary-fixed": "#ffdbd0",
-                        "error": "#ba1a1a",
-                        "surface-tint": "#475b9c",
-                        "on-tertiary-fixed": "#00201b",
-                        "primary-container": "#0a2463",
-                        "on-secondary-container": "#5d1900",
-                        "on-tertiary-fixed-variant": "#005047",
-                        "on-error": "#ffffff",
-                        "secondary": "#ab3500",
-                        "outline-variant": "#c5c6d2",
-                        "primary-fixed-dim": "#b5c4ff",
-                        "on-tertiary": "#ffffff",
-                        "inverse-surface": "#303035",
-                        "on-primary": "#ffffff",
-                        "on-background": "#1b1b20",
-                        "secondary-container": "#fe6a34",
-                        "inverse-on-surface": "#f2f0f6",
-                        "primary-fixed": "#dce1ff",
-                        "on-secondary-fixed": "#390c00",
-                        "on-secondary": "#ffffff",
-                        "surface-bright": "#faf8ff",
-                        "tertiary": "#001814",
-                        "on-secondary-fixed-variant": "#832600"
-                    },
-                    fontFamily: {
-                        "headline": ["Be Vietnam Pro"],
-                        "body": ["Be Vietnam Pro"],
-                        "label": ["Be Vietnam Pro"]
-                    },
-                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
-                },
-            },
-        }
-    </script>
     <style>
         .glass-panel {
             background: rgba(255, 255, 255, 0.8);
@@ -150,7 +80,7 @@
     </style>
 </head>
 
-<body class="bg-surface-container-low font-body text-on-surface min-h-screen relative">
+<body class="bg-background text-on-surface min-h-screen relative">
 
     <div th:if="${error}"
         class="fixed top-24 left-1/2 -translate-x-1/2 z-[100] bg-red-100 border border-red-400 text-red-700 px-6 py-3 rounded-xl shadow-lg font-medium text-sm"
@@ -159,38 +89,10 @@
         class="fixed top-24 left-1/2 -translate-x-1/2 z-[100] bg-green-100 border border-green-400 text-green-700 px-6 py-3 rounded-xl shadow-lg font-medium text-sm"
         th:text="${success}"></div>
 
-    <!-- TopAppBar -->
-    <header
-        class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 py-4 md:px-12 bg-[#0A2463] dark:bg-slate-950 shadow-[0_4px_24px_rgba(0,16,62,0.08)]">
-        <div class="flex items-center gap-8">
-            <h1 class="text-xl font-bold text-white dark:text-slate-100 font-headline tracking-tight">SR-Booking</h1>
-            <nav class="hidden md:flex items-center gap-8 ml-4">
-                <a class="text-white/80 hover:text-white transition-colors duration-300 text-sm font-medium"
-                    th:href="@{/}">Trang chủ</a>
-                <a class="text-white/80 hover:text-white transition-colors duration-300 text-sm font-medium"
-                    th:href="@{/vehicles/search}">Thuê xe</a>
-                <a class="text-[#FF6B35] border-b-2 border-[#FF6B35] pb-1 text-sm font-semibold relative"
-                    th:href="@{/sober-bookings/new}">Lái hộ</a>
-                <a class="text-white/80 hover:text-white transition-colors duration-300 text-sm font-medium"
-                    th:href="@{/wallet}">Ví</a>
-            </nav>
-        </div>
-        <div class="flex items-center gap-4">
-            <button class="p-2 text-white/80 hover:bg-white/10 rounded-full transition-colors relative">
-                <span class="material-symbols-outlined">notifications</span>
-            </button>
-            <div class="flex items-center gap-3 pl-2">
-                <div class="text-right hidden sm:block">
-                    <p class="text-xs text-white/60 font-medium">Xin chào,</p>
-                    <p class="text-sm text-white font-bold" th:text="${session.loggedUser?.email ?: 'Khách'}">Khách</p>
-                </div>
-                <span class="material-symbols-outlined text-white text-3xl"
-                    data-icon="account_circle">account_circle</span>
-            </div>
-        </div>
-    </header>
+    <!-- Shared Navbar -->
+    <nav th:replace="~{layout/base :: navbar}"></nav>
 
-    <main class="pt-24 pb-32 px-4 md:px-12 max-w-7xl mx-auto">
+    <main class="pt-28 pb-32 px-4 md:px-12 max-w-7xl mx-auto">
         <form id="bookingForm" th:action="@{/sober-bookings/new}" method="post" th:object="${booking}"
             class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <!-- Hero Section & Title -->
