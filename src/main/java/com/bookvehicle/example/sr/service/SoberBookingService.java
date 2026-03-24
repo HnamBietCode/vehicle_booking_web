@@ -41,6 +41,9 @@ public class SoberBookingService {
     @Autowired
     private GeocodingService geocodingService;
 
+    @Autowired
+    private NotificationService notificationService;
+
 
     @Transactional
     public SoberBooking createBooking(Long customerUserId, SoberBooking booking) {
@@ -92,7 +95,16 @@ public class SoberBookingService {
 
         // No auto-assign: tai xe se tu nhan don
         notifyAvailableDrivers(booking);
-        return soberBookingRepository.save(booking);
+        SoberBooking saved = soberBookingRepository.save(booking);
+        // In-app notification for customer
+        try {
+            notificationService.createNotification(
+                    customerUserId, "Đặt lái hộ thành công",
+                    "Đơn lái hộ #" + saved.getId() + " đã tạo. Đang chờ tài xế nhận đơn.",
+                    NotificationType.SOBER_CREATED,
+                    NotificationRefType.SOBER, saved.getId());
+        } catch (Exception ignored) {}
+        return saved;
     }
 
     private void notifyAvailableDrivers(SoberBooking booking) {
@@ -156,6 +168,17 @@ public class SoberBookingService {
                 "DRIVER_ACCEPTED",
                 "Tai xe da nhan don cua ban. Ban co the mo trang theo doi de doi vi tri."
         );
+        // In-app notification for customer
+        try {
+            Customer cust = customerRepository.findById(saved.getCustomerId()).orElse(null);
+            if (cust != null) {
+                notificationService.createNotification(
+                        cust.getUserId(), "Tài xế đã nhận đơn",
+                        "Đơn lái hộ #" + saved.getId() + " đã được tài xế " + driver.getFullName() + " nhận.",
+                        NotificationType.SOBER_ACCEPTED,
+                        NotificationRefType.SOBER, saved.getId());
+            }
+        } catch (Exception ignored) {}
         return saved;
     }
 
@@ -174,6 +197,17 @@ public class SoberBookingService {
                 "DRIVER_ARRIVED",
                 "Tai xe da toi diem don."
         );
+        // In-app notification for customer
+        try {
+            Customer cust = customerRepository.findById(saved.getCustomerId()).orElse(null);
+            if (cust != null) {
+                notificationService.createNotification(
+                        cust.getUserId(), "Tài xế đã đến",
+                        "Tài xế đã đến điểm đón cho đơn #" + saved.getId() + ".",
+                        NotificationType.SOBER_ARRIVED,
+                        NotificationRefType.SOBER, saved.getId());
+            }
+        } catch (Exception ignored) {}
         return saved;
     }
 
@@ -193,6 +227,17 @@ public class SoberBookingService {
                 "TRIP_STARTED",
                 "Chuyen di da bat dau."
         );
+        // In-app notification for customer
+        try {
+            Customer cust = customerRepository.findById(saved.getCustomerId()).orElse(null);
+            if (cust != null) {
+                notificationService.createNotification(
+                        cust.getUserId(), "Chuyến đi bắt đầu",
+                        "Đơn lái hộ #" + saved.getId() + " đã bắt đầu.",
+                        NotificationType.SOBER_STARTED,
+                        NotificationRefType.SOBER, saved.getId());
+            }
+        } catch (Exception ignored) {}
         return saved;
     }
 
@@ -221,6 +266,17 @@ public class SoberBookingService {
                 "TRIP_COMPLETED",
                 "Chuyen di da hoan thanh."
         );
+        // In-app notification for customer
+        try {
+            Customer cust = customerRepository.findById(saved.getCustomerId()).orElse(null);
+            if (cust != null) {
+                notificationService.createNotification(
+                        cust.getUserId(), "Chuyến đi hoàn thành",
+                        "Đơn lái hộ #" + saved.getId() + " đã hoàn thành. Vui lòng thanh toán.",
+                        NotificationType.SOBER_COMPLETED,
+                        NotificationRefType.SOBER, saved.getId());
+            }
+        } catch (Exception ignored) {}
         return saved;
     }
 
@@ -290,7 +346,24 @@ public class SoberBookingService {
         }
 
         booking.setPaymentStatus(PaymentStatus.PAID);
-        return soberBookingRepository.save(booking);
+        SoberBooking paidBooking = soberBookingRepository.save(booking);
+        // Notifications: customer + driver
+        try {
+            notificationService.createNotification(
+                    customerUserId, "Thanh toán thành công",
+                    "Đơn lái hộ #" + bookingId + " đã thanh toán thành công.",
+                    NotificationType.SOBER_PAID,
+                    NotificationRefType.SOBER, bookingId);
+            Driver drv = driverRepository.findById(paidBooking.getDriverId()).orElse(null);
+            if (drv != null) {
+                notificationService.createNotification(
+                        drv.getUserId(), "Nhận tiền chuyến đi",
+                        "Bạn đã nhận tiền cho đơn lái hộ #" + bookingId + ".",
+                        NotificationType.PAYMENT_DONE,
+                        NotificationRefType.SOBER, bookingId);
+            }
+        } catch (Exception ignored) {}
+        return paidBooking;
     }
 
     @Transactional
@@ -319,6 +392,17 @@ public class SoberBookingService {
                 "TRIP_CANCELLED",
                 "Tai xe da huy don. Vui long dat lai hoac lien he ho tro."
         );
+        // In-app notification for customer
+        try {
+            Customer cust = customerRepository.findById(saved.getCustomerId()).orElse(null);
+            if (cust != null) {
+                notificationService.createNotification(
+                        cust.getUserId(), "Đơn bị hủy bởi tài xế",
+                        "Đơn lái hộ #" + saved.getId() + " đã bị tài xế hủy. " + (reason != null ? "Lý do: " + reason : ""),
+                        NotificationType.SOBER_CANCELLED,
+                        NotificationRefType.SOBER, saved.getId());
+            }
+        } catch (Exception ignored) {}
         return saved;
     }
 
@@ -347,6 +431,14 @@ public class SoberBookingService {
                 "TRIP_CANCELLED",
                 "Don cua ban da duoc huy."
         );
+        // In-app notification for customer
+        try {
+            notificationService.createNotification(
+                    customerUserId, "Đã hủy đơn",
+                    "Đơn lái hộ #" + saved.getId() + " đã được hủy thành công.",
+                    NotificationType.SOBER_CANCELLED,
+                    NotificationRefType.SOBER, saved.getId());
+        } catch (Exception ignored) {}
         return saved;
     }
 

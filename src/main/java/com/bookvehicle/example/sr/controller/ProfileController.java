@@ -3,15 +3,10 @@ package com.bookvehicle.example.sr.controller;
 import com.bookvehicle.example.sr.config.SecurityUtil;
 import com.bookvehicle.example.sr.dto.ChangePasswordForm;
 import com.bookvehicle.example.sr.dto.ProfileEditForm;
-import com.bookvehicle.example.sr.model.Customer;
-import com.bookvehicle.example.sr.model.Driver;
 import com.bookvehicle.example.sr.model.Role;
 import com.bookvehicle.example.sr.model.User;
-import com.bookvehicle.example.sr.model.Vehicle;
-import com.bookvehicle.example.sr.model.RatingTargetType;
 import com.bookvehicle.example.sr.service.UserService;
 import com.bookvehicle.example.sr.service.VehicleService;
-import com.bookvehicle.example.sr.service.RatingService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -26,12 +21,10 @@ public class ProfileController {
 
     private final UserService userService;
     private final VehicleService vehicleService;
-    private final RatingService ratingService;
 
-    public ProfileController(UserService userService, VehicleService vehicleService, RatingService ratingService) {
+    public ProfileController(UserService userService, VehicleService vehicleService) {
         this.userService = userService;
         this.vehicleService = vehicleService;
-        this.ratingService = ratingService;
     }
 
     // ── Detail ────────────────────────────────────────────────────
@@ -40,6 +33,11 @@ public class ProfileController {
     public String detail(Model model, HttpSession session) {
         User user = SecurityUtil.getLoggedUser(session);
         model.addAttribute("user", user);
+
+        // Redirect drivers to their own profile page
+        if (user.getRole() == Role.DRIVER) {
+            return "redirect:/driver/profile";
+        }
 
         ProfileEditForm form = new ProfileEditForm();
         form.setPhone(user.getPhone());
@@ -51,22 +49,6 @@ public class ProfileController {
                            model.addAttribute("customer", c);
                            form.setFullName(c.getFullName());
                            form.setAddress(c.getAddress());
-                       });
-        } else if (user.getRole() == Role.DRIVER) {
-            userService.findDriverByUserId(user.getId())
-                       .ifPresent(d -> {
-                           model.addAttribute("driver", d);
-                           form.setFullName(d.getFullName());
-                           
-                           // Add Rating Stats
-                           int totalRatings = ratingService.findDriverRatings(d.getId()).size();
-                           Double avgRating = ratingService.getAvgRating(RatingTargetType.DRIVER, d.getId());
-                           model.addAttribute("totalRatings", totalRatings);
-                           model.addAttribute("avgRating", String.format("%.2f", avgRating));
-                           
-                           // Add Assigned Vehicle
-                           vehicleService.findByAssignedDriver(d.getId())
-                                         .ifPresent(v -> model.addAttribute("assignedVehicle", v));
                        });
         }
         

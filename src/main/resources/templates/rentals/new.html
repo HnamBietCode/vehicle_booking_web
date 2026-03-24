@@ -4,47 +4,12 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>VinaPulse - Thuê xe</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&amp;display=swap"
-        rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-        rel="stylesheet" />
+    <title>SR-Booking - Thuê xe</title>
+    <style th:replace="~{layout/base :: head}"></style>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary-container": "#0a2463",
-                        "on-primary-container": "#7a8ed2",
-                        "secondary-container": "#fe6a34",
-                        "background": "#faf8ff",
-                        "on-surface": "#1b1b20",
-                        "on-surface-variant": "#444650",
-                        "surface-container-low": "#f5f3f9",
-                        "surface-container-lowest": "#ffffff",
-                        "outline-variant": "#c5c6d2",
-                        "secondary": "#ab3500"
-                    },
-                    fontFamily: {
-                        "headline": ["Be Vietnam Pro"],
-                        "body": ["Be Vietnam Pro"]
-                    },
-                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1.5rem", "full": "9999px" },
-                },
-            },
-        }
-    </script>
     <style>
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-
-        body {
-            font-family: 'Be Vietnam Pro', sans-serif;
-            background-color: #faf8ff;
         }
 
         #map-preview {
@@ -133,7 +98,7 @@
                             <input type="radio" th:field="*{rentalType}" th:value="${t}" class="hidden" onchange="this.form.submit()">
                             <div class="flex flex-col items-center gap-1">
                                 <span class="font-semibold" th:classappend="${form.rentalType == t ? 'text-primary-container' : 'text-on-surface-variant'}" th:text="${t}">DAILY</span>
-                                <span class="text-[10px] text-on-surface-variant uppercase tracking-tighter" th:text="${t == 'DAILY' ? 'Theo ngày' : 'Theo giờ'}"></span>
+                                <span class="text-[10px] text-on-surface-variant uppercase tracking-tighter" th:text="${t.name() == 'DAILY' ? 'Theo ngày' : 'Theo giờ'}"></span>
                             </div>
                         </label>
                     </div>

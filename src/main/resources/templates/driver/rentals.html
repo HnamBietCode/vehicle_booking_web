@@ -92,6 +92,10 @@
                                     <button th:if="${rental.status.name() == 'ACTIVE'}" 
                                             th:onclick="'openCompleteModal(' + ${rental.id} + ')'"
                                             class="bg-on-tertiary-container text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:scale-105 active:scale-95 transition-all">Hoàn thành</button>
+                                    <!-- Cancel/Reject Button -->
+                                    <button th:if="${rental.status.name() == 'PENDING' or rental.status.name() == 'CONFIRMED' or rental.status.name() == 'ACTIVE'}" 
+                                            th:onclick="'openRejectModal(' + ${rental.id} + ')'"
+                                            class="bg-red-500/10 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-500/20 active:scale-95 transition-all">Hủy đơn</button>
                                 </div>
                             </td>
                         </tr>
@@ -148,6 +152,41 @@
         </div>
     </div>
 
+    <!-- Reject/Cancel Modal -->
+    <div id="rejectModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-all duration-300">
+        <div class="bg-white rounded-[24px] w-full max-w-md p-8 shadow-2xl scale-95 opacity-0 transition-all duration-300" id="rejectModalContainer">
+            <h3 class="text-2xl font-bold text-red-600 mb-2">Hủy đơn thuê xe</h3>
+            <p class="text-on-surface-variant text-sm mb-6">Vui lòng cho biết lý do bạn muốn hủy đơn này.</p>
+            
+            <form id="rejectForm" method="post">
+                <div class="space-y-3 mb-4">
+                    <label class="flex items-center gap-3 p-3 bg-surface-container rounded-xl cursor-pointer hover:bg-surface-container-low transition-colors">
+                        <input type="radio" name="reason" value="Tài xế bận, không thể nhận đơn." class="text-primary focus:ring-primary" required>
+                        <span class="text-sm">Tài xế bận, không thể nhận đơn</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-surface-container rounded-xl cursor-pointer hover:bg-surface-container-low transition-colors">
+                        <input type="radio" name="reason" value="Vị trí quá xa, không thuận tiện.">
+                        <span class="text-sm">Vị trí quá xa, không thuận tiện</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-surface-container rounded-xl cursor-pointer hover:bg-surface-container-low transition-colors">
+                        <input type="radio" name="reason" value="Xe gặp sự cố kỹ thuật.">
+                        <span class="text-sm">Xe gặp sự cố kỹ thuật</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-surface-container rounded-xl cursor-pointer hover:bg-surface-container-low transition-colors">
+                        <input type="radio" name="reason" value="other" id="otherReasonRadio">
+                        <span class="text-sm">Lý do khác</span>
+                    </label>
+                    <textarea id="otherReasonText" name="otherReasonText" class="hidden w-full px-4 py-3 bg-surface-container rounded-xl border-none focus:ring-2 focus:ring-primary transition-all text-sm h-24" placeholder="Nhập lý do cụ thể..."></textarea>
+                </div>
+                
+                <div class="flex gap-4 mt-6">
+                    <button type="button" onclick="closeRejectModal()" class="flex-1 px-4 py-3 bg-surface-variant text-on-surface-variant font-bold rounded-xl active:scale-95 transition-all text-sm">Bỏ qua</button>
+                    <button type="submit" class="flex-1 px-4 py-3 bg-red-600 text-white font-bold rounded-xl active:scale-95 shadow-lg shadow-red-600/20 transition-all text-sm">Xác nhận hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- BottomNavBar -->
     <nav th:replace="~{driver/fragments :: bottomnav('rentals')}"></nav>
 
@@ -174,6 +213,49 @@
                 modal.classList.add('hidden');
             }, 300);
         }
+
+        /* Reject Modal */
+        function openRejectModal(rentalId) {
+            const modal = document.getElementById('rejectModal');
+            const container = document.getElementById('rejectModalContainer');
+            const form = document.getElementById('rejectForm');
+            form.action = `/driver/rentals/${rentalId}/reject`;
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                container.classList.remove('scale-95', 'opacity-0');
+                container.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeRejectModal() {
+            const modal = document.getElementById('rejectModal');
+            const container = document.getElementById('rejectModalContainer');
+            container.classList.add('scale-95', 'opacity-0');
+            container.classList.remove('scale-100', 'opacity-100');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // Show/hide 'other reason' textarea
+        document.querySelectorAll('#rejectForm input[name="reason"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                const textarea = document.getElementById('otherReasonText');
+                textarea.classList.toggle('hidden', radio.value !== 'other');
+            });
+        });
+
+        // Override submit to handle 'other' reason
+        document.getElementById('rejectForm').addEventListener('submit', function(e) {
+            const selected = this.querySelector('input[name="reason"]:checked');
+            if (selected && selected.value === 'other') {
+                const text = document.getElementById('otherReasonText').value.trim();
+                if (!text) { e.preventDefault(); alert('Vui lòng nhập lý do.'); return; }
+                // Create hidden input with actual reason
+                selected.value = text;
+            }
+        });
     </script>
 </body>
 </html>

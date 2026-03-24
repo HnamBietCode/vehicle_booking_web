@@ -289,15 +289,15 @@
 
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-on-surface">Họ tên</label>
-                    <input th:field="*{fullName}" class="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="Nguyễn Văn A" type="text" required/>
+                    <input th:field="*{fullName}" class="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="Nguyễn Văn A" type="text" required minlength="2" maxlength="100"/>
                 </div>
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-on-surface">Số điện thoại</label>
-                    <input th:field="*{phone}" class="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="0901 234 567" type="tel" required/>
+                    <input th:field="*{phone}" class="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="0901234567" type="tel" required maxlength="11" pattern="0[0-9]{9,10}" title="Số điện thoại phải bắt đầu bằng 0, gồm 10-11 chữ số"/>
                 </div>
                 <div class="md:col-span-2 space-y-2">
                     <label class="text-sm font-semibold text-on-surface">Email</label>
-                    <input th:field="*{email}" class="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="example@gmail.com" type="email" required/>
+                    <input th:field="*{email}" class="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="example@gmail.com" type="email" required maxlength="100"/>
                 </div>
                 
                 <!-- Driver Specific Fields -->
@@ -309,11 +309,11 @@
                     </div>
                     <div class="space-y-2">
                         <label class="text-sm font-semibold text-on-surface" for="cccd">Số CCCD (12 số)</label>
-                        <input type="text" th:field="*{cccd}" id="cccd" class="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="Căn cước công dân">
+                        <input type="text" th:field="*{cccd}" id="cccd" class="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="Căn cước công dân" maxlength="12" pattern="[0-9]{12}" title="CCCD phải gồm đúng 12 chữ số">
                     </div>
                     <div class="space-y-2">
                         <label class="text-sm font-semibold text-on-surface" for="driverLicense">Số Bằng Lái Xe</label>
-                        <input type="text" th:field="*{driverLicense}" id="driverLicense" class="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="Mã số GPLX">
+                        <input type="text" th:field="*{driverLicense}" id="driverLicense" class="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="Mã số GPLX" maxlength="12">
                     </div>
                     <div class="space-y-2">
                         <label class="text-sm font-semibold text-on-surface" for="licenseExpiry">Ngày Hết Hạn Bằng Lái</label>
@@ -338,7 +338,7 @@
 
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-on-surface">Mật khẩu</label>
-                    <input th:field="*{password}" class="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="Tối thiểu 6 ký tự" type="password" required/>
+                    <input th:field="*{password}" class="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="Tối thiểu 6 ký tự" type="password" required minlength="6" maxlength="50"/>
                 </div>
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-on-surface">Xác nhận mật khẩu</label>

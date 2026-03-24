@@ -61,6 +61,14 @@ public class WithdrawalService {
                 "Yêu cầu rút tiền #" + wr.getId() + " - " + bankName + " " + accountNumber
         );
 
+        // Notification for user
+        try {
+            notificationService.createNotification(
+                    userId, "Yêu cầu rút tiền",
+                    "Yêu cầu rút " + amount + "₫ đã được gửi. Chờ admin duyệt.",
+                    NotificationType.WITHDRAW_REQUEST,
+                    NotificationRefType.WALLET, wr.getId());
+        } catch (Exception ignored) {}
         return null;
     }
 
@@ -88,7 +96,7 @@ public class WithdrawalService {
                     wr.getUserId(), "Rút tiền được duyệt",
                     "Yêu cầu rút " + wr.getAmount() + "₫ đã được duyệt." + (adminNote != null ? " Note: " + adminNote : ""),
                     NotificationType.WITHDRAW_APPROVED,
-                    NotificationRefType.SYSTEM, wr.getId());
+                    NotificationRefType.WALLET, wr.getId());
         } catch (Exception ignored) {}
         return null;
     }
@@ -126,7 +134,7 @@ public class WithdrawalService {
                     wr.getUserId(), "Rút tiền bị từ chối",
                     "Yêu cầu rút " + wr.getAmount() + "₫ đã bị từ chối và hoàn tiền về ví." + (adminNote != null ? " Lý do: " + adminNote : ""),
                     NotificationType.WITHDRAW_REJECTED,
-                    NotificationRefType.SYSTEM, wr.getId());
+                    NotificationRefType.WALLET, wr.getId());
         } catch (Exception ignored) {}
         return null;
     }

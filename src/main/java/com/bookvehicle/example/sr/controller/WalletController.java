@@ -98,7 +98,7 @@ public class WalletController {
                     loggedUser.getId(), "Nạp tiền thành công",
                     "Bạn đã nạp " + amountStr + "₫ vào ví qua MoMo.",
                     NotificationType.DEPOSIT_SUCCESS,
-                    NotificationRefType.SYSTEM, null);
+                    NotificationRefType.WALLET, null);
             return "redirect:/wallet?success=momo_deposit_success";
         }
         return "redirect:/wallet?error=momo_payment_failed";
@@ -154,7 +154,7 @@ public class WalletController {
                     loggedUser.getId(), "Yêu cầu rút tiền",
                     "Bạn đã tạo yêu cầu rút " + amount + "₫ về " + bankName + " " + accountNumber + ". Chờ Admin xử lý.",
                     NotificationType.WITHDRAW_REQUEST,
-                    NotificationRefType.SYSTEM, null);
+                    NotificationRefType.WALLET, null);
         }
         return "redirect:/wallet";
     }

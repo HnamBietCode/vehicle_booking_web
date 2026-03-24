@@ -7,6 +7,7 @@
     <title th:text="${pageTitle != null ? pageTitle + ' - VehicleBook' : 'VehicleBook'}">VehicleBook</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <style>
         *,
         *::before,
@@ -456,7 +457,7 @@
                 <a href="/" class="text-2xl font-extrabold text-[#0A2463] tracking-tight">SR-Booking</a>
                 
                 <!-- Desktop Navigation Links -->
-                <nav class="hidden md:flex items-center gap-8" th:with="user=${session?.loggedUser ?: #httpServletRequest.getAttribute('loggedUser')}">
+                <nav class="hidden md:flex items-center gap-8" th:with="user=${session != null and session.loggedUser != null ? session.loggedUser : loggedUser}">
                     <a href="/" class="text-sm font-bold transition-all relative group"
                        th:classappend="${#httpServletRequest != null and #httpServletRequest.requestURI == '/' ? 'text-secondary-container' : 'text-on-surface-variant hover:text-primary-container'}">
                         Trang chủ
@@ -470,10 +471,16 @@
                             <div th:if="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/vehicles')}" class="absolute -bottom-1 left-0 right-0 h-0.5 bg-secondary-container"></div>
                         </a>
                         
-                        <a th:if="${user?.role?.name() == 'CUSTOMER'}" th:href="@{/bookings/options}" class="text-sm font-bold transition-all relative group"
-                           th:classappend="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/bookings') ? 'text-secondary-container' : 'text-on-surface-variant hover:text-primary-container'}">
+                        <a th:if="${user?.role?.name() == 'CUSTOMER'}" th:href="@{/sober-bookings/new}" class="text-sm font-bold transition-all relative group"
+                           th:classappend="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/sober-bookings') ? 'text-secondary-container' : 'text-on-surface-variant hover:text-primary-container'}">
                             Lái hộ
-                            <div th:if="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/bookings')}" class="absolute -bottom-1 left-0 right-0 h-0.5 bg-secondary-container"></div>
+                            <div th:if="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/sober-bookings')}" class="absolute -bottom-1 left-0 right-0 h-0.5 bg-secondary-container"></div>
+                        </a>
+
+                        <a th:if="${user?.role?.name() == 'CUSTOMER'}" th:href="@{/booking-history}" class="text-sm font-bold transition-all relative group"
+                           th:classappend="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/booking-history') ? 'text-secondary-container' : 'text-on-surface-variant hover:text-primary-container'}">
+                            Lịch sử
+                            <div th:if="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/booking-history')}" class="absolute -bottom-1 left-0 right-0 h-0.5 bg-secondary-container"></div>
                         </a>
 
                         <a th:href="@{/wallet}" class="text-sm font-bold transition-all relative group"
@@ -493,7 +500,7 @@
             </div>
 
             <!-- Profile & Logout -->
-            <div class="flex items-center gap-6" th:with="user=${session?.loggedUser ?: #httpServletRequest.getAttribute('loggedUser')}">
+            <div class="flex items-center gap-6" th:with="user=${session != null and session.loggedUser != null ? session.loggedUser : loggedUser}">
                 <th:block th:if="${user != null}">
                     <a th:href="@{/profile}" class="text-sm font-bold text-[#0A2463] hover:text-secondary-container transition-all flex items-center gap-2">
                         Hồ sơ cá nhân
@@ -519,8 +526,9 @@
                         </div>
                     </div>
 
-                    <a th:href="@{/auth/logout}" class="flex items-center text-rose-500 hover:text-rose-700 transition-all" title="Đăng xuất">
-                        <span class="material-symbols-outlined text-2xl font-bold">logout</span>
+                    <a th:href="@{/auth/logout}" class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-all text-sm font-semibold" title="Đăng xuất">
+                        <span class="material-symbols-outlined text-[18px]">logout</span>
+                        Đăng xuất
                     </a>
                 </th:block>
             </div>

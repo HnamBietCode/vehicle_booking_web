@@ -84,14 +84,18 @@
 <body>
     <!-- TopAppBar Fragment -->
     <header th:fragment="header" class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-sm shadow-[#00103E]/5 h-16 flex justify-between items-center px-6">
-        <div class="text-xl font-bold text-[#0A2463] dark:text-white tracking-tight">VinaPulse</div>
-        <div class="flex items-center gap-4">
-            <button class="p-2 rounded-full hover:bg-slate-50 transition-colors active:scale-95 duration-200">
-                <span class="material-symbols-outlined text-slate-500" data-icon="notifications">notifications</span>
-            </button>
-            <button class="p-2 rounded-full hover:bg-slate-50 transition-colors active:scale-95 duration-200">
-                <span class="material-symbols-outlined text-slate-500" data-icon="account_circle">account_circle</span>
-            </button>
+        <a href="/" class="text-xl font-bold text-[#0A2463] dark:text-white tracking-tight no-underline">SR-Booking</a>
+        <div class="flex items-center gap-3">
+            <a href="/notifications" class="p-2 rounded-full hover:bg-slate-50 transition-colors active:scale-95 duration-200">
+                <span class="material-symbols-outlined text-slate-500">notifications</span>
+            </a>
+            <a href="/profile" class="p-2 rounded-full hover:bg-slate-50 transition-colors active:scale-95 duration-200">
+                <span class="material-symbols-outlined text-slate-500">account_circle</span>
+            </a>
+            <a href="/auth/logout" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-all active:scale-95 duration-200 text-xs font-semibold">
+                <span class="material-symbols-outlined text-[16px]">logout</span>
+                Đăng xuất
+            </a>
         </div>
     </header>
 
@@ -117,8 +121,9 @@
             <span class="material-symbols-outlined" data-icon="verified_user" th:style="${active == 'sober' ? 'font-variation-settings: &quot;FILL&quot; 1;' : ''}">verified_user</span>
             <span class="font-['Be_Vietnam_Pro'] text-[11px] font-medium tracking-wide uppercase mt-1">Sober</span>
         </a>
-        <a th:href="@{/profile}" class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 py-2 px-4 hover:text-[#FE6A34] transition-all active:scale-90 duration-300 ease-out">
-            <span class="material-symbols-outlined" data-icon="person">person</span>
+        <a th:href="@{/driver/profile}" class="flex flex-col items-center justify-center py-2 px-4 transition-all active:scale-90 duration-300 ease-out" 
+           th:classappend="${active == 'profile' ? 'bg-[#0A2463] text-white rounded-[16px]' : 'text-slate-400 dark:text-slate-500 hover:text-[#FE6A34]'}">
+            <span class="material-symbols-outlined" data-icon="person" th:style="${active == 'profile' ? 'font-variation-settings: &quot;FILL&quot; 1;' : ''}">person</span>
             <span class="font-['Be_Vietnam_Pro'] text-[11px] font-medium tracking-wide uppercase mt-1">Profile</span>
         </a>
     </nav>

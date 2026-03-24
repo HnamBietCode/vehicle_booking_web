@@ -3,111 +3,19 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>VinaPulse Mobility - Danh sách đội xe</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "surface-container-low": "#f5f3f9",
-                        "on-tertiary-fixed-variant": "#005047",
-                        "tertiary-fixed": "#97f3e2",
-                        "on-tertiary-fixed": "#00201b",
-                        "surface-container": "#efedf3",
-                        "tertiary-fixed-dim": "#7ad7c6",
-                        "secondary-container": "#fe6a34",
-                        "on-surface-variant": "#444650",
-                        "on-secondary-fixed": "#390c00",
-                        "on-error": "#ffffff",
-                        "error-container": "#ffdad6",
-                        "on-primary": "#ffffff",
-                        "tertiary": "#001814",
-                        "surface-container-lowest": "#ffffff",
-                        "surface-container-high": "#e9e7ed",
-                        "secondary-fixed-dim": "#ffb59d",
-                        "primary-fixed": "#dce1ff",
-                        "on-secondary-fixed-variant": "#832600",
-                        "on-tertiary-container": "#409f90",
-                        "on-tertiary": "#ffffff",
-                        "primary": "#00103e",
-                        "secondary-fixed": "#ffdbd0",
-                        "on-primary-container": "#7a8ed2",
-                        "primary-fixed-dim": "#b5c4ff",
-                        "surface-dim": "#dbd9df",
-                        "on-primary-fixed-variant": "#2e4382",
-                        "outline": "#757681",
-                        "on-surface": "#1b1b20",
-                        "error": "#ba1a1a",
-                        "on-secondary": "#ffffff",
-                        "on-error-container": "#93000a",
-                        "surface-variant": "#e3e2e8",
-                        "surface-tint": "#475b9c",
-                        "secondary": "#ab3500",
-                        "on-primary-fixed": "#00164d",
-                        "on-secondary-container": "#5d1900",
-                        "tertiary-container": "#002f29",
-                        "inverse-surface": "#303035",
-                        "surface-bright": "#faf8ff",
-                        "primary-container": "#0a2463",
-                        "background": "#faf8ff",
-                        "inverse-on-surface": "#f2f0f6",
-                        "on-background": "#1b1b20",
-                        "outline-variant": "#c5c6d2",
-                        "inverse-primary": "#b5c4ff",
-                        "surface": "#faf8ff",
-                        "surface-container-highest": "#e3e2e8"
-                    },
-                    fontFamily: {
-                        "headline": ["Be Vietnam Pro"],
-                        "body": ["Be Vietnam Pro"],
-                        "label": ["Be Vietnam Pro"]
-                    },
-                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
-                },
-            },
-        }
-    </script>
+<title>SR-Booking - Danh sách đội xe</title>
+<style th:replace="~{layout/base :: head}"></style>
 <style>
-        body { font-family: 'Be Vietnam Pro', sans-serif; }
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-            vertical-align: middle;
-        }
-    </style>
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        vertical-align: middle;
+    }
+</style>
 </head>
-<body class="bg-surface text-on-surface min-h-screen relative flex flex-col">
+<body class="bg-background text-on-surface min-h-screen relative flex flex-col">
 
-<!-- Top Navigation Bar -->
-<header class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200/15 shadow-sm">
-    <nav class="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
-        <div class="flex items-center gap-8">
-            <a class="text-2xl font-bold tracking-tighter text-[#0A2463] dark:text-white" th:href="@{/}">SR-Booking</a>
-            <div class="hidden md:flex gap-6 items-center">
-                <a class="text-slate-600 dark:text-slate-400 hover:text-[#0A2463] dark:hover:text-white transition-colors font-medium text-base" th:href="@{/}">Trang chủ</a>
-                <a class="text-[#FE6A34] font-semibold border-b-2 border-[#FE6A34] pb-1 font-medium text-base" th:href="@{/vehicles/search}">Thuê xe</a>
-                <a class="text-slate-600 dark:text-slate-400 hover:text-[#0A2463] dark:hover:text-white transition-colors font-medium text-base" th:href="@{/sober-bookings/new}">Lái hộ</a>
-                <a class="text-slate-600 dark:text-slate-400 hover:text-[#0A2463] dark:hover:text-white transition-colors font-medium text-base" th:href="@{/wallet}">Ví</a>
-            </div>
-        </div>
-        <div class="flex items-center gap-4">
-            <!-- User is NOT logged in -->
-            <th:block th:if="${loggedUser == null}">
-                <a th:href="@{/auth/login}" class="px-4 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-xl transition-all">Đăng nhập</a>
-                <a th:href="@{/auth/register}" class="px-6 py-2.5 bg-primary-container text-white font-semibold rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-md">Đăng ký</a>
-            </th:block>
-            <!-- User is logged in -->
-            <th:block th:if="${loggedUser != null}">
-                <a th:if="${loggedUser.role.name() == 'ADMIN'}" th:href="@{/admin/users}" class="px-4 py-2 font-bold text-primary hover:bg-slate-50 rounded-xl transition-all">Dashboard</a>
-                <a th:if="${loggedUser.role.name() != 'ADMIN'}" th:href="@{/profile}" class="px-4 py-2 font-bold text-primary hover:bg-slate-50 rounded-xl transition-all">Hồ sơ cá nhân</a>
-                <a th:href="@{/auth/logout}" class="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-all"><span class="material-symbols-outlined">logout</span></a>
-            </th:block>
-        </div>
-    </nav>
-</header>
+<!-- Shared Navbar -->
+<nav th:replace="~{layout/base :: navbar}"></nav>
 
 <main class="max-w-7xl mx-auto px-6 pt-28 pb-24 w-full flex-grow">
     <!-- Hero Section -->
@@ -194,10 +102,18 @@
             <!-- Sort Bar -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                 <p class="font-body text-on-surface-variant text-lg">Tìm thấy <span class="font-bold text-primary" th:text="${results.size()}">24</span> phương tiện</p>
-                <div class="flex items-center gap-3 bg-white p-1 rounded-2xl shadow-sm border border-slate-100">
-                    <span class="text-xs font-semibold px-3 py-2 text-outline">Sắp xếp:</span>
-                    <button class="text-xs font-bold px-4 py-2 rounded-xl bg-surface-container text-primary">Đề xuất</button>
-                    <button class="text-xs font-semibold px-4 py-2 rounded-xl text-outline hover:text-primary transition-colors">Giá thấp nhất</button>
+                <div class="flex items-center gap-3">
+                    <!-- Rental History Button -->
+                    <a th:if="${loggedUser != null and loggedUser.role.name() != 'ADMIN'}" th:href="@{/rentals/my}"
+                       class="flex items-center gap-2 px-4 py-2.5 bg-[#0A2463] text-white rounded-xl text-sm font-bold hover:bg-[#0a2463e6] active:scale-95 transition-all shadow-md shadow-primary/10">
+                        <span class="material-symbols-outlined text-[18px]">history</span>
+                        Lịch sử đặt xe
+                    </a>
+                    <div class="flex items-center gap-3 bg-white p-1 rounded-2xl shadow-sm border border-slate-100">
+                        <span class="text-xs font-semibold px-3 py-2 text-outline">Sắp xếp:</span>
+                        <button class="text-xs font-bold px-4 py-2 rounded-xl bg-surface-container text-primary">Đề xuất</button>
+                        <button class="text-xs font-semibold px-4 py-2 rounded-xl text-outline hover:text-primary transition-colors">Giá thấp nhất</button>
+                    </div>
                 </div>
             </div>
 

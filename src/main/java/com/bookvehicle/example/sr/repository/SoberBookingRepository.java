@@ -35,4 +35,7 @@ public interface SoberBookingRepository extends JpaRepository<SoberBooking, Long
     void clearDriverId(@Param("driverId") Long driverId);
 
     void deleteByCustomerId(Long customerId);
+
+    @Query("SELECT b FROM SoberBooking b WHERE b.driverId = :driverId AND b.status IN ('COMPLETED', 'CANCELLED') ORDER BY b.updatedAt DESC")
+    List<SoberBooking> findDriverHistory(@Param("driverId") Long driverId);
 }
