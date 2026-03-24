@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Xác thực email đăng ký | SR-Booking</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <style>
+        body {
+            font-family: "Be Vietnam Pro", sans-serif;
+            background:
+                    radial-gradient(circle at top left, rgba(254, 106, 52, 0.16), transparent 28%),
+                    radial-gradient(circle at top right, rgba(10, 36, 99, 0.14), transparent 32%),
+                    #faf8ff;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6 text-slate-900">
+<main class="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 bg-white rounded-[32px] shadow-[0_28px_80px_rgba(10,36,99,0.12)] overflow-hidden">
+    <section class="bg-[#0A2463] text-white p-10 lg:p-12 relative overflow-hidden">
+        <div class="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#FE6A34]/20 blur-3xl"></div>
+        <div class="absolute -left-20 bottom-0 h-56 w-56 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="relative">
+            <p class="text-xs uppercase tracking-[0.28em] font-extrabold text-white/60">Email verification</p>
+            <h1 class="mt-4 text-4xl font-black tracking-tight leading-tight">Xác thực Gmail để hoàn tất đăng ký.</h1>
+            <p class="mt-5 text-white/80 leading-7">
+                Mã OTP 6 số đã được gửi đến <strong th:text="${email}">email@example.com</strong>.
+                Nhập mã bên phải để kích hoạt tài khoản của bạn.
+            </p>
+
+            <div class="mt-8 space-y-4 text-sm text-white/80">
+                <div class="flex gap-3">
+                    <span class="material-symbols-outlined text-[#FE6A34]">mark_email_read</span>
+                    <span>OTP có hiệu lực trong 5 phút kể từ lúc gửi.</span>
+                </div>
+                <div class="flex gap-3">
+                    <span class="material-symbols-outlined text-[#FE6A34]">shield_lock</span>
+                    <span>Không chia sẻ mã OTP cho bất kỳ ai khác.</span>
+                </div>
+                <div class="flex gap-3" th:if="${isDriver}">
+                    <span class="material-symbols-outlined text-[#FE6A34]">pending_actions</span>
+                    <span>Sau khi xác thực email, hồ sơ tài xế vẫn tiếp tục chờ Admin duyệt.</span>
+                </div>
+                <div class="flex gap-3" th:unless="${isDriver}">
+                    <span class="material-symbols-outlined text-[#FE6A34]">login</span>
+                    <span>Sau khi xác thực thành công, bạn có thể đăng nhập ngay.</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="p-8 md:p-12">
+        <div th:if="${success}" class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-700 font-semibold" th:text="${success}"></div>
+        <div th:if="${error}" class="mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-red-700 font-semibold" th:text="${error}"></div>
+
+        <p class="text-xs uppercase tracking-[0.24em] font-extrabold text-slate-400">Step 2 / 2</p>
+        <h2 class="mt-3 text-3xl font-black tracking-tight text-[#0A2463]">Nhập mã OTP xác thực</h2>
+        <p class="mt-3 text-slate-500 leading-7">
+            Nếu chưa thấy email, hãy kiểm tra cả thư mục spam hoặc bấm gửi lại mã mới.
+        </p>
+
+        <form th:action="@{/auth/register/verify}" method="post" class="mt-8 space-y-6">
+            <input type="hidden" name="email" th:value="${email}" />
+
+            <div>
+                <label class="block text-xs uppercase tracking-[0.22em] font-extrabold text-slate-400 mb-3">Mã OTP</label>
+                <input name="otp"
+                       th:value="${otp}"
+                       type="text"
+                       maxlength="6"
+                       pattern="[0-9]{6}"
+                       inputmode="numeric"
+                       autocomplete="one-time-code"
+                       placeholder="6 chữ số"
+                       class="w-full rounded-[24px] border border-slate-200 bg-slate-50 px-6 py-5 text-center text-3xl font-black tracking-[0.6em] text-[#0A2463] focus:border-[#FE6A34] focus:ring-[#FE6A34]/20"
+                       required />
+            </div>
+
+            <button type="submit" class="w-full rounded-[24px] bg-[#0A2463] px-6 py-4 text-white font-extrabold shadow-[0_18px_36px_rgba(10,36,99,0.18)] hover:translate-y-[-1px] transition-transform">
+                Xác thực email
+            </button>
+        </form>
+
+        <form th:action="@{/auth/register/resend-otp}" method="post" class="mt-4">
+            <input type="hidden" name="email" th:value="${email}" />
+            <button type="submit" class="w-full rounded-[24px] border border-slate-200 bg-white px-6 py-4 text-[#0A2463] font-bold hover:bg-slate-50 transition-colors">
+                Gửi lại mã OTP
+            </button>
+        </form>
+
+        <a th:href="@{/auth/login}" class="mt-4 inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-[#0A2463] transition-colors">
+            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+            Quay lại đăng nhập
+        </a>
+    </section>
+</main>
+</body>
+</html>

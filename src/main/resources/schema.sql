@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS users (
     role        ENUM('ADMIN', 'CUSTOMER', 'DRIVER') NOT NULL,
     avatar_url  VARCHAR(500),
     is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+    email_verified BOOLEAN NOT NULL DEFAULT TRUE,
+    email_verified_at DATETIME,
     created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
@@ -24,6 +26,7 @@ CREATE TABLE IF NOT EXISTS customers (
     full_name   VARCHAR(100) NOT NULL,
     address     VARCHAR(255),
     membership  ENUM('STANDARD', 'PREMIUM') NOT NULL DEFAULT 'STANDARD',
+    premium_tier ENUM('BRONZE', 'SILVER', 'GOLD'),
     premium_exp DATE,
 
     CONSTRAINT fk_customers_user    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
@@ -374,6 +377,17 @@ LEFT JOIN users   u_d ON u_d.id = d.user_id;
 
 -- Ensure existing database is updated to the new VARCHAR type for drivers
 ALTER TABLE drivers MODIFY COLUMN vehicle_types VARCHAR(255) NOT NULL;
+
+-- Ensure users have email verification fields
+SET @s = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'users' AND COLUMN_NAME = 'email_verified' AND TABLE_SCHEMA = DATABASE()) = 0, 'ALTER TABLE users ADD COLUMN email_verified BOOLEAN NOT NULL DEFAULT TRUE AFTER is_active', 'SELECT 1'));
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @s = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'users' AND COLUMN_NAME = 'email_verified_at' AND TABLE_SCHEMA = DATABASE()) = 0, 'ALTER TABLE users ADD COLUMN email_verified_at DATETIME NULL AFTER email_verified', 'SELECT 1'));
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- Ensure customers have premium_tier for Dong/Bac/Vang packages
+SET @s = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'customers' AND COLUMN_NAME = 'premium_tier' AND TABLE_SCHEMA = DATABASE()) = 0, 'ALTER TABLE customers ADD COLUMN premium_tier ENUM(''BRONZE'',''SILVER'',''GOLD'') AFTER membership', 'SELECT 1'));
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 -- Ensure missing columns are added to driver_bookings if the table already existed
 SET @s = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'driver_bookings' AND COLUMN_NAME = 'distance_km' AND TABLE_SCHEMA = DATABASE()) = 0, 'ALTER TABLE driver_bookings ADD COLUMN distance_km DECIMAL(8, 2) AFTER dest_lng', 'SELECT 1'));

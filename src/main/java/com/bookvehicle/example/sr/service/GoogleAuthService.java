@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
+import java.time.LocalDateTime;
 
 @Service
 @Transactional
@@ -74,6 +75,10 @@ public class GoogleAuthService {
                 if (userByEmail.getAvatarUrl() == null && pictureUrl != null) {
                     userByEmail.setAvatarUrl(pictureUrl);
                 }
+                userByEmail.setEmailVerified(true);
+                if (userByEmail.getEmailVerifiedAt() == null) {
+                    userByEmail.setEmailVerifiedAt(LocalDateTime.now());
+                }
                 return userRepository.save(userByEmail);
             }
 
@@ -85,6 +90,8 @@ public class GoogleAuthService {
             newUser.setPhone("GOOGLE_" + googleId.substring(0, Math.min(10, googleId.length())));
             newUser.setRole(Role.CUSTOMER);
             newUser.setIsActive(true);
+            newUser.setEmailVerified(true);
+            newUser.setEmailVerifiedAt(LocalDateTime.now());
             if (pictureUrl != null) {
                 newUser.setAvatarUrl(pictureUrl);
             }

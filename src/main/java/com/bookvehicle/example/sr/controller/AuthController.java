@@ -10,10 +10,19 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Map;
+import java.util.Optional;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Controller
 @RequestMapping("/auth")
@@ -30,79 +39,145 @@ public class AuthController {
         this.googleAuthService = googleAuthService;
     }
 
-    // ── Đăng ký ──────────────────────────────────────────────────
-
-    /** Hiển thị form đăng ký */
     @GetMapping("/register")
     public String showRegisterForm(Model model, HttpSession session) {
-        if (SecurityUtil.isLoggedIn(session))
+        if (SecurityUtil.isLoggedIn(session)) {
             return "redirect:/";
+        }
         model.addAttribute("registerForm", new RegisterForm());
         model.addAttribute("loginForm", new LoginForm());
+        model.addAttribute("googleClientId", googleClientId);
         model.addAttribute("showRegister", true);
         return "auth/login";
     }
 
-    /** Xử lý đăng ký */
     @PostMapping("/register")
     public String handleRegister(@ModelAttribute("registerForm") RegisterForm form,
-            Model model,
-            RedirectAttributes redirectAttributes) {
-        String error = authService.register(form);
-        if (error != null) {
-            model.addAttribute("errorReg", error);
+                                 Model model,
+                                 RedirectAttributes redirectAttributes) {
+        AuthService.RegistrationResult result = authService.register(form);
+        if (!result.ok()) {
+            model.addAttribute("errorReg", result.message());
             model.addAttribute("registerForm", form);
             model.addAttribute("loginForm", new LoginForm());
+            model.addAttribute("googleClientId", googleClientId);
             model.addAttribute("showRegister", true);
             return "auth/login";
         }
 
-        String role = form.getRole().toUpperCase();
-        if ("DRIVER".equals(role)) {
-            redirectAttributes.addFlashAttribute("success",
-                    "Đăng ký thành công! Vui lòng chờ Admin duyệt hồ sơ trước khi đăng nhập.");
+        redirectAttributes.addFlashAttribute(
+                "success",
+                "Dang ky thanh cong. Ma OTP da duoc gui den Gmail cua ban."
+        );
+        return "redirect:/auth/register/verify?email=" + encode(result.email());
+    }
+
+    @GetMapping("/register/verify")
+    public String showRegisterVerifyPage(@RequestParam("email") String email,
+                                         Model model,
+                                         HttpSession session,
+                                         RedirectAttributes ra) {
+        if (SecurityUtil.isLoggedIn(session)) {
+            return "redirect:/";
+        }
+
+        Optional<User> userOpt = authService.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            ra.addFlashAttribute("error", "Khong tim thay tai khoan can xac thuc.");
+            return "redirect:/auth/login";
+        }
+
+        User user = userOpt.get();
+        if (Boolean.TRUE.equals(user.getEmailVerified())) {
+            if (user.getRole().name().equals("DRIVER")) {
+                ra.addFlashAttribute("success", "Email da duoc xac thuc. Ho so tai xe cua ban dang cho Admin duyet.");
+            } else {
+                ra.addFlashAttribute("success", "Email nay da duoc xac thuc. Vui long dang nhap.");
+            }
+            return "redirect:/auth/login";
+        }
+
+        model.addAttribute("email", user.getEmail());
+        model.addAttribute("isDriver", user.getRole().name().equals("DRIVER"));
+        return "auth/verify-registration";
+    }
+
+    @PostMapping("/register/verify")
+    public String verifyRegistrationOtp(@RequestParam("email") String email,
+                                        @RequestParam("otp") String otp,
+                                        Model model,
+                                        RedirectAttributes ra) {
+        Optional<User> userOpt = authService.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            ra.addFlashAttribute("error", "Khong tim thay tai khoan can xac thuc.");
+            return "redirect:/auth/login";
+        }
+
+        User user = userOpt.get();
+        String error = authService.verifyRegistrationOtp(email, otp);
+        if (error != null) {
+            model.addAttribute("error", error);
+            model.addAttribute("email", user.getEmail());
+            model.addAttribute("otp", otp);
+            model.addAttribute("isDriver", user.getRole().name().equals("DRIVER"));
+            return "auth/verify-registration";
+        }
+
+        if (user.getRole().name().equals("DRIVER")) {
+            ra.addFlashAttribute("success", "Xac thuc email thanh cong. Ho so tai xe dang cho Admin duyet.");
         } else {
-            redirectAttributes.addFlashAttribute("success",
-                    "Đăng ký thành công! Vui lòng đăng nhập.");
+            ra.addFlashAttribute("success", "Xac thuc email thanh cong. Ban co the dang nhap ngay.");
         }
         return "redirect:/auth/login";
     }
 
-    // ── Đăng nhập ─────────────────────────────────────────────────
+    @PostMapping("/register/resend-otp")
+    public String resendRegistrationOtp(@RequestParam("email") String email,
+                                        RedirectAttributes ra) {
+        String error = authService.resendRegistrationOtp(email);
+        if (error != null) {
+            ra.addFlashAttribute("error", error);
+        } else {
+            ra.addFlashAttribute("success", "Ma OTP moi da duoc gui lai den Gmail cua ban.");
+        }
+        return "redirect:/auth/register/verify?email=" + encode(email.trim().toLowerCase());
+    }
 
-    /** Hiển thị form đăng nhập */
     @GetMapping("/login")
     public String showLoginForm(Model model,
-            HttpSession session,
-            @RequestParam(name = "error", required = false) String error) {
-        if (SecurityUtil.isLoggedIn(session))
+                                HttpSession session,
+                                @RequestParam(name = "error", required = false) String error) {
+        if (SecurityUtil.isLoggedIn(session)) {
             return "redirect:/";
+        }
         model.addAttribute("loginForm", new LoginForm());
         model.addAttribute("registerForm", new RegisterForm());
         model.addAttribute("googleClientId", googleClientId);
-        if ("forbidden".equals(error))
-            model.addAttribute("error", "Bạn không có quyền truy cập trang đó.");
+        if ("forbidden".equals(error)) {
+            model.addAttribute("error", "Ban khong co quyen truy cap trang do.");
+        }
         return "auth/login";
     }
 
-    /** Xử lý đăng nhập */
     @PostMapping("/login")
     public String handleLogin(@ModelAttribute("loginForm") LoginForm form,
-            Model model,
-            HttpSession session,
-            @RequestParam(name = "redirect", required = false) String redirect) {
-        User user = authService.login(form.getEmail(), form.getPassword());
-        if (user == null) {
+                              Model model,
+                              HttpSession session,
+                              @RequestParam(name = "redirect", required = false) String redirect) {
+        AuthService.LoginResult result = authService.attemptLogin(form.getEmail(), form.getPassword());
+        if (!result.ok()) {
             model.addAttribute("loginForm", form);
             model.addAttribute("registerForm", new RegisterForm());
-            model.addAttribute("error", "Email hoặc mật khẩu không đúng, hoặc tài khoản đã bị khoá.");
+            model.addAttribute("googleClientId", googleClientId);
+            model.addAttribute("error", result.message());
             return "auth/login";
         }
-        SecurityUtil.setLoggedUser(session, user);
 
-        // Redirect đến trang đích hoặc trang chủ theo role
-        if (redirect != null && !redirect.isBlank())
+        User user = result.user();
+        SecurityUtil.setLoggedUser(session, user);
+        if (redirect != null && !redirect.isBlank()) {
             return "redirect:" + redirect;
+        }
         return switch (user.getRole()) {
             case ADMIN -> "redirect:/admin/users";
             case CUSTOMER -> "redirect:/profile";
@@ -110,28 +185,24 @@ public class AuthController {
         };
     }
 
-    // ── Đăng xuất ─────────────────────────────────────────────────
-
     @GetMapping("/logout")
     public String logout(HttpSession session, RedirectAttributes ra) {
         SecurityUtil.clearSession(session);
-        ra.addFlashAttribute("success", "Bạn đã đăng xuất thành công.");
+        ra.addFlashAttribute("success", "Ban da dang xuat thanh cong.");
         return "redirect:/auth/login";
     }
-
-    // ── Google Login ────────────────────────────────────────────────
 
     @PostMapping("/google")
     @ResponseBody
     public Map<String, Object> handleGoogleLogin(@RequestBody Map<String, String> body,
-                                                  HttpSession session) {
+                                                 HttpSession session) {
         String idToken = body.get("idToken");
         if (idToken == null || idToken.isBlank()) {
-            return Map.of("success", false, "error", "Token không hợp lệ.");
+            return Map.of("success", false, "error", "Token khong hop le.");
         }
         User user = googleAuthService.authenticateWithGoogle(idToken);
         if (user == null) {
-            return Map.of("success", false, "error", "Xác thực Google thất bại.");
+            return Map.of("success", false, "error", "Xac thuc Google that bai.");
         }
         SecurityUtil.setLoggedUser(session, user);
         String redirectUrl = switch (user.getRole()) {
@@ -141,8 +212,6 @@ public class AuthController {
         };
         return Map.of("success", true, "redirect", redirectUrl);
     }
-
-    // ── Forgot Password Flow ───────────────────────────────────────
 
     @GetMapping("/forgot-password")
     public String forgotPasswordForm(Model model) {
@@ -197,7 +266,11 @@ public class AuthController {
             model.addAttribute("otp", otp);
             return "auth/forgot-password";
         }
-        ra.addFlashAttribute("success", "Mật khẩu đã được đặt lại thành công. Vui lòng đăng nhập.");
+        ra.addFlashAttribute("success", "Mat khau da duoc dat lai thanh cong. Vui long dang nhap.");
         return "redirect:/auth/login";
+    }
+
+    private String encode(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 }

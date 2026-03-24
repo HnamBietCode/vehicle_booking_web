@@ -27,10 +27,11 @@ public class MobileAuthService {
     }
 
     public TokenResult login(String email, String password, HttpServletRequest request) {
-        User user = authService.login(email, password);
-        if (user == null) {
-            return TokenResult.error("Email hoac mat khau khong dung.");
+        AuthService.LoginResult loginResult = authService.attemptLogin(email, password);
+        if (!loginResult.ok()) {
+            return TokenResult.error(loginResult.message());
         }
+        User user = loginResult.user();
         String rawToken = UUID.randomUUID() + "-" + UUID.randomUUID();
         String tokenHash = DigestUtils.sha256Hex(rawToken);
 

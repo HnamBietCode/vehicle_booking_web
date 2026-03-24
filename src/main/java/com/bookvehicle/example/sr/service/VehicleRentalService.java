@@ -627,11 +627,8 @@ public class VehicleRentalService {
                         NotificationType.TRIP_COMPLETED,
                         NotificationRefType.RENTAL, rental.getId());
             }
-<<<<<<< HEAD
 
-=======
->>>>>>> f35f5d837b5cf47ea1a48a7d9e302414b0fab22b
-        } catch (Exception e) {
+       } catch (Exception e) {
             log.error("Error creating rental notification: {}", e.getMessage());
         }
         return ServiceResult.success("Da hoan thanh chuyen va da thanh toan.", rental.getId());

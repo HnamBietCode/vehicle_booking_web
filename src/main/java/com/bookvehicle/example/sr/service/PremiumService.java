@@ -2,11 +2,18 @@ package com.bookvehicle.example.sr.service;
 
 import com.bookvehicle.example.sr.model.Customer;
 import com.bookvehicle.example.sr.model.MembershipType;
+import com.bookvehicle.example.sr.model.NotificationRefType;
+import com.bookvehicle.example.sr.model.NotificationType;
+import com.bookvehicle.example.sr.model.PremiumTier;
+import com.bookvehicle.example.sr.model.ReferenceType;
+import com.bookvehicle.example.sr.model.TransactionType;
 import com.bookvehicle.example.sr.repository.CustomerRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,13 +21,20 @@ import java.util.Optional;
 @Transactional
 public class PremiumService {
 
-    private final CustomerRepository customerRepository;
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-    public PremiumService(CustomerRepository customerRepository) {
+    private final CustomerRepository customerRepository;
+    private final WalletService walletService;
+    private final NotificationService notificationService;
+
+    public PremiumService(CustomerRepository customerRepository,
+                          WalletService walletService,
+                          NotificationService notificationService) {
         this.customerRepository = customerRepository;
+        this.walletService = walletService;
+        this.notificationService = notificationService;
     }
 
-    // ── Read ──────────────────────────────────────────────────────
     @Transactional(readOnly = true)
     public List<Customer> findAll() {
         return customerRepository.findAll();
@@ -36,60 +50,117 @@ public class PremiumService {
         return customerRepository.findById(id);
     }
 
-    // ── Upgrade ───────────────────────────────────────────────────
-    /**
-     * Nâng cấp membership lên PREMIUM.
-     * @param userId  ID user (not customer.id)
-     * @param months  Số tháng Premium (1, 3, 6, 12…)
-     * @return null nếu thành công, chuỗi lỗi nếu thất bại.
-     */
-    public String upgrade(Long userId, int months) {
-        if (months <= 0) return "Số tháng không hợp lệ.";
-        Optional<Customer> opt = customerRepository.findByUserId(userId);
-        if (opt.isEmpty()) return "Không tìm thấy hồ sơ khách hàng.";
-        Customer c = opt.get();
-
-        LocalDate expiry;
-        if (c.getMembership() == MembershipType.PREMIUM && c.getPremiumExp() != null
-                && c.getPremiumExp().isAfter(LocalDate.now())) {
-            // Cộng thêm vào ngày hết hạn hiện tại
-            expiry = c.getPremiumExp().plusMonths(months);
-        } else {
-            expiry = LocalDate.now().plusMonths(months);
-        }
-
-        c.setMembership(MembershipType.PREMIUM);
-        c.setPremiumExp(expiry);
-        customerRepository.save(c);
-        return null;
+    @Transactional(readOnly = true)
+    public List<PremiumTier> getAvailableTiers() {
+        return Arrays.asList(PremiumTier.values());
     }
 
-    // ── Cancel / Downgrade ────────────────────────────────────────
-    /**
-     * Huỷ Premium – chuyển về STANDARD.
-     */
+    @Transactional(readOnly = true)
+    public PremiumTier parseTier(String rawTier) {
+        if (rawTier == null || rawTier.isBlank()) {
+            return null;
+        }
+        try {
+            return PremiumTier.valueOf(rawTier.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+
+    public PurchaseResult purchase(Long userId, PremiumTier tier) {
+        if (tier == null) {
+            return PurchaseResult.error("Goi premium khong hop le.");
+        }
+
+        Optional<Customer> opt = customerRepository.findByUserId(userId);
+        if (opt.isEmpty()) {
+            return PurchaseResult.error("Khong tim thay ho so khach hang.");
+        }
+
+        Customer customer = opt.get();
+        String debitError = walletService.debit(
+                userId,
+                tier.getPrice(),
+                TransactionType.PREMIUM_UPGRADE,
+                ReferenceType.MANUAL,
+                customer.getId(),
+                "Thanh toan goi Premium hang " + tier.getDisplayName()
+        );
+        if (debitError != null) {
+            return PurchaseResult.error(debitError);
+        }
+
+        LocalDate baseDate = customer.isPremiumActive() && customer.getPremiumExp() != null
+                ? customer.getPremiumExp()
+                : LocalDate.now();
+        LocalDate expiry = baseDate.plusMonths(1);
+
+        customer.setMembership(MembershipType.PREMIUM);
+        customer.setPremiumTier(tier);
+        customer.setPremiumExp(expiry);
+        customerRepository.save(customer);
+
+        notificationService.createNotification(
+                userId,
+                "Nang cap premium thanh cong",
+                "Ban da kich hoat hang " + tier.getDisplayName() + " den ngay " + expiry.format(DATE_FORMATTER) + ".",
+                NotificationType.GENERAL,
+                NotificationRefType.SYSTEM,
+                customer.getId()
+        );
+
+        return PurchaseResult.success(
+                "Da kich hoat goi hang " + tier.getDisplayName() + " den " + expiry.format(DATE_FORMATTER) + "."
+        );
+    }
+
     public String cancel(Long userId) {
         Optional<Customer> opt = customerRepository.findByUserId(userId);
-        if (opt.isEmpty()) return "Không tìm thấy hồ sơ khách hàng.";
-        Customer c = opt.get();
-        c.setMembership(MembershipType.STANDARD);
-        c.setPremiumExp(null);
-        customerRepository.save(c);
+        if (opt.isEmpty()) {
+            return "Khong tim thay ho so khach hang.";
+        }
+
+        Customer customer = opt.get();
+        customer.setMembership(MembershipType.STANDARD);
+        customer.setPremiumTier(null);
+        customer.setPremiumExp(null);
+        customerRepository.save(customer);
         return null;
     }
 
-    // ── Admin: set trực tiếp ──────────────────────────────────────
     public String adminSetMembership(Long customerId, String membership, LocalDate expiry) {
         Optional<Customer> opt = customerRepository.findById(customerId);
-        if (opt.isEmpty()) return "Không tìm thấy khách hàng.";
-        Customer c = opt.get();
-        try {
-            c.setMembership(MembershipType.valueOf(membership.toUpperCase()));
-        } catch (Exception e) {
-            return "Loại membership không hợp lệ.";
+        if (opt.isEmpty()) {
+            return "Khong tim thay khach hang.";
         }
-        c.setPremiumExp(expiry);
-        customerRepository.save(c);
+
+        Customer customer = opt.get();
+        try {
+            customer.setMembership(MembershipType.valueOf(membership.toUpperCase()));
+        } catch (Exception e) {
+            return "Loai membership khong hop le.";
+        }
+
+        if (customer.getMembership() == MembershipType.STANDARD) {
+            customer.setPremiumTier(null);
+            customer.setPremiumExp(null);
+        } else {
+            if (customer.getPremiumTier() == null) {
+                customer.setPremiumTier(PremiumTier.BRONZE);
+            }
+            customer.setPremiumExp(expiry);
+        }
+        customerRepository.save(customer);
         return null;
+    }
+
+    public record PurchaseResult(boolean ok, String message) {
+        public static PurchaseResult success(String message) {
+            return new PurchaseResult(true, message);
+        }
+
+        public static PurchaseResult error(String message) {
+            return new PurchaseResult(false, message);
+        }
     }
 }

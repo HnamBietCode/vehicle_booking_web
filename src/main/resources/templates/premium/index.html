@@ -1,435 +1,497 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Premium – VehicleBook</title>
+    <title>Premium Membership | SR-Booking</title>
     <style th:replace="~{layout/base :: head}"></style>
     <style>
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        :root {
-            --primary: #4F46E5;
-            --primary-dark: #3730A3;
-            --accent: #F59E0B;
-            --danger: #EF4444;
-            --success: #10B981;
-            --bg: #F8FAFC;
-            --surface: #fff;
-            --border: #E2E8F0;
-            --text: #1E293B;
-            --muted: #64748B;
-            --radius: 12px;
-        }
-
         body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
+            background:
+                    radial-gradient(circle at top left, rgba(254, 106, 52, 0.16), transparent 28%),
+                    radial-gradient(circle at top right, rgba(10, 36, 99, 0.18), transparent 30%),
+                    #f6f4ee;
         }
 
-        .navbar {
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-            padding: 0 2rem;
-            display: flex;
-            align-items: center;
-            height: 64px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
+        .premium-shell {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 7.5rem 1.5rem 3rem;
         }
 
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.3rem;
-            color: var(--primary);
-            text-decoration: none;
-        }
-
-        .navbar-brand::before {
-            content: '🚗 ';
-        }
-
-        .navbar-nav {
-            display: flex;
-            align-items: center;
-            gap: .25rem;
-            margin-left: auto;
-            list-style: none;
-        }
-
-        .nav-link {
-            padding: .5rem .85rem;
-            border-radius: 8px;
-            text-decoration: none;
-            color: var(--muted);
-            font-size: .9rem;
-            font-weight: 500;
-            transition: all .2s;
-        }
-
-        .nav-link:hover,
-        .nav-link.active {
-            background: var(--primary);
+        .hero-card {
+            background: linear-gradient(135deg, #081f57 0%, #17398d 52%, #fe6a34 100%);
             color: #fff;
+            border-radius: 28px;
+            padding: 2.25rem;
+            box-shadow: 0 22px 60px rgba(10, 36, 99, 0.22);
+            position: relative;
+            overflow: hidden;
         }
 
-        .main {
-            max-width: 900px;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
+        .hero-card::after {
+            content: "";
+            position: absolute;
+            inset: auto -60px -80px auto;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.12);
+            filter: blur(10px);
         }
 
-        .alert {
-            padding: .85rem 1.2rem;
-            border-radius: 8px;
-            margin-bottom: 1.2rem;
-            font-size: .9rem;
-            font-weight: 500;
+        .hero-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.9fr);
+            gap: 1.5rem;
+            position: relative;
+            z-index: 1;
         }
 
-        .alert-danger {
-            background: #FEF2F2;
-            color: #991B1B;
-            border-left: 4px solid var(--danger);
-        }
-
-        .alert-success {
-            background: #F0FDF4;
-            color: #166534;
-            border-left: 4px solid var(--success);
-        }
-
-        /* Hero */
-        .premium-hero {
-            background: linear-gradient(135deg, #4F46E5, #7C3AED);
-            border-radius: var(--radius);
-            padding: 3rem 2rem;
-            color: #fff;
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .premium-hero h1 {
-            font-size: 2.2rem;
-            font-weight: 800;
-            margin-bottom: .5rem;
-        }
-
-        .premium-hero p {
-            opacity: .85;
-            font-size: 1.05rem;
-            max-width: 540px;
-            margin: 0 auto 1.5rem;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: .4rem 1.2rem;
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .45rem .85rem;
             border-radius: 999px;
+            background: rgba(255, 255, 255, 0.14);
+            font-size: .78rem;
             font-weight: 700;
-            font-size: .9rem;
-            margin-bottom: 1.5rem;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
         }
 
-        .status-premium {
-            background: var(--accent);
-            color: #fff;
+        .hero-title {
+            font-size: clamp(2rem, 3.2vw, 3rem);
+            line-height: 1.02;
+            font-weight: 900;
+            letter-spacing: -.04em;
+            max-width: 9ch;
+            margin-bottom: .85rem;
         }
 
-        .status-standard {
-            background: rgba(255, 255, 255, .2);
-            color: #fff;
+        .hero-copy {
+            max-width: 58ch;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.84);
+            margin-bottom: 1.25rem;
         }
 
-        /* Plan cards */
+        .hero-points {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .75rem;
+        }
+
+        .hero-point {
+            padding: .75rem .95rem;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            min-width: 180px;
+        }
+
+        .hero-point span {
+            display: block;
+            font-size: .72rem;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: rgba(255, 255, 255, 0.62);
+            margin-bottom: .35rem;
+        }
+
+        .hero-point strong {
+            font-size: 1rem;
+        }
+
+        .status-panel {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 24px;
+            padding: 1.35rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .4rem .8rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.14);
+            font-size: .75rem;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .status-name {
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: -.04em;
+            margin-bottom: .35rem;
+        }
+
+        .status-note {
+            color: rgba(255, 255, 255, 0.78);
+            line-height: 1.55;
+            margin-bottom: 1.25rem;
+        }
+
+        .status-meta {
+            display: grid;
+            gap: .9rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-meta-item {
+            padding: .9rem 1rem;
+            border-radius: 18px;
+            background: rgba(6, 16, 45, 0.22);
+        }
+
+        .status-meta-item span {
+            display: block;
+            font-size: .74rem;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.58);
+            margin-bottom: .3rem;
+        }
+
+        .status-meta-item strong {
+            font-size: 1.05rem;
+        }
+
+        .section-title {
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: #081f57;
+            letter-spacing: -.03em;
+            margin: 2rem 0 1rem;
+        }
+
+        .section-copy {
+            color: #53627d;
+            line-height: 1.6;
+            margin-bottom: 1.4rem;
+            max-width: 72ch;
+        }
+
         .plan-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 1.2rem;
-            margin-bottom: 2rem;
         }
 
         .plan-card {
-            background: var(--surface);
-            border: 2px solid var(--border);
-            border-radius: var(--radius);
-            padding: 1.5rem 1rem;
-            text-align: center;
-            transition: border-color .2s, box-shadow .2s;
+            background: rgba(255, 255, 255, 0.86);
+            border: 1px solid rgba(10, 36, 99, 0.08);
+            border-radius: 26px;
+            padding: 1.35rem;
+            box-shadow: 0 16px 36px rgba(12, 24, 49, 0.08);
+            display: flex;
+            flex-direction: column;
+            min-height: 100%;
         }
 
-        .plan-card:hover {
-            border-color: var(--primary);
-            box-shadow: 0 4px 20px rgba(79, 70, 229, .12);
+        .plan-card.bronze {
+            background: linear-gradient(180deg, #fff8f2 0%, #ffffff 100%);
         }
 
-        .plan-card .emoji {
-            font-size: 2rem;
-            margin-bottom: .5rem;
+        .plan-card.silver {
+            background: linear-gradient(180deg, #f6f8fc 0%, #ffffff 100%);
         }
 
-        .plan-card .plan-name {
-            font-weight: 700;
-            font-size: 1rem;
-            margin-bottom: .25rem;
+        .plan-card.gold {
+            background: linear-gradient(180deg, #fff7dd 0%, #ffffff 100%);
+            border-color: rgba(245, 158, 11, 0.24);
         }
 
-        .plan-card .price {
-            font-size: 1.6rem;
+        .plan-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .plan-rank {
+            font-size: 1.45rem;
+            font-weight: 900;
+            letter-spacing: -.04em;
+            color: #081f57;
+        }
+
+        .plan-badge {
+            padding: .35rem .7rem;
+            border-radius: 999px;
+            font-size: .72rem;
             font-weight: 800;
-            color: var(--primary);
-            margin: .25rem 0;
+            text-transform: uppercase;
+            letter-spacing: .08em;
         }
 
-        .plan-card .months {
-            font-size: .8rem;
-            color: var(--muted);
-            margin-bottom: 1rem;
+        .plan-badge.bronze {
+            background: #f4d7c4;
+            color: #8a4b1f;
         }
 
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: .4rem;
-            padding: .6rem 1.3rem;
-            border: none;
-            border-radius: 8px;
-            font-size: .9rem;
+        .plan-badge.silver {
+            background: #dde5f0;
+            color: #40506a;
+        }
+
+        .plan-badge.gold {
+            background: #ffe7a3;
+            color: #8a5a00;
+        }
+
+        .plan-summary {
+            color: #53627d;
+            line-height: 1.58;
+            min-height: 4.6rem;
+        }
+
+        .price-line {
+            margin: 1rem 0 1.1rem;
+            display: flex;
+            align-items: baseline;
+            gap: .45rem;
+        }
+
+        .price-line strong {
+            font-size: 2rem;
+            font-weight: 900;
+            letter-spacing: -.04em;
+            color: #081f57;
+        }
+
+        .price-line span {
+            color: #5b6780;
             font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all .2s;
-            width: 100%;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: #fff;
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-1px);
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: #fff;
-        }
-
-        .btn-danger:hover {
-            opacity: .9;
-        }
-
-        /* Benefits */
-        .card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 1.75rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .card-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
         }
 
         .benefit-list {
             list-style: none;
-            display: flex;
-            flex-direction: column;
+            display: grid;
             gap: .75rem;
+            margin: 0 0 1.25rem;
         }
 
         .benefit-list li {
             display: flex;
-            align-items: center;
-            gap: .75rem;
-            font-size: .95rem;
+            gap: .7rem;
+            color: #25324a;
+            line-height: 1.52;
+            font-size: .94rem;
         }
 
         .benefit-list li::before {
-            content: '✅';
-            flex-shrink: 0;
+            content: "•";
+            color: #fe6a34;
+            font-weight: 900;
         }
 
-        /* Current status */
-        .status-card {
-            background: linear-gradient(135deg, #FEF3C7, #FDE68A);
-            border-radius: var(--radius);
-            padding: 1.5rem 1.75rem;
-            margin-bottom: 1.5rem;
+        .plan-actions {
+            margin-top: auto;
             display: flex;
+            flex-direction: column;
+            gap: .7rem;
+        }
+
+        .plan-note {
+            font-size: .8rem;
+            color: #63718a;
+        }
+
+        .btn-solid {
+            display: inline-flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-        }
-
-        .status-card .label {
-            font-size: .85rem;
-            color: #92400E;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: .05em;
-        }
-
-        .status-card .value {
-            font-size: 1.3rem;
-            font-weight: 800;
-            color: #78350F;
-        }
-
-        .cancel-section {
-            text-align: center;
-        }
-
-        .cancel-section .cancel-link {
-            background: none;
+            justify-content: center;
+            gap: .55rem;
+            width: 100%;
+            padding: .92rem 1rem;
+            border-radius: 16px;
             border: none;
-            color: var(--danger);
-            font-size: .875rem;
+            text-decoration: none;
+            background: #081f57;
+            color: #fff;
+            font-weight: 800;
             cursor: pointer;
-            text-decoration: underline;
-            font-family: inherit;
+            transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+            box-shadow: 0 14px 28px rgba(8, 31, 87, 0.18);
+        }
+
+        .btn-solid:hover {
+            transform: translateY(-1px);
+            background: #0d2a73;
+        }
+
+        .btn-muted {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: .82rem 1rem;
+            border-radius: 16px;
+            text-decoration: none;
+            border: 1px solid rgba(8, 31, 87, 0.12);
+            color: #081f57;
+            background: rgba(255, 255, 255, 0.72);
+            font-weight: 700;
+        }
+
+        .empty-note {
+            margin-top: 1.5rem;
+            padding: 1rem 1.15rem;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.78);
+            color: #5a6880;
+            border: 1px solid rgba(8, 31, 87, 0.08);
+        }
+
+        .flash {
+            padding: .95rem 1rem;
+            border-radius: 18px;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .flash.error {
+            background: #fff2f2;
+            color: #b42318;
+            border: 1px solid #fecaca;
+        }
+
+        .flash.success {
+            background: #ecfdf3;
+            color: #027a48;
+            border: 1px solid #abefc6;
+        }
+
+        @media (max-width: 1024px) {
+            .hero-grid,
+            .plan-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
+<body>
+<nav th:replace="~{layout/base :: navbar}"></nav>
 
-<body class="bg-background text-on-surface">
-    <nav th:replace="~{layout/base :: navbar}"></nav>
+<main class="premium-shell">
+    <div th:if="${error}" class="flash error" th:text="${error}"></div>
+    <div th:if="${success}" class="flash success" th:text="${success}"></div>
 
-    <main class="main" style="padding-top:7rem;">
-        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
-        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-
-        <!-- Hero -->
-        <div class="premium-hero">
-            <div class="status-badge status-premium" th:if="${customer?.membership?.name() == 'PREMIUM'}">⭐ Tài khoản
-                Premium</div>
-            <div class="status-badge status-standard" th:unless="${customer?.membership?.name() == 'PREMIUM'}">Standard
-            </div>
-            <h1>VehicleBook Premium</h1>
-            <p>Nâng cấp tài khoản để tận hưởng ưu tiên đặt xe, giảm giá 10% và nhiều đặc quyền khác.</p>
-        </div>
-
-        <!-- Current Premium Status -->
-        <div class="status-card" th:if="${customer?.membership?.name() == 'PREMIUM'}">
+    <section class="hero-card">
+        <div class="hero-grid">
             <div>
-                <div class="label">Gói hiện tại</div>
-                <div class="value">⭐ Premium</div>
+                <div class="eyebrow">Premium membership</div>
+                <h1 class="hero-title">Chọn hạng phù hợp cho từng kiểu di chuyển.</h1>
+                <p class="hero-copy">
+                    Khi bấm mua, hệ thống sẽ điều hướng sang trang thanh toán premium bằng ví, theo đúng luồng thanh toán đang dùng cho lịch đặt thuê.
+                </p>
+                <div class="hero-points">
+                    <div class="hero-point">
+                        <span>Hệ thứ tự ưu tiên</span>
+                        <strong>Vàng > Bạc > Đồng > Normal</strong>
+                    </div>
+                    <div class="hero-point">
+                        <span>Hình thức thanh toán</span>
+                        <strong>Ví SR-Booking</strong>
+                    </div>
+                    <div class="hero-point">
+                        <span>Chu kỳ gói</span>
+                        <strong>30 ngày mỗi lần mua</strong>
+                    </div>
+                </div>
             </div>
-            <div>
-                <div class="label">Hết hạn</div>
-                <div class="value" th:text="${#temporals.format(customer.premiumExp,'dd/MM/yyyy')}">—</div>
-            </div>
-            <div class="cancel-section">
-                <form th:action="@{/premium/cancel}" method="post"
-                    onsubmit="return confirm('Bạn có chắc muốn huỷ Premium?')">
-                    <button type="submit" class="cancel-link">Huỷ Premium</button>
+
+            <aside class="status-panel">
+                <div class="status-chip" th:if="${customer != null and customer.premiumActive}">
+                    Đang hoạt động
+                </div>
+                <div class="status-chip" th:unless="${customer != null and customer.premiumActive}">
+                    Tài khoản thường
+                </div>
+
+                <div class="status-name"
+                     th:text="${customer != null and customer.premiumActive and customer.premiumTier != null ? customer.premiumTier.levelLabel : 'Standard'}">
+                    Standard
+                </div>
+
+                <p class="status-note"
+                   th:text="${customer != null and customer.premiumActive ? customer.premiumTier.summary : 'Bạn chưa kích hoạt gói premium. Chọn một hạng bên dưới để mở quyền lợi tương ứng.'}">
+                    Bạn chưa kích hoạt gói premium.
+                </p>
+
+                <div class="status-meta">
+                    <div class="status-meta-item">
+                        <span>Badge hồ sơ</span>
+                        <strong th:text="${customer != null and customer.premiumActive ? 'Rank ' + customer.premiumTier.displayName : 'Chưa có badge'}">Chưa có badge</strong>
+                    </div>
+                    <div class="status-meta-item">
+                        <span>Hiệu lực đến</span>
+                        <strong th:text="${customer != null and customer.premiumActive ? #temporals.format(customer.premiumExp, 'dd/MM/yyyy') : 'Chưa kích hoạt'}">Chưa kích hoạt</strong>
+                    </div>
+                </div>
+
+                <form th:if="${customer != null and customer.premiumActive}" th:action="@{/premium/cancel}" method="post">
+                    <button type="submit" class="btn-muted">Hủy premium và về Standard</button>
                 </form>
-            </div>
+                <a th:unless="${customer != null and customer.premiumActive}" th:href="@{/wallet}" class="btn-muted">Nạp thêm tiền vào ví</a>
+            </aside>
         </div>
+    </section>
 
-        <!-- Purchase Plans -->
-        <div
-            th:unless="${customer?.membership?.name() == 'PREMIUM' and customer.premiumExp != null and customer.premiumExp.isAfter(T(java.time.LocalDate).now())}">
-            <h2 style="font-size:1.15rem;font-weight:700;margin-bottom:1rem;">Chọn gói Premium</h2>
-            <div class="plan-grid">
-                <div class="plan-card">
-                    <div class="emoji">📅</div>
-                    <div class="plan-name">1 Tháng</div>
-                    <div class="price">99K</div>
-                    <div class="months">/ tháng</div>
-                    <form th:action="@{/premium/upgrade}" method="post">
-                        <input type="hidden" name="months" value="1">
-                        <button type="submit" class="btn btn-primary">Mua ngay</button>
-                    </form>
+    <h2 class="section-title">Ba hạng premium cho khách hàng</h2>
+    <p class="section-copy">
+        Quyền lợi được thiết kế đúng theo từng gói Đồng, Bạc, Vàng. Khi đổi gói, hạng mới sẽ được áp dụng ngay sau khi thanh toán thành công.
+    </p>
+
+    <section class="plan-grid">
+        <article th:each="tier : ${premiumTiers}"
+                 class="plan-card"
+                 th:classappend="${tier.name() == 'BRONZE' ? ' bronze' : (tier.name() == 'SILVER' ? ' silver' : ' gold')}">
+            <div class="plan-top">
+                <div>
+                    <div class="plan-rank" th:text="${tier.levelLabel}">Hạng Đồng</div>
+                    <p class="plan-summary" th:text="${tier.summary}">Mô tả gói.</p>
                 </div>
-                <div class="plan-card" style="border-color:var(--primary);">
-                    <div class="emoji">🔥</div>
-                    <div class="plan-name">3 Tháng</div>
-                    <div class="price">249K</div>
-                    <div class="months">tiết kiệm 17%</div>
-                    <form th:action="@{/premium/upgrade}" method="post">
-                        <input type="hidden" name="months" value="3">
-                        <button type="submit" class="btn btn-primary">Mua ngay</button>
-                    </form>
-                </div>
-                <div class="plan-card">
-                    <div class="emoji">💎</div>
-                    <div class="plan-name">6 Tháng</div>
-                    <div class="price">449K</div>
-                    <div class="months">tiết kiệm 25%</div>
-                    <form th:action="@{/premium/upgrade}" method="post">
-                        <input type="hidden" name="months" value="6">
-                        <button type="submit" class="btn btn-primary">Mua ngay</button>
-                    </form>
-                </div>
-                <div class="plan-card">
-                    <div class="emoji">👑</div>
-                    <div class="plan-name">12 Tháng</div>
-                    <div class="price">799K</div>
-                    <div class="months">tiết kiệm 33%</div>
-                    <form th:action="@{/premium/upgrade}" method="post">
-                        <input type="hidden" name="months" value="12">
-                        <button type="submit" class="btn btn-primary">Mua ngay</button>
-                    </form>
-                </div>
+                <span class="plan-badge"
+                      th:classappend="${tier.name() == 'BRONZE' ? ' bronze' : (tier.name() == 'SILVER' ? ' silver' : ' gold')}"
+                      th:text="${tier.isVip() ? 'VIP' : 'Premium'}">
+                    Premium
+                </span>
             </div>
-        </div>
 
-        <!-- Extend if already premium -->
-        <div th:if="${customer?.membership?.name() == 'PREMIUM'}">
-            <h2 style="font-size:1.15rem;font-weight:700;margin-bottom:1rem;">Gia hạn thêm</h2>
-            <div class="plan-grid">
-                <div class="plan-card">
-                    <div class="emoji">➕</div>
-                    <div class="plan-name">+1 Tháng</div>
-                    <div class="price">99K</div>
-                    <div class="months">&nbsp;</div>
-                    <form th:action="@{/premium/upgrade}" method="post">
-                        <input type="hidden" name="months" value="1">
-                        <button type="submit" class="btn btn-primary">Gia hạn</button>
-                    </form>
-                </div>
-                <div class="plan-card">
-                    <div class="emoji">➕➕</div>
-                    <div class="plan-name">+3 Tháng</div>
-                    <div class="price">249K</div>
-                    <div class="months">&nbsp;</div>
-                    <form th:action="@{/premium/upgrade}" method="post">
-                        <input type="hidden" name="months" value="3">
-                        <button type="submit" class="btn btn-primary">Gia hạn</button>
-                    </form>
-                </div>
+            <div class="price-line">
+                <strong th:text="${#numbers.formatDecimal(tier.price, 0, 'COMMA', 0, 'POINT') + ' đ'}">99.000 đ</strong>
+                <span>/ 30 ngày</span>
             </div>
-        </div>
 
-        <!-- Benefits -->
-        <div class="card">
-            <div class="card-title">🎁 Đặc quyền Premium</div>
             <ul class="benefit-list">
-                <li>Giảm giá <strong>10%</strong> cho tất cả đơn đặt xe</li>
-                <li>Ưu tiên ghép tài xế (xử lý trước tài khoản Standard)</li>
-                <li>Hỗ trợ 24/7 qua chat trực tiếp</li>
-                <li>Xem lịch sử chuyến đi không giới hạn</li>
-                <li>Huy hiệu ⭐ Premium hiển thị trên hồ sơ</li>
+                <li th:each="benefit : ${tier.benefits}" th:text="${benefit}">Quyền lợi</li>
             </ul>
-        </div>
-    </main>
-</body>
 
+            <div class="plan-actions">
+                <a class="btn-solid" th:href="@{/premium/checkout(tier=${tier.name()})}">
+                    <span>Thanh toán gói</span>
+                </a>
+                <div class="plan-note"
+                     th:text="${customer != null and customer.premiumActive and customer.premiumTier == tier ? 'Bạn đang dùng đúng hạng này. Có thể bấm mua để gia hạn thêm 30 ngày.' : 'Mua gói để điều hướng sang trang xác nhận thanh toán.'}">
+                    Mua gói để điều hướng sang trang xác nhận thanh toán.
+                </div>
+            </div>
+        </article>
+    </section>
+
+    <div class="empty-note">
+        Rank Vàng được hiển thị như gói VIP và dùng badge nhận diện hạng Vàng trên hồ sơ khách hàng.
+    </div>
+</main>
+</body>
 </html>

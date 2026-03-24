@@ -246,6 +246,8 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(form.getPassword()));
         user.setRole(role);
         user.setIsActive(role != Role.DRIVER);
+        user.setEmailVerified(true);
+        user.setEmailVerifiedAt(java.time.LocalDateTime.now());
         User saved = userRepository.save(user);
 
         if (role == Role.CUSTOMER) {
