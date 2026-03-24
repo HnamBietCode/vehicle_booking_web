@@ -145,15 +145,15 @@
                             <div th:if="${wr.status.name() == 'PENDING'}" style="display:flex;flex-direction:column;gap:6px;">
                                 <form th:action="@{/admin/withdrawals/{id}/approve(id=${wr.id})}" method="post" class="action-form">
                                     <input type="text" name="adminNote" placeholder="Ghi chú…" class="action-input">
-                                    <button type="submit" class="btn btn-success"
-                                        onclick="return confirm('Duyệt yêu cầu rút tiền này?')">
+                                    <button type="button" class="btn btn-success"
+                                        onclick="showConfirmModal(this.closest('form'), 'approve', 'Duyệt yêu cầu rút tiền?', 'Xác nhận duyệt yêu cầu rút tiền này. Số tiền sẽ được chuyển cho người dùng.')">
                                         <span class="material-symbols-outlined" style="font-size:14px;">check</span>Duyệt
                                     </button>
                                 </form>
                                 <form th:action="@{/admin/withdrawals/{id}/reject(id=${wr.id})}" method="post" class="action-form">
                                     <input type="text" name="adminNote" placeholder="Lý do từ chối…" class="action-input">
-                                    <button type="submit" class="btn btn-danger"
-                                        onclick="return confirm('Từ chối & hoàn tiền yêu cầu này?')">
+                                    <button type="button" class="btn btn-danger"
+                                        onclick="showConfirmModal(this.closest('form'), 'reject', 'Từ chối yêu cầu rút tiền?', 'Yêu cầu sẽ bị từ chối và số tiền sẽ được hoàn lại vào ví người dùng.')">
                                         <span class="material-symbols-outlined" style="font-size:14px;">close</span>Từ chối
                                     </button>
                                 </form>
@@ -165,6 +165,88 @@
             </table>
         </div>
     </div>
+
+<!-- Custom Confirm Modal -->
+<div id="confirmModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(10,36,99,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);justify-content:center;align-items:center;padding:16px;">
+    <div id="confirmModalContent" style="background:white;border-radius:24px;max-width:420px;width:100%;box-shadow:0 24px 64px rgba(10,36,99,.2);overflow:hidden;transform:scale(.9);opacity:0;transition:all .25s cubic-bezier(.4,0,.2,1);">
+        <!-- Header -->
+        <div id="confirmModalHeader" style="padding:28px 28px 0;display:flex;align-items:center;gap:14px;">
+            <div id="confirmModalIcon" style="width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <span class="material-symbols-outlined" id="confirmModalIconText" style="font-size:24px;color:white;"></span>
+            </div>
+            <div>
+                <h3 id="confirmModalTitle" style="font-size:1.05rem;font-weight:800;color:#0A2463;margin-bottom:2px;"></h3>
+                <p id="confirmModalDesc" style="font-size:.82rem;color:#64748b;font-weight:500;line-height:1.5;"></p>
+            </div>
+        </div>
+        <!-- Actions -->
+        <div style="padding:24px 28px;display:flex;justify-content:flex-end;gap:10px;">
+            <button type="button" onclick="hideConfirmModal()"
+                style="padding:10px 22px;border:1.5px solid #e9e7ed;background:white;border-radius:12px;font-size:.85rem;font-weight:700;color:#64748b;cursor:pointer;transition:all .2s;font-family:inherit;"
+                onmouseover="this.style.background='#f5f3f9'" onmouseout="this.style.background='white'">
+                Hủy
+            </button>
+            <button type="button" id="confirmModalAction"
+                style="padding:10px 28px;border:none;border-radius:12px;font-size:.85rem;font-weight:700;color:white;cursor:pointer;transition:all .2s;font-family:inherit;display:flex;align-items:center;gap:6px;">
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let pendingForm = null;
+
+    function showConfirmModal(form, type, title, desc) {
+        pendingForm = form;
+        const modal = document.getElementById('confirmModal');
+        const content = document.getElementById('confirmModalContent');
+        const icon = document.getElementById('confirmModalIcon');
+        const iconText = document.getElementById('confirmModalIconText');
+        const actionBtn = document.getElementById('confirmModalAction');
+
+        document.getElementById('confirmModalTitle').textContent = title;
+        document.getElementById('confirmModalDesc').textContent = desc;
+
+        if (type === 'approve') {
+            icon.style.background = 'linear-gradient(135deg, #10B981, #059669)';
+            iconText.textContent = 'check_circle';
+            actionBtn.style.background = 'linear-gradient(135deg, #10B981, #059669)';
+            actionBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;">check_circle</span>Xác nhận duyệt';
+        } else {
+            icon.style.background = 'linear-gradient(135deg, #EF4444, #DC2626)';
+            iconText.textContent = 'cancel';
+            actionBtn.style.background = 'linear-gradient(135deg, #EF4444, #DC2626)';
+            actionBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;">cancel</span>Xác nhận từ chối';
+        }
+
+        modal.style.display = 'flex';
+        requestAnimationFrame(() => {
+            content.style.transform = 'scale(1)';
+            content.style.opacity = '1';
+        });
+
+        actionBtn.onclick = function() {
+            if (pendingForm) pendingForm.submit();
+            hideConfirmModal();
+        };
+    }
+
+    function hideConfirmModal() {
+        const content = document.getElementById('confirmModalContent');
+        content.style.transform = 'scale(.9)';
+        content.style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('confirmModal').style.display = 'none';
+            pendingForm = null;
+        }, 200);
+    }
+
+    // Đóng modal khi click bên ngoài
+    document.getElementById('confirmModal').addEventListener('click', function(e) {
+        if (e.target === this) hideConfirmModal();
+    });
+</script>
+
 </main>
 
 </body>
