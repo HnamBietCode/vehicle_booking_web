@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title th:text="${title}">VinaPulse</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-bright": "#faf8ff",
+                        "secondary": "#ab3500",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed-variant": "#2e4382",
+                        "on-primary": "#ffffff",
+                        "on-primary-container": "#7a8ed2",
+                        "on-secondary": "#ffffff",
+                        "surface-container-low": "#f5f3f9",
+                        "on-secondary-fixed": "#390c00",
+                        "on-secondary-container": "#5d1900",
+                        "surface-container-high": "#e9e7ed",
+                        "error": "#ba1a1a",
+                        "secondary-fixed-dim": "#ffb59d",
+                        "surface-container": "#efedf3",
+                        "on-tertiary-container": "#409f90",
+                        "inverse-surface": "#303035",
+                        "on-secondary-fixed-variant": "#832600",
+                        "primary-container": "#0a2463",
+                        "on-primary-fixed": "#00164d",
+                        "error-container": "#ffdad6",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#005047",
+                        "background": "#faf8ff",
+                        "surface": "#faf8ff",
+                        "on-error": "#ffffff",
+                        "secondary-fixed": "#ffdbd0",
+                        "on-surface": "#1b1b20",
+                        "tertiary-fixed-dim": "#7ad7c6",
+                        "surface-dim": "#dbd9df",
+                        "inverse-primary": "#b5c4ff",
+                        "outline-variant": "#c5c6d2",
+                        "surface-variant": "#e3e2e8",
+                        "tertiary": "#001814",
+                        "outline": "#757681",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "on-tertiary-fixed": "#00201b",
+                        "primary": "#00103e",
+                        "on-surface-variant": "#444650",
+                        "tertiary-container": "#002f29",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed": "#dce1ff",
+                        "inverse-on-surface": "#f2f0f6",
+                        "secondary-container": "#fe6a34",
+                        "tertiary-fixed": "#97f3e2",
+                        "surface-tint": "#475b9c",
+                        "surface-container-highest": "#e3e2e8",
+                        "on-background": "#1b1b20"
+                    },
+                    fontFamily: {
+                        "headline": ["Be Vietnam Pro"],
+                        "body": ["Be Vietnam Pro"],
+                        "label": ["Be Vietnam Pro"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #faf8ff;
+        }
+    </style>
+</head>
+<body>
+    <!-- TopAppBar Fragment -->
+    <header th:fragment="header" class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-sm shadow-[#00103E]/5 h-16 flex justify-between items-center px-6">
+        <a href="/" class="text-xl font-bold text-[#0A2463] dark:text-white tracking-tight no-underline">SR-Booking</a>
+        <div class="flex items-center gap-3">
+            <a href="/notifications" class="p-2 rounded-full hover:bg-slate-50 transition-colors active:scale-95 duration-200">
+                <span class="material-symbols-outlined text-slate-500">notifications</span>
+            </a>
+            <a href="/profile" class="p-2 rounded-full hover:bg-slate-50 transition-colors active:scale-95 duration-200">
+                <span class="material-symbols-outlined text-slate-500">account_circle</span>
+            </a>
+            <a href="/auth/logout" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-all active:scale-95 duration-200 text-xs font-semibold">
+                <span class="material-symbols-outlined text-[16px]">logout</span>
+                Đăng xuất
+            </a>
+        </div>
+    </header>
+
+    <!-- BottomNavBar Fragment -->
+    <nav th:fragment="bottomnav(active)" class="fixed bottom-0 left-0 w-full bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl shadow-[0_-4px_24px_rgba(0,16,62,0.08)] flex justify-around items-center px-4 pb-6 pt-3 z-50 rounded-t-[24px]">
+        <a th:href="@{/driver/dashboard}" class="flex flex-col items-center justify-center py-2 px-4 transition-all active:scale-90 duration-300 ease-out" 
+           th:classappend="${active == 'dashboard' ? 'bg-[#0A2463] text-white rounded-[16px]' : 'text-slate-400 dark:text-slate-500 hover:text-[#FE6A34]'}">
+            <span class="material-symbols-outlined" data-icon="grid_view" th:style="${active == 'dashboard' ? 'font-variation-settings: &quot;FILL&quot; 1;' : ''}">grid_view</span>
+            <span class="font-['Be_Vietnam_Pro'] text-[11px] font-medium tracking-wide uppercase mt-1">Home</span>
+        </a>
+        <a th:href="@{/driver/rentals}" class="flex flex-col items-center justify-center py-2 px-4 transition-all active:scale-90 duration-300 ease-out" 
+           th:classappend="${active == 'rentals' ? 'bg-[#0A2463] text-white rounded-[16px]' : 'text-slate-400 dark:text-slate-500 hover:text-[#FE6A34]'}">
+            <span class="material-symbols-outlined" data-icon="directions_car" th:style="${active == 'rentals' ? 'font-variation-settings: &quot;FILL&quot; 1;' : ''}">directions_car</span>
+            <span class="font-['Be_Vietnam_Pro'] text-[11px] font-medium tracking-wide uppercase mt-1">Rentals</span>
+        </a>
+        <a th:href="@{/driver/stats}" class="flex flex-col items-center justify-center py-2 px-4 transition-all active:scale-90 duration-300 ease-out" 
+           th:classappend="${active == 'stats' ? 'bg-[#0A2463] text-white rounded-[16px]' : 'text-slate-400 dark:text-slate-500 hover:text-[#FE6A34]'}">
+            <span class="material-symbols-outlined" data-icon="bar_chart" th:style="${active == 'stats' ? 'font-variation-settings: &quot;FILL&quot; 1;' : ''}">bar_chart</span>
+            <span class="font-['Be_Vietnam_Pro'] text-[11px] font-medium tracking-wide uppercase mt-1">Stats</span>
+        </a>
+        <a th:href="@{/driver/sober-bookings}" class="flex flex-col items-center justify-center py-2 px-4 transition-all active:scale-90 duration-300 ease-out" 
+           th:classappend="${active == 'sober' ? 'bg-[#0A2463] text-white rounded-[16px]' : 'text-slate-400 dark:text-slate-500 hover:text-[#FE6A34]'}">
+            <span class="material-symbols-outlined" data-icon="verified_user" th:style="${active == 'sober' ? 'font-variation-settings: &quot;FILL&quot; 1;' : ''}">verified_user</span>
+            <span class="font-['Be_Vietnam_Pro'] text-[11px] font-medium tracking-wide uppercase mt-1">Sober</span>
+        </a>
+        <a th:href="@{/driver/profile}" class="flex flex-col items-center justify-center py-2 px-4 transition-all active:scale-90 duration-300 ease-out" 
+           th:classappend="${active == 'profile' ? 'bg-[#0A2463] text-white rounded-[16px]' : 'text-slate-400 dark:text-slate-500 hover:text-[#FE6A34]'}">
+            <span class="material-symbols-outlined" data-icon="person" th:style="${active == 'profile' ? 'font-variation-settings: &quot;FILL&quot; 1;' : ''}">person</span>
+            <span class="font-['Be_Vietnam_Pro'] text-[11px] font-medium tracking-wide uppercase mt-1">Profile</span>
+        </a>
+    </nav>
+</body>
+</html>

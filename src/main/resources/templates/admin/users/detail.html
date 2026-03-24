@@ -4,9 +4,10 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chi tiết tài khoản – Admin</title>
+    <title>Chi tiết tài khoản – SR-Booking Admin</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <style>
         *,
         *::before,
@@ -17,77 +18,37 @@
         }
 
         :root {
-            --primary: #4F46E5;
-            --primary-dark: #3730A3;
+            --primary: #0A2463;
+            --primary-dark: #071a4a;
             --danger: #EF4444;
             --success: #10B981;
             --accent: #F59E0B;
-            --bg: #F8FAFC;
+            --bg: #f5f3f9;
             --surface: #fff;
-            --border: #E2E8F0;
-            --text: #1E293B;
+            --border: #e9e7ed;
+            --text: #1b1b20;
             --muted: #64748B;
-            --radius: 12px;
+            --radius: 14px;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Be Vietnam Pro', sans-serif;
             background: var(--bg);
             color: var(--text);
         }
 
-        .navbar {
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-            padding: 0 2rem;
-            display: flex;
-            align-items: center;
-            height: 64px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
-        }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .sidebar-link { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 12px; color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 600; transition: all .2s; }
+        .sidebar-link:hover { background: rgba(255,255,255,.1); color: white; }
+        .sidebar-link.active { background: #FE6A34; color: white; transform: scale(1.02); }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.3rem;
-            color: var(--primary);
-            text-decoration: none;
-        }
-
-        .navbar-brand::before {
-            content: '🚗 ';
-        }
-
-        .navbar-nav {
-            display: flex;
-            align-items: center;
-            gap: .25rem;
-            margin-left: auto;
-            list-style: none;
-        }
-
-        .nav-link {
-            padding: .5rem .85rem;
-            border-radius: 8px;
-            text-decoration: none;
-            color: var(--muted);
-            font-size: .9rem;
-            font-weight: 500;
-            transition: all .2s;
-        }
-
-        .nav-link:hover,
-        .nav-link.active {
-            background: var(--primary);
-            color: #fff;
-        }
+        /* Old navbar styles removed - using sidebar layout */
 
         .main {
             max-width: 900px;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
+            margin: 0 auto;
+            padding: 88px 32px 48px;
         }
 
         .breadcrumb {
@@ -128,7 +89,7 @@
 
         /* Hero */
         .user-hero {
-            background: linear-gradient(135deg, #4F46E5, #7C3AED);
+            background: linear-gradient(135deg, #0A2463, #1a3f8f);
             border-radius: var(--radius);
             padding: 2rem;
             color: #fff;
@@ -340,13 +301,39 @@
 </head>
 
 <body>
-    <nav th:replace="~{layout/base :: navbar}"></nav>
-
-    <main class="main">
-        <div class="breadcrumb">
-            <a th:href="@{/admin/users}">Quản lý Users</a>
-            <span th:text="${target.email}">Chi tiết</span>
+    <!-- Sidebar -->
+    <aside style="position:fixed;left:0;top:0;height:100%;width:256px;background:#0A2463;display:flex;flex-direction:column;padding:24px 0;z-index:50;box-shadow:4px 0 24px rgba(0,16,62,.15);">
+        <div style="padding:0 24px;margin-bottom:32px;">
+            <h1 style="color:white;font-size:1.4rem;font-weight:800;font-style:italic;letter-spacing:-.02em;">SR-Booking</h1>
+            <p style="color:#93c5fd;font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;opacity:.7;">Mobility Admin</p>
         </div>
+        <nav style="flex:1;padding:0 8px;display:flex;flex-direction:column;gap:2px;">
+            <a class="sidebar-link" href="/admin/dashboard"><span class="material-symbols-outlined" style="font-size:20px;">dashboard</span>Dashboard</a>
+            <a class="sidebar-link active" href="/admin/users"><span class="material-symbols-outlined" style="font-size:20px;">group</span>Quản lý Users</a>
+            <a class="sidebar-link" href="/admin/vehicles"><span class="material-symbols-outlined" style="font-size:20px;">directions_car</span>Quản lý Xe</a>
+            <a class="sidebar-link" href="/admin/sober-bookings"><span class="material-symbols-outlined" style="font-size:20px;">assignment</span>Quản lý Lái hộ</a>
+            <a class="sidebar-link" href="/admin/withdrawals"><span class="material-symbols-outlined" style="font-size:20px;">payments</span>Rút tiền</a>
+            <a class="sidebar-link" href="/admin/pickup-points"><span class="material-symbols-outlined" style="font-size:20px;">location_on</span>Điểm đón</a>
+            <a class="sidebar-link" href="/admin/ratings"><span class="material-symbols-outlined" style="font-size:20px;">star</span>Đánh giá</a>
+            <a class="sidebar-link" href="/admin/realtime"><span class="material-symbols-outlined" style="font-size:20px;">monitoring</span>Realtime<span style="margin-left:auto;width:8px;height:8px;background:#4ade80;border-radius:50%;animation:pulse 1.5s infinite;"></span></a>
+        </nav>
+        <div style="padding:0 8px;border-top:1px solid rgba(255,255,255,.1);padding-top:12px;margin-top:8px;">
+            <a class="sidebar-link" href="/auth/logout" style="color:#fca5a5;"><span class="material-symbols-outlined" style="font-size:18px;">logout</span>Đăng xuất</a>
+        </div>
+    </aside>
+
+    <!-- Top Header -->
+    <header style="position:fixed;top:0;right:0;width:calc(100% - 256px);height:64px;background:rgba(255,255,255,.85);backdrop-filter:blur(16px);display:flex;justify-content:space-between;align-items:center;padding:0 32px;z-index:40;border-bottom:1px solid #f0eef5;">
+        <div style="display:flex;align-items:center;gap:8px;">
+            <a href="/admin/users" style="color:#64748b;font-size:.85rem;text-decoration:none;font-weight:500;">Quản lý Users</a>
+            <span style="color:#c5c6d2;">/</span>
+            <span style="color:#0A2463;font-weight:700;font-size:.85rem;">Chi tiết tài khoản</span>
+        </div>
+        <div style="width:34px;height:34px;border-radius:50%;background:#0A2463;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:12px;">AD</div>
+    </header>
+
+    <div style="margin-left:256px;">
+    <main class="main">
 
         <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
 
@@ -540,6 +527,7 @@
             <a class="btn btn-outline" th:href="@{/admin/users}">← Quay lại</a>
         </div>
     </main>
+    </div><!-- end margin-left wrapper -->
 </body>
 
 <script>

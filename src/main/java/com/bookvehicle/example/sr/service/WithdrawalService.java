@@ -20,6 +20,9 @@ public class WithdrawalService {
     @Autowired
     private WalletService walletService;
 
+    @Autowired
+    private NotificationService notificationService;
+
     /**
      * User/Driver tạo lệnh rút tiền.
      * Trừ tiền trong ví ngay lập tức (hold) và tạo request PENDING.
@@ -58,6 +61,14 @@ public class WithdrawalService {
                 "Yêu cầu rút tiền #" + wr.getId() + " - " + bankName + " " + accountNumber
         );
 
+        // Notification for user
+        try {
+            notificationService.createNotification(
+                    userId, "Yêu cầu rút tiền",
+                    "Yêu cầu rút " + amount + "₫ đã được gửi. Chờ admin duyệt.",
+                    NotificationType.WITHDRAW_REQUEST,
+                    NotificationRefType.WALLET, wr.getId());
+        } catch (Exception ignored) {}
         return null;
     }
 
@@ -78,6 +89,15 @@ public class WithdrawalService {
         wr.setAdminNote(adminNote);
         wr.setProcessedAt(LocalDateTime.now());
         withdrawalRepository.save(wr);
+
+        // Thông báo cho user
+        try {
+            notificationService.createNotification(
+                    wr.getUserId(), "Rút tiền được duyệt",
+                    "Yêu cầu rút " + wr.getAmount() + "₫ đã được duyệt." + (adminNote != null ? " Note: " + adminNote : ""),
+                    NotificationType.WITHDRAW_APPROVED,
+                    NotificationRefType.WALLET, wr.getId());
+        } catch (Exception ignored) {}
         return null;
     }
 
@@ -107,6 +127,15 @@ public class WithdrawalService {
         wr.setAdminNote(adminNote);
         wr.setProcessedAt(LocalDateTime.now());
         withdrawalRepository.save(wr);
+
+        // Thông báo từ chối
+        try {
+            notificationService.createNotification(
+                    wr.getUserId(), "Rút tiền bị từ chối",
+                    "Yêu cầu rút " + wr.getAmount() + "₫ đã bị từ chối và hoàn tiền về ví." + (adminNote != null ? " Lý do: " + adminNote : ""),
+                    NotificationType.WITHDRAW_REJECTED,
+                    NotificationRefType.WALLET, wr.getId());
+        } catch (Exception ignored) {}
         return null;
     }
 

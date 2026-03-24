@@ -7,6 +7,7 @@
     <title th:text="${pageTitle != null ? pageTitle + ' - VehicleBook' : 'VehicleBook'}">VehicleBook</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <style>
         *,
         *::before,
@@ -419,62 +420,192 @@
             color: var(--muted);
         }
     </style>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-container": "#0a2463",
+                        "on-primary-container": "#7a8ed2",
+                        "secondary-container": "#fe6a34",
+                        "background": "#faf8ff",
+                        "on-surface": "#1b1b20",
+                        "on-surface-variant": "#444650",
+                        "outline-variant": "#c5c6d2"
+                    },
+                    fontFamily: {
+                        "headline": ["Be Vietnam Pro"],
+                        "body": ["Be Vietnam Pro"]
+                    }
+                }
+            }
+        }
+    </script>
     <th:block th:fragment="head">
         <!-- child page styles slot -->
     </th:block>
 </head>
 
-<body>
-    <!-- â”€â”€â”€ Navbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
-    <nav class="navbar" th:fragment="navbar">
-        <a class="navbar-brand" href="/">VehicleBook</a>
-        <ul class="navbar-nav"
-            th:if="${session?.loggedUser != null || #httpServletRequest.getAttribute('loggedUser') != null}">
-            <th:block th:with="u=${session?.loggedUser ?: #httpServletRequest.getAttribute('loggedUser')}">
-                <li th:if="${u?.role?.name() != 'ADMIN'}"><a class="nav-link" th:href="@{/vehicles/search}">🔍 Tìm xe</a></li>
-                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/users}">👥 Quản lý Users</a></li>
-                <li th:if="${u?.role?.name() == 'DRIVER'}"><a class="nav-link" th:href="@{/driver/dashboard}">📈 Thống kê</a></li>
-                <li th:if="${u?.role?.name() == 'DRIVER'}"><a class="nav-link" th:href="@{/driver/rentals}">🧾 Đơn thuê</a></li>
-                <li th:if="${u?.role?.name() == 'DRIVER'}"><a class="nav-link" th:href="@{/driver/sober-bookings}">🚗 Xử lý lái hộ</a></li>
-                <li th:if="${u?.role?.name() == 'CUSTOMER'}"><a class="nav-link" th:href="@{/rentals/my}">🧾 Đơn thuê</a></li>
-                <li th:if="${u?.role?.name() == 'CUSTOMER'}"><a class="nav-link" th:href="@{/bookings/options}">Đặt dịch vụ</a></li>
-                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/vehicles}">🚗 Quản lý xe</a></li>
-                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/pickup-points}">📍 Điểm đón</a></li>
-                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/sober-bookings}">🚗 Quản lý lái hộ</a></li>
-                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/withdrawals}">💸 Rút tiền</a></li>
-                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/realtime}">Realtime</a></li>
-                <li th:if="${u?.role?.name() == 'ADMIN'}"><a class="nav-link" th:href="@{/admin/dashboard}">📊 Báo cáo</a></li>
-                <li th:if="${u?.role?.name() != 'ADMIN'}"><a class="nav-link" th:href="@{/profile}">👤 Hồ sơ</a></li>
-                <li th:if="${u?.role?.name() == 'CUSTOMER'}">
-                    <a class="nav-link" th:href="@{/premium}">
-                        ⭐ Premium
-                        <span class="nav-badge" th:if="${u != null}">VIP</span>
+<body class="bg-background text-on-surface">
+    <!-- Modern Navbar -->
+    <header th:fragment="navbar" class="fixed top-0 w-full z-50 bg-white shadow-[0_2px_15px_rgba(0,0,0,0.05)]">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
+            <!-- Brand -->
+            <div class="flex items-center gap-12">
+                <a href="/" class="text-2xl font-extrabold text-[#0A2463] tracking-tight">SR-Booking</a>
+                
+                <!-- Desktop Navigation Links -->
+                <nav class="hidden md:flex items-center gap-8" th:with="user=${session != null and session.loggedUser != null ? session.loggedUser : loggedUser}">
+                    <a href="/" class="text-sm font-bold transition-all relative group"
+                       th:classappend="${#httpServletRequest != null and #httpServletRequest.requestURI == '/' ? 'text-secondary-container' : 'text-on-surface-variant hover:text-primary-container'}">
+                        Trang chủ
+                        <div th:if="${#httpServletRequest != null and #httpServletRequest.requestURI == '/'}" class="absolute -bottom-1 left-0 right-0 h-0.5 bg-secondary-container"></div>
                     </a>
-                </li>
-                <li th:if="${u?.role?.name() != 'ADMIN'}"><a class="nav-link" th:href="@{/wallet}">💳 Ví điện tử</a></li>
-                <li>
-                    <a class="nav-link" th:href="@{/auth/logout}" style="color:#EF4444;"
-                       onmouseover="this.style.background='#EF4444';this.style.color='#fff'"
-                       onmouseout="this.style.background='';this.style.color='#EF4444'">Đăng xuất</a>
-                </li>
-            </th:block>
-        </ul>
-        <ul class="navbar-nav"
-            th:unless="${session?.loggedUser != null || #httpServletRequest.getAttribute('loggedUser') != null}">
-            <li><a class="nav-link" th:href="@{/vehicles/search}">🔍 Tìm xe</a></li>
-            <li><a class="nav-link" th:href="@{/auth/login}">Đăng nhập</a></li>
-            <li><a class="nav-link btn-primary btn" th:href="@{/auth/register}" style="margin-left:.5rem;">Đăng ký</a></li>
-        </ul>
-    </nav>
+
+                    <th:block th:if="${user != null}">
+                        <a th:if="${user?.role?.name() == 'CUSTOMER'}" th:href="@{/vehicles/search}" class="text-sm font-bold transition-all relative group"
+                           th:classappend="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/vehicles') ? 'text-secondary-container' : 'text-on-surface-variant hover:text-primary-container'}">
+                            Thuê xe
+                            <div th:if="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/vehicles')}" class="absolute -bottom-1 left-0 right-0 h-0.5 bg-secondary-container"></div>
+                        </a>
+                        
+                        <a th:if="${user?.role?.name() == 'CUSTOMER'}" th:href="@{/sober-bookings/new}" class="text-sm font-bold transition-all relative group"
+                           th:classappend="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/sober-bookings') ? 'text-secondary-container' : 'text-on-surface-variant hover:text-primary-container'}">
+                            Lái hộ
+                            <div th:if="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/sober-bookings')}" class="absolute -bottom-1 left-0 right-0 h-0.5 bg-secondary-container"></div>
+                        </a>
+
+                        <a th:if="${user?.role?.name() == 'CUSTOMER'}" th:href="@{/booking-history}" class="text-sm font-bold transition-all relative group"
+                           th:classappend="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/booking-history') ? 'text-secondary-container' : 'text-on-surface-variant hover:text-primary-container'}">
+                            Lịch sử
+                            <div th:if="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/booking-history')}" class="absolute -bottom-1 left-0 right-0 h-0.5 bg-secondary-container"></div>
+                        </a>
+
+                        <a th:href="@{/wallet}" class="text-sm font-bold transition-all relative group"
+                           th:classappend="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/wallet') ? 'text-secondary-container' : 'text-on-surface-variant hover:text-primary-container'}">
+                            Ví
+                            <div th:if="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/wallet')}" class="absolute -bottom-1 left-0 right-0 h-0.5 bg-secondary-container"></div>
+                        </a>
+                    </th:block>
+
+                    <!-- Guest Mode Links if needed -->
+                    <th:block th:if="${user == null}">
+                        <a th:href="@{/vehicles/search}" class="text-sm font-bold text-on-surface-variant hover:text-primary-container transition-all">Thuê xe</a>
+                        <a th:href="@{/auth/login}" class="text-sm font-bold text-on-surface-variant hover:text-primary-container transition-all">Đăng nhập</a>
+                        <a th:href="@{/auth/register}" class="px-4 py-2 bg-primary-container text-white rounded-lg text-sm font-bold hover:scale-105 transition-all">Đăng ký</a>
+                    </th:block>
+                </nav>
+            </div>
+
+            <!-- Profile & Logout -->
+            <div class="flex items-center gap-6" th:with="user=${session != null and session.loggedUser != null ? session.loggedUser : loggedUser}">
+                <th:block th:if="${user != null}">
+                    <a th:href="@{/profile}" class="text-sm font-bold text-[#0A2463] hover:text-secondary-container transition-all flex items-center gap-2">
+                        Hồ sơ cá nhân
+                    </a>
+
+                    <!-- 🔔 Notification Bell -->
+                    <div class="relative" id="notifBellWrap" style="position:relative;">
+                        <button id="notifBell" onclick="toggleNotifDropdown()" style="background:none;border:none;cursor:pointer;font-size:1.5rem;position:relative;padding:4px 8px;">
+                            🔔
+                            <span id="notifBadge" style="display:none;position:absolute;top:0;right:0;background:#EF4444;color:#fff;font-size:.6rem;font-weight:700;min-width:16px;height:16px;border-radius:8px;padding:0 4px;line-height:16px;text-align:center;">0</span>
+                        </button>
+                        <div id="notifDropdown" style="display:none;position:absolute;right:0;top:100%;width:360px;max-height:420px;overflow-y:auto;background:#fff;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.12);z-index:999;padding:0;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #E2E8F0;">
+                                <span style="font-weight:700;font-size:.95rem;">Thông báo</span>
+                                <a href="/notifications" style="font-size:.8rem;color:#4F46E5;text-decoration:none;font-weight:600;">Xem tất cả →</a>
+                            </div>
+                            <div id="notifList" style="padding:4px 0;">
+                                <div style="text-align:center;padding:1.5rem;color:#94A3B8;font-size:.85rem;">Đang tải...</div>
+                            </div>
+                            <div style="padding:8px 16px;border-top:1px solid #E2E8F0;text-align:center;">
+                                <button onclick="markAllReadFromDropdown()" style="background:none;border:none;color:#4F46E5;font-size:.8rem;font-weight:600;cursor:pointer;">✓ Đánh dấu tất cả đã đọc</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a th:href="@{/auth/logout}" class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-all text-sm font-semibold" title="Đăng xuất">
+                        <span class="material-symbols-outlined text-[18px]">logout</span>
+                        Đăng xuất
+                    </a>
+                </th:block>
+            </div>
+        </div>
+    </header>
 
     <!-- â”€â”€â”€ Main content slot â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <main class="main" th:fragment="main">
         <!-- child page content fills here -->
     </main>
 
+    <!-- Notification bell script -->
+    <script>
+        function toggleNotifDropdown() {
+            const dd = document.getElementById('notifDropdown');
+            if (!dd) return;
+            const isHidden = dd.style.display === 'none';
+            dd.style.display = isHidden ? 'block' : 'none';
+            if (isHidden) loadLatestNotifs();
+        }
+        document.addEventListener('click', function(e) {
+            const wrap = document.getElementById('notifBellWrap');
+            const dd = document.getElementById('notifDropdown');
+            if (wrap && dd && !wrap.contains(e.target)) dd.style.display = 'none';
+        });
+        async function updateNotifCount() {
+            try {
+                const r = await fetch('/api/notifications/count');
+                if (!r.ok) return;
+                const d = await r.json();
+                const badge = document.getElementById('notifBadge');
+                if (badge) {
+                    if (d.count > 0) { badge.textContent = d.count > 99 ? '99+' : d.count; badge.style.display = ''; }
+                    else { badge.style.display = 'none'; }
+                }
+            } catch(e) {}
+        }
+        async function loadLatestNotifs() {
+            try {
+                const r = await fetch('/api/notifications/latest');
+                if (!r.ok) return;
+                const list = await r.json();
+                const container = document.getElementById('notifList');
+                if (!container) return;
+                if (list.length === 0) {
+                    container.innerHTML = '<div style="text-align:center;padding:1.5rem;color:#94A3B8;font-size:.85rem;">Không có thông báo</div>';
+                    return;
+                }
+                container.innerHTML = list.map(n => {
+                    const unread = !n.isRead;
+                    const time = new Date(n.createdAt).toLocaleString('vi-VN');
+                    return '<div onclick="markNotifRead('+n.id+', this)" style="padding:10px 16px;border-bottom:1px solid #F1F5F9;cursor:pointer;transition:background .2s;'+(unread?'background:#F8F7FF;border-left:3px solid #4F46E5;':'')+'">'
+                        + '<div style="font-weight:'+(unread?'700':'500')+';font-size:.85rem;color:#1E293B;">'+n.title+'</div>'
+                        + '<div style="font-size:.78rem;color:#64748B;margin-top:2px;line-height:1.4;">'+n.body+'</div>'
+                        + '<div style="font-size:.7rem;color:#94A3B8;margin-top:4px;">'+time+'</div>'
+                        + '</div>';
+                }).join('');
+            } catch(e) {}
+        }
+        async function markNotifRead(id, el) {
+            await fetch('/api/notifications/' + id + '/read', { method: 'POST' });
+            if (el) { el.style.background = ''; el.style.borderLeft = ''; }
+            updateNotifCount();
+        }
+        async function markAllReadFromDropdown() {
+            await fetch('/api/notifications/read-all', { method: 'POST' });
+            updateNotifCount();
+            loadLatestNotifs();
+        }
+        updateNotifCount();
+        setInterval(updateNotifCount, 30000);
+    </script>
+
 </body>
 
 </html>
+
 
 
 

@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Transactional
@@ -33,20 +35,38 @@ public class AuthService {
      * @return thông báo lỗi nếu thất bại, null nếu thành công.
      */
     public String register(RegisterForm form) {
-        // Validate
+        // ─── Validate chung ────────────────────────────────────────
         if (form.getFullName() == null || form.getFullName().isBlank())
             return "Họ tên không được để trống.";
+        if (form.getFullName().trim().length() < 2)
+            return "Họ tên phải có ít nhất 2 ký tự.";
+        if (form.getFullName().trim().length() > 100)
+            return "Họ tên không được vượt quá 100 ký tự.";
+
         if (form.getEmail() == null || form.getEmail().isBlank())
             return "Email không được để trống.";
+        if (form.getEmail().trim().length() > 100)
+            return "Email không được vượt quá 100 ký tự.";
+        if (!form.getEmail().trim().matches("^[\\w.%+-]+@[\\w.-]+\\.[a-zA-Z]{2,}$"))
+            return "Email không đúng định dạng.";
+
         if (form.getPhone() == null || form.getPhone().isBlank())
             return "Số điện thoại không được để trống.";
+        String phone = form.getPhone().trim().replaceAll("\\s+", "");
+        if (!phone.matches("^0[0-9]{9,10}$"))
+            return "Số điện thoại không hợp lệ (phải bắt đầu bằng 0, gồm 10-11 chữ số).";
+        form.setPhone(phone); // normalize
+
         if (form.getPassword() == null || form.getPassword().length() < 6)
             return "Mật khẩu phải từ 6 ký tự trở lên.";
+        if (form.getPassword().length() > 50)
+            return "Mật khẩu không được vượt quá 50 ký tự.";
         if (!form.getPassword().equals(form.getConfirmPassword()))
             return "Xác nhận mật khẩu không khớp.";
-        if (userRepository.existsByEmail(form.getEmail()))
+
+        if (userRepository.existsByEmail(form.getEmail().trim().toLowerCase()))
             return "Email đã được sử dụng.";
-        if (userRepository.existsByPhone(form.getPhone()))
+        if (userRepository.existsByPhone(phone))
             return "Số điện thoại đã được sử dụng.";
 
         Role role;
@@ -72,6 +92,9 @@ public class AuthService {
 
             if (form.getDriverLicense() == null || form.getDriverLicense().isBlank()) {
                 return "Bằng lái xe không được để trống.";
+            }
+            if (form.getDriverLicense().trim().length() > 12) {
+                return "Số bằng lái xe không được vượt quá 12 ký tự.";
             }
             if (form.getLicenseExpiry() == null) {
                 return "Ngày hết hạn bằng lái không được để trống.";
@@ -135,5 +158,70 @@ public class AuthService {
         if (!passwordEncoder.matches(rawPassword, user.getPassword()))
             return null;
         return user;
+    }
+
+    // ── Forgot Password Logic ───────────────────────────────────────
+    
+    private final Map<String, String> otpStorage = new ConcurrentHashMap<>();
+    private final Map<String, Long> otpExpiry = new ConcurrentHashMap<>();
+    
+    public String sendPasswordResetOtp(String email) {
+        if (!userRepository.existsByEmail(email.trim().toLowerCase())) {
+            return "Email không tồn tại trong hệ thống.";
+        }
+        
+        // Generate random 6-digit OTP
+        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
+        long expiryTime = System.currentTimeMillis() + (5 * 60 * 1000); // 5 minutes
+        
+        otpStorage.put(email.toLowerCase(), otp);
+        otpExpiry.put(email.toLowerCase(), expiryTime);
+        
+        System.out.println("==================================================");
+        System.out.println("OTP YÊU CẦU ĐẶT LẠI MẬT KHẨU CHO " + email + " LÀ: " + otp);
+        System.out.println("==================================================");
+        
+        return null; // Success
+    }
+
+    public String verifyPasswordResetOtp(String email, String otp) {
+        String storedOtp = otpStorage.get(email.toLowerCase());
+        Long expiryTime = otpExpiry.get(email.toLowerCase());
+        
+        if (storedOtp == null || expiryTime == null) {
+            return "Mã OTP không hợp lệ hoặc đã hết hạn.";
+        }
+        if (System.currentTimeMillis() > expiryTime) {
+            otpStorage.remove(email.toLowerCase());
+            otpExpiry.remove(email.toLowerCase());
+            return "Mã OTP đã hết hạn.";
+        }
+        if (!storedOtp.equals(otp)) {
+            return "Mã OTP không chính xác.";
+        }
+        
+        return null;
+    }
+
+    public String resetPassword(String email, String otp, String newPassword, String confirmPassword) {
+        String verifyErr = verifyPasswordResetOtp(email, otp);
+        if (verifyErr != null) return verifyErr;
+        
+        if (newPassword == null || newPassword.length() < 6)
+            return "Mật khẩu mới phải từ 6 ký tự trở lên.";
+        if (!newPassword.equals(confirmPassword))
+            return "Xác nhận mật khẩu không khớp.";
+            
+        Optional<User> optUser = userRepository.findByEmail(email.toLowerCase());
+        if (optUser.isEmpty()) return "Người dùng không tồn tại.";
+        
+        User user = optUser.get();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        
+        otpStorage.remove(email.toLowerCase());
+        otpExpiry.remove(email.toLowerCase());
+        
+        return null;
     }
 }

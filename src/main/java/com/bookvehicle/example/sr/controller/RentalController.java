@@ -54,8 +54,13 @@ public class RentalController {
         RentalCreateForm form = new RentalCreateForm();
         form.setVehicleId(vehicleId);
         form.setRentalMode(mode);
+        form.setDuration(null); // Explicitly null to satisfy user request
+
+        // Set Start to now rounded, but leave End/Duration for user input
+        form.setPlannedStart(java.time.LocalDateTime.now().plusHours(1).withMinute(0).withSecond(0).withNano(0));
+        
         model.addAttribute("form", form);
-        populateCreateFormModel(model, loggedUser, mode);
+        populateCreateFormModel(model, loggedUser, mode, vehicleId);
         return "rentals/new";
     }
 
@@ -78,11 +83,12 @@ public class RentalController {
         if (!result.ok()) {
             model.addAttribute("error", result.message());
             model.addAttribute("form", form);
-            populateCreateFormModel(model, loggedUser, form.getRentalMode());
+            populateCreateFormModel(model, loggedUser, form.getRentalMode(), form.getVehicleId());
             return "rentals/new";
         }
 
         ra.addFlashAttribute("success", result.message());
+        ra.addFlashAttribute("newRentalId", result.rentalId());
         return "redirect:/rentals/my";
     }
 
@@ -150,10 +156,15 @@ public class RentalController {
         return "redirect:/rentals/my";
     }
 
-    private void populateCreateFormModel(Model model, User loggedUser, VehicleRental.RentalMode mode) {
+    private void populateCreateFormModel(Model model, User loggedUser, VehicleRental.RentalMode mode, Long vehicleId) {
         boolean requireFreeDriver = (mode == VehicleRental.RentalMode.WITH_DRIVER);
         List<Vehicle> vehicles = vehicleService.searchAvailable(null, null, null, requireFreeDriver);
         model.addAttribute("vehicles", vehicles);
+        
+        if (vehicleId != null) {
+            vehicleService.findById(vehicleId).ifPresent(v -> model.addAttribute("selectedVehicle", v));
+        }
+
         model.addAttribute("pickupPoints", pickupPointRepository.findDistinctActivePickupPoints());
         model.addAttribute("rentalTypes", VehicleRental.RentalType.values());
         model.addAttribute("rentalMode", mode);

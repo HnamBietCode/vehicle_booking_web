@@ -104,6 +104,20 @@ public class VehicleService {
         return vehicleRepository.findAvailable(category, maxPricePerKm, location);
     }
 
+    @Transactional(readOnly = true)
+    public List<Vehicle> searchAll(String categoryStr, BigDecimal maxPricePerKm,
+                                          String location, boolean requireFreeDriver) {
+        VehicleCategory category = null;
+        if (categoryStr != null && !categoryStr.isBlank()) {
+            try { category = VehicleCategory.valueOf(categoryStr.toUpperCase()); }
+            catch (Exception ignored) {}
+        }
+        if (requireFreeDriver) {
+            return vehicleRepository.searchAllWithDriverFilters(category, maxPricePerKm, location);
+        }
+        return vehicleRepository.searchAll(category, maxPricePerKm, location);
+    }
+
     // ── Create ──────────────────────────────────────────────────────
 
     /**

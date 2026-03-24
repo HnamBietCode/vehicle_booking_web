@@ -29,7 +29,7 @@ public interface DriverReportRepository extends JpaRepository<Driver, Long> {
     @Query(value = "SELECT " +
             "(SELECT COUNT(*) FROM vehicle_rentals WHERE status = 'COMPLETED' AND driver_id = :driverId AND created_at BETWEEN :startDate AND :endDate) + "
             +
-            "(SELECT COUNT(*) FROM driver_bookings WHERE status = 'COMPLETED' AND driver_id = :driverId AND created_at BETWEEN :startDate AND :endDate)", nativeQuery = true)
+            "(SELECT COUNT(*) FROM sober_bookings WHERE status = 'COMPLETED' AND driver_id = :driverId AND created_at BETWEEN :startDate AND :endDate)", nativeQuery = true)
     Long countTripsByDateRange(@Param("driverId") Long driverId,
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate);
@@ -50,7 +50,7 @@ public interface DriverReportRepository extends JpaRepository<Driver, Long> {
             "SELECT DATE(created_at) as dt, COUNT(*) as trips FROM vehicle_rentals WHERE status = 'COMPLETED' AND driver_id = :driverId AND created_at BETWEEN :startDate AND :endDate GROUP BY DATE(created_at) "
             +
             "UNION ALL " +
-            "SELECT DATE(created_at) as dt, COUNT(*) as trips FROM driver_bookings WHERE status = 'COMPLETED' AND driver_id = :driverId AND created_at BETWEEN :startDate AND :endDate GROUP BY DATE(created_at) "
+            "SELECT DATE(created_at) as dt, COUNT(*) as trips FROM sober_bookings WHERE status = 'COMPLETED' AND driver_id = :driverId AND created_at BETWEEN :startDate AND :endDate GROUP BY DATE(created_at) "
             +
             ") as combined " +
             "GROUP BY dt ORDER BY dt ASC", nativeQuery = true)

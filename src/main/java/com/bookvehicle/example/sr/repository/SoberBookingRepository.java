@@ -2,6 +2,7 @@ package com.bookvehicle.example.sr.repository;
 
 import com.bookvehicle.example.sr.model.SoberBooking;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -28,4 +29,13 @@ public interface SoberBookingRepository extends JpaRepository<SoberBooking, Long
 
     @Query("SELECT COUNT(b) FROM SoberBooking b WHERE b.customerId = :customerId AND b.paymentStatus = 'PENDING' AND b.status != 'CANCELLED'")
     long countUnpaidBookings(@Param("customerId") Long customerId);
+
+    @Modifying
+    @Query("UPDATE SoberBooking b SET b.driverId = NULL WHERE b.driverId = :driverId")
+    void clearDriverId(@Param("driverId") Long driverId);
+
+    void deleteByCustomerId(Long customerId);
+
+    @Query("SELECT b FROM SoberBooking b WHERE b.driverId = :driverId AND b.status IN ('COMPLETED', 'CANCELLED') ORDER BY b.updatedAt DESC")
+    List<SoberBooking> findDriverHistory(@Param("driverId") Long driverId);
 }

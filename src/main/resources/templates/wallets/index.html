@@ -2,480 +2,309 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 
 <head>
-    <meta charset="UTF-8">
-    <title>Ví Điện Tử | Đặt Xe</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>SR-Booking - Ví</title>
+    <style th:replace="~{layout/base :: head}"></style>
     <style>
-        /* BASE CSS */
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
 
-        :root {
-            --primary: #4F46E5;
-            --primary-dark: #3730A3;
-            --secondary: #7C3AED;
-            --accent: #F59E0B;
-            --danger: #EF4444;
-            --success: #10B981;
-            --bg: #F8FAFC;
-            --surface: #FFFFFF;
-            --border: #E2E8F0;
-            --text: #1E293B;
-            --muted: #64748B;
-            --radius: 12px;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-        }
-
-        .navbar {
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-            padding: 0 2rem;
-            display: flex;
-            align-items: center;
-            height: 64px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
-        }
-
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.3rem;
-            color: var(--primary);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: .5rem;
-        }
-
-        .navbar-brand::before {
-            content: '🚗';
-            font-size: 1.4rem;
-        }
-
-        .navbar-nav {
-            display: flex;
-            align-items: center;
-            gap: .25rem;
-            margin-left: auto;
-            list-style: none;
-        }
-
-        .nav-link {
-            padding: .5rem .85rem;
-            border-radius: 8px;
-            text-decoration: none;
-            color: var(--muted);
-            font-size: .9rem;
-            font-weight: 500;
-            transition: all .2s;
-        }
-
-        .nav-link:hover,
-        .nav-link.active {
-            background: var(--primary);
-            color: #fff;
-        }
-
-        .nav-badge {
-            background: var(--accent);
-            color: #fff;
-            font-size: .7rem;
-            padding: .15rem .45rem;
-            border-radius: 999px;
-            margin-left: .3rem;
-            font-weight: 700;
-        }
-
-        .alert {
-            padding: .85rem 1.2rem;
-            border-radius: 8px;
-            margin-bottom: 1.2rem;
-            font-size: .9rem;
-            font-weight: 500;
-        }
-
-        .alert-danger {
-            background: #FEF2F2;
-            color: #991B1B;
-            border-left: 4px solid var(--danger);
-        }
-
-        .alert-success {
-            background: #F0FDF4;
-            color: #166534;
-            border-left: 4px solid var(--success);
-        }
-
-        .form-group {
-            margin-bottom: 1.1rem;
-        }
-
-        .form-label {
-            display: block;
-            font-size: .875rem;
-            font-weight: 600;
-            margin-bottom: .4rem;
-            color: var(--text);
-        }
-
-        .form-control {
-            width: 100%;
-            padding: .65rem 1rem;
-            border: 1.5px solid var(--border);
-            border-radius: 8px;
-            font-size: .95rem;
-            font-family: inherit;
-            transition: border-color .2s, box-shadow .2s;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, .15);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: .9rem;
-            background: var(--surface);
-        }
-
-        th {
-            background: var(--bg);
-            font-weight: 600;
-            color: var(--muted);
-            padding: .75rem 1rem;
-            text-align: left;
-            border-bottom: 2px solid var(--border);
-        }
-
-        td {
-            padding: .75rem 1rem;
-            border-bottom: 1px solid var(--border);
-            vertical-align: middle;
-        }
-
-        tr:hover td {
-            background: #f8fafc;
-        }
-
-        .wallet-container {
-            max-width: 900px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-
-        .wallet-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .wallet-card {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border-radius: 1rem;
-            padding: 2rem;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-        }
-
-        .wallet-card .title {
-            font-size: 1.1rem;
-            opacity: 0.9;
-            margin-bottom: 0.5rem;
-        }
-
-        .wallet-card .balance {
-            font-size: 2.5rem;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .deposit-form {
-            background: white;
-            padding: 2rem;
-            border-radius: 1rem;
-            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-        }
-
-        .deposit-form .amount-presels {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .amount-presel {
-            padding: 0.5rem 1rem;
-            border: 1px solid var(--border);
-            border-radius: 2rem;
-            background: none;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .amount-presel:hover,
-        .amount-presel.active {
-            border-color: var(--primary);
-            color: var(--primary);
-            background: var(--bg);
-        }
-
-        .history-card {
-            background: white;
-            padding: 2rem;
-            border-radius: 1rem;
-            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-        }
-
-        .tx-type-DEPOSIT {
-            color: var(--success);
-        }
-
-        .tx-type-WITHDRAW {
-            color: var(--danger);
-        }
-
-        .tx-type-RENTAL_PAYMENT {
-            color: var(--danger);
-        }
-
-        .tx-type-BOOKING_PAYMENT {
-            color: var(--danger);
-        }
-
-        .tx-type-DRIVER_EARNING {
-            color: var(--success);
-        }
-
-        .tx-type-SYSTEM_FEE {
-            color: var(--danger);
-        }
-
-        .tx-type-REFUND {
-            color: var(--success);
-        }
-
-        .btn-momo {
-            background: #A50064;
-            color: white;
-            width: 100%;
-            margin-top: 1rem;
-            font-weight: 600;
-        }
-
-        .btn-momo:hover {
-            background: #8b0054;
-        }
-
-        @media (max-width: 768px) {
-            .wallet-grid {
-                grid-template-columns: 1fr;
-            }
+        .glass-effect {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
         }
     </style>
 </head>
 
-<body>
-    <!-- Navigation Bar from Base Layout -->
+<body class="bg-background text-on-surface pb-32">
+    <!-- TopAppBar -->
     <nav th:replace="~{layout/base :: navbar}"></nav>
 
-    <main class="wallet-container">
+    <main class="pt-24 px-4 md:px-8 max-w-7xl mx-auto">
         <!-- Messages -->
-        <div th:if="${param.success}" class="alert alert-success">
+        <div th:if="${param.success}"
+             class="mb-6 p-4 bg-emerald-100 border-l-4 border-emerald-500 text-emerald-700 rounded-xl shadow-sm font-medium">
             Nạp tiền thành công!
         </div>
-        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
-        <div th:if="${param.error}" class="alert alert-danger">
+        <div th:if="${success}"
+             class="mb-6 p-4 bg-emerald-100 border-l-4 border-emerald-500 text-emerald-700 rounded-xl shadow-sm font-medium"
+             th:text="${success}"></div>
+        <div th:if="${error}"
+             class="mb-6 p-4 bg-rose-100 border-l-4 border-rose-500 text-rose-700 rounded-xl shadow-sm font-medium"
+             th:text="${error}"></div>
+        <div th:if="${param.error}"
+             class="mb-6 p-4 bg-rose-100 border-l-4 border-rose-500 text-rose-700 rounded-xl shadow-sm font-medium">
             Giao dịch bị từ chối hoặc có lỗi xảy ra.
         </div>
 
-        <div class="wallet-grid" th:style="${loggedUser.role.name() == 'DRIVER' ? 'grid-template-columns: 1fr' : ''}">
-            <!-- Balance Card -->
-            <div class="wallet-card">
-                <div class="title">Số Dư Hiện Tại</div>
-                <div class="balance">
-                    <span th:text="${#numbers.formatDecimal(wallet.balance, 0, 'COMMA', 0, 'POINT')}">0</span>
-                    <span>₫</span>
+        <!-- Section 1: Balance Hero (Bento Grid Style) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-10">
+            <div class="lg:col-span-8 bg-primary-container rounded-[24px] p-8 relative overflow-hidden flex flex-col justify-between min-h-[240px] shadow-[0_8px_32px_rgba(10,36,99,0.15)]">
+                <!-- Velocity Gradient Overlay -->
+                <div class="absolute inset-0 opacity-20 pointer-events-none bg-[linear-gradient(135deg,#00103E_0%,#0A2463_100%)]"></div>
+                <div class="relative z-10">
+                    <span class="text-xs font-semibold uppercase tracking-[0.2em] text-on-primary-container/80 mb-2 block">Số dư hiện tại</span>
+                    <h1 class="text-5xl font-bold text-white tracking-tight leading-none">
+                        <span th:text="${#numbers.formatDecimal(wallet.balance, 0, 'COMMA', 0, 'POINT')}">0</span>
+                        <span class="text-2xl font-medium text-on-primary-container">VND</span>
+                    </h1>
                 </div>
-                <div style="margin-top: 2rem; opacity: 0.8; font-size: 0.9rem;">
-                    Ví Điện Tử Hệ Thống Đặt Xe
+                <div class="relative z-10 flex items-center justify-between mt-8">
+                    <div class="flex -space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-blue-400 border-2 border-primary-container flex items-center justify-center text-white text-xs font-bold">VP</div>
+                        <div class="w-10 h-10 rounded-full bg-orange-400 border-2 border-primary-container flex items-center justify-center text-white text-xs font-bold">M</div>
+                    </div>
+                    <div class="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full glass-effect">
+                        <span class="material-symbols-outlined text-white text-sm" data-icon="verified">verified</span>
+                        <span class="text-white text-sm font-medium">Tài khoản an toàn</span>
+                    </div>
                 </div>
             </div>
-
-            <!-- Deposit Form - Ẩn cho tài xế -->
-            <div class="deposit-form" th:if="${loggedUser.role.name() != 'DRIVER'}">
-                <h3 style="margin-top:0; margin-bottom:1.5rem;">Nạp Tiền Vào Ví</h3>
-                <form th:action="@{/wallet/deposit/momo}" method="post" id="depositForm">
-                    <div class="amount-presels">
-                        <button type="button" class="amount-presel" onclick="setDepositAmount(50000)">50,000₫</button>
-                        <button type="button" class="amount-presel" onclick="setDepositAmount(100000)">100,000₫</button>
-                        <button type="button" class="amount-presel" onclick="setDepositAmount(200000)">200,000₫</button>
-                        <button type="button" class="amount-presel" onclick="setDepositAmount(500000)">500,000₫</button>
+            <!-- Stats Card -->
+            <div class="lg:col-span-4 bg-surface-container-lowest rounded-[24px] p-8 flex flex-col justify-center shadow-[0_4px_24px_rgba(0,16,62,0.04)]">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-12 h-12 rounded-2xl bg-tertiary-fixed flex items-center justify-center">
+                        <span class="material-symbols-outlined text-on-tertiary-fixed" data-icon="insights">insights</span>
                     </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="depositAmount">Hoặc nhập số tiền (Tối thiểu 10,000₫)</label>
-                        <input type="number" id="depositAmount" name="amount" class="form-control" min="10000" step="1000"
-                            required placeholder="Nhập số tiền...">
+                    <div>
+                        <p class="text-sm text-on-surface-variant font-medium">Loại tài khoản</p>
+                        <p class="text-lg font-bold text-on-surface" th:text="${loggedUser.role.name()}">CUSTOMER</p>
                     </div>
-
-                    <button type="submit" class="btn btn-momo">
-                        Nạp tiền bằng ví MoMo
-                    </button>
-                </form>
+                </div>
+                <div class="h-1 bg-surface-container rounded-full overflow-hidden">
+                    <div class="h-full bg-secondary-container w-[100%]"></div>
+                </div>
+                <p class="text-xs text-on-surface-variant mt-2 font-medium">Ví hệ thống SR-Booking</p>
             </div>
         </div>
 
-        <!-- Withdrawal Form -->
-        <div class="history-card" style="margin-bottom:2rem;">
-            <h3 style="margin-top:0; margin-bottom: 1.5rem;">💸 Rút Tiền Từ Ví</h3>
-            <form th:action="@{/wallet/withdraw}" method="post">
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-                    <div class="form-group">
-                        <label class="form-label">Ngân hàng</label>
-                        <select name="bankName" class="form-control" required>
-                            <option value="">-- Chọn ngân hàng --</option>
-                            <option value="Vietcombank">Vietcombank</option>
-                            <option value="BIDV">BIDV</option>
-                            <option value="VietinBank">VietinBank</option>
-                            <option value="Techcombank">Techcombank</option>
-                            <option value="MB Bank">MB Bank</option>
-                            <option value="ACB">ACB</option>
-                            <option value="Sacombank">Sacombank</option>
-                            <option value="VPBank">VPBank</option>
-                            <option value="TPBank">TPBank</option>
-                            <option value="Agribank">Agribank</option>
-                            <option value="SHB">SHB</option>
-                            <option value="HDBank">HDBank</option>
-                            <option value="MoMo">Ví MoMo</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Số tài khoản</label>
-                        <input type="text" name="accountNumber" class="form-control" required placeholder="Nhập số TK / SĐT">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Chủ tài khoản</label>
-                        <input type="text" name="accountHolder" class="form-control" required placeholder="NGUYEN VAN A">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Số tiền rút (Tối thiểu 10,000₫)</label>
-                        <input type="number" name="amount" class="form-control" min="10000" step="1000" required
-                            placeholder="Nhập số tiền rút...">
-                    </div>
+        <!-- Transaction Actions -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+            <!-- Section 2: Deposit -->
+            <section class="bg-surface-container-low rounded-[24px] p-8" th:if="${loggedUser.role.name() != 'DRIVER'}">
+                <div class="flex items-center gap-3 mb-8">
+                    <span class="material-symbols-outlined text-primary-container" data-icon="add_card">add_card</span>
+                    <h2 class="text-2xl font-bold tracking-tight text-primary-container">Nạp tiền</h2>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Ghi chú (tuỳ chọn)</label>
-                    <input type="text" name="note" class="form-control" placeholder="VD: Rút lương tháng 3...">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                    <button type="button" onclick="setDepositAmount(50000)" class="py-3 px-4 bg-surface-container-lowest rounded-xl text-sm font-bold text-on-surface-variant hover:bg-primary-container hover:text-white transition-all duration-300">50k</button>
+                    <button type="button" onclick="setDepositAmount(100000)" class="py-3 px-4 bg-surface-container-lowest rounded-xl text-sm font-bold text-on-surface-variant hover:bg-primary-container hover:text-white transition-all duration-300">100k</button>
+                    <button type="button" onclick="setDepositAmount(200000)" class="py-3 px-4 bg-surface-container-lowest rounded-xl text-sm font-bold text-on-surface-variant hover:bg-primary-container hover:text-white transition-all duration-300">200k</button>
+                    <button type="button" onclick="setDepositAmount(500000)" class="py-3 px-4 bg-surface-container-lowest rounded-xl text-sm font-bold text-on-surface-variant hover:bg-primary-container hover:text-white transition-all duration-300">500k</button>
                 </div>
-                <button type="submit" class="btn btn-momo" style="background:var(--danger);"
-                    onclick="return confirm('Bạn chắc chắn muốn rút tiền? Số tiền sẽ bị trừ ngay và chờ Admin chuyển khoản.')">
-                    💸 Tạo yêu cầu rút tiền
-                </button>
-            </form>
+                <form th:action="@{/wallet/deposit/momo}" method="post" id="depositForm">
+                    <div class="mb-8">
+                        <label class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Số tiền nạp (Tối thiểu 10,000₫)</label>
+                        <input name="amount" id="depositAmount" class="w-full bg-transparent border-b-2 border-outline-variant focus:border-secondary transition-all outline-none py-3 text-lg font-semibold placeholder:text-outline-variant placeholder:font-normal" 
+                               placeholder="Nhập số tiền..." type="number" min="10000" step="1000" required/>
+                    </div>
+                    <button type="submit" class="w-full bg-secondary-container text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all shadow-[0_8px_20px_rgba(254,106,52,0.25)]">
+                        <span class="material-symbols-outlined" data-icon="account_balance_wallet" data-weight="fill">account_balance_wallet</span>
+                        Nạp tiền qua MoMo
+                    </button>
+                </form>
+            </section>
+
+            <!-- Section 3: Withdrawal -->
+            <section class="bg-surface-container-lowest rounded-[24px] p-8 shadow-[0_4px_24px_rgba(0,16,62,0.04)]" th:classappend="${loggedUser.role.name() == 'DRIVER' ? 'lg:col-span-2' : ''}">
+                <div class="flex items-center gap-3 mb-8">
+                    <span class="material-symbols-outlined text-primary-container" data-icon="account_balance">account_balance</span>
+                    <h2 class="text-2xl font-bold tracking-tight text-primary-container">Rút tiền</h2>
+                </div>
+                <form th:action="@{/wallet/withdraw}" method="post" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <label class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Ngân hàng</label>
+                            <select name="bankName" class="w-full bg-surface-container border-none rounded-lg text-sm font-medium py-3 focus:ring-2 focus:ring-primary-container/20" required>
+                                <option value="">-- Chọn ngân hàng --</option>
+                                <option value="Vietcombank">Vietcombank</option>
+                                <option value="BIDV">BIDV</option>
+                                <option value="VietinBank">VietinBank</option>
+                                <option value="Techcombank">Techcombank</option>
+                                <option value="MB Bank">MB Bank</option>
+                                <option value="ACB">ACB</option>
+                                <option value="Sacombank">Sacombank</option>
+                                <option value="VPBank">VPBank</option>
+                                <option value="TPBank">TPBank</option>
+                                <option value="Agribank">Agribank</option>
+                                <option value="SHB">SHB</option>
+                                <option value="HDBank">HDBank</option>
+                                <option value="MoMo">Ví MoMo</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Số tài khoản</label>
+                            <input name="accountNumber" class="w-full bg-surface-container border-none rounded-lg text-sm font-medium py-3 focus:ring-2 focus:ring-primary-container/20" type="text" placeholder="Số TK / SĐT MoMo" required/>
+                        </div>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Tên chủ tài khoản</label>
+                        <input name="accountHolder" class="w-full bg-surface-container border-none rounded-lg text-sm font-medium py-3 focus:ring-2 focus:ring-primary-container/20" type="text" placeholder="NGUYEN VAN A" required/>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <label class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Số tiền rút (Tối thiểu 10,000₫)</label>
+                            <input name="amount" class="w-full bg-surface-container border-none rounded-lg text-sm font-medium py-3 focus:ring-2 focus:ring-primary-container/20" placeholder="0 VND" type="number" min="10000" step="1000" required/>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Ghi chú</label>
+                            <input name="note" class="w-full bg-surface-container border-none rounded-lg text-sm font-medium py-3 focus:ring-2 focus:ring-primary-container/20" placeholder="Tùy chọn" type="text"/>
+                        </div>
+                    </div>
+
+                    <!-- OTP Section (hiện sau khi gửi OTP) -->
+                    <div id="otpSection" style="display:none;" class="space-y-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                        <div class="flex items-center gap-2 text-sm font-bold text-blue-800">
+                            <span class="material-symbols-outlined text-lg">mail</span>
+                            <span id="otpMessage">Mã OTP đã được gửi đến email của bạn</span>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Nhập mã OTP (6 số)</label>
+                            <input name="otp" id="otpInput" class="w-full bg-white border-2 border-blue-300 rounded-lg text-center text-lg font-bold py-3 tracking-[8px] focus:ring-2 focus:ring-blue-400/40 focus:border-blue-500" type="text" maxlength="6" pattern="[0-9]{6}" placeholder="• • • • • •" required/>
+                        </div>
+                        <p class="text-xs text-blue-600">⏱ Mã có hiệu lực trong 5 phút. <button type="button" onclick="sendWithdrawOtp()" class="font-bold underline">Gửi lại</button></p>
+                    </div>
+
+                    <!-- Bước 1: Gửi OTP -->
+                    <button type="button" id="sendOtpBtn" onclick="sendWithdrawOtp()"
+                            class="w-full bg-secondary-container text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all">
+                        <span class="material-symbols-outlined">mail</span>
+                        Gửi mã OTP để xác nhận rút tiền
+                    </button>
+
+                    <!-- Bước 2: Xác nhận rút tiền (hiện sau khi nhập OTP) -->
+                    <button type="submit" id="confirmWithdrawBtn" style="display:none;"
+                            class="w-full bg-primary-container text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all">
+                        <span class="material-symbols-outlined">send</span>
+                        Xác nhận rút tiền
+                    </button>
+                </form>
+
+                <script>
+                    async function sendWithdrawOtp() {
+                        const btn = document.getElementById('sendOtpBtn');
+                        btn.textContent = 'Đang gửi OTP...';
+                        btn.disabled = true;
+                        try {
+                            const res = await fetch('/wallet/withdraw/send-otp', { method: 'POST' });
+                            const data = await res.json();
+                            if (data.success) {
+                                document.getElementById('otpSection').style.display = 'block';
+                                document.getElementById('otpMessage').textContent = data.message;
+                                btn.style.display = 'none';
+                                document.getElementById('confirmWithdrawBtn').style.display = 'flex';
+                                document.getElementById('otpInput').focus();
+                            } else {
+                                alert(data.error || 'Không thể gửi OTP.');
+                                btn.textContent = 'Gửi mã OTP để xác nhận rút tiền';
+                                btn.disabled = false;
+                            }
+                        } catch(e) {
+                            alert('Lỗi kết nối. Vui lòng thử lại.');
+                            btn.textContent = 'Gửi mã OTP để xác nhận rút tiền';
+                            btn.disabled = false;
+                        }
+                    }
+                </script>
+            </section>
         </div>
 
         <!-- Withdrawal Requests History -->
-        <div class="history-card" th:if="${withdrawals != null && !withdrawals.empty}" style="margin-bottom:2rem;">
-            <h3 style="margin-top:0; margin-bottom: 1.5rem;">📝 Yêu Cầu Rút Tiền</h3>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Số tiền</th>
-                        <th>Ngân hàng</th>
-                        <th>STK</th>
-                        <th>Trạng thái</th>
-                        <th>Ngày tạo</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="wr : ${withdrawals}">
-                        <td th:text="${wr.id}"></td>
-                        <td style="font-weight:700;color:var(--danger);"
-                            th:text="${#numbers.formatDecimal(wr.amount, 0, 'COMMA', 0, 'POINT') + '₫'}"></td>
-                        <td th:text="${wr.bankName}"></td>
-                        <td>
-                            <span th:text="${wr.accountNumber}"></span><br>
-                            <span style="font-size:.8rem;color:var(--muted);" th:text="${wr.accountHolder}"></span>
-                        </td>
-                        <td>
-                            <span style="display:inline-block;padding:.2rem .6rem;border-radius:999px;font-size:.72rem;font-weight:700;"
-                                th:style="${wr.status.name() == 'PENDING' ? 'background:#FEF3C7;color:#92400E;' : (wr.status.name() == 'APPROVED' ? 'background:#D1FAE5;color:#065F46;' : 'background:#FEE2E2;color:#991B1B;')}"
-                                th:text="${wr.status.name() == 'PENDING' ? '⏳ Chờ duyệt' : (wr.status.name() == 'APPROVED' ? '✅ Đã chuyển' : '❌ Từ chối')}"></span>
-                            <div th:if="${wr.adminNote != null}" style="font-size:.75rem;color:var(--muted);margin-top:.2rem;"
-                                th:text="'Admin: ' + ${wr.adminNote}"></div>
-                        </td>
-                        <td th:text="${#temporals.format(wr.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        <section class="bg-surface-container-low rounded-[32px] overflow-hidden mb-10" th:if="${withdrawals != null && !withdrawals.empty}">
+            <div class="p-8 pb-4">
+                <h2 class="text-2xl font-bold tracking-tight text-primary-container">Yêu cầu rút tiền</h2>
+                <p class="text-sm text-on-surface-variant">Trạng thái xử lý các yêu cầu rút tiền của bạn</p>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-separate border-spacing-y-2 px-8 pb-8">
+                    <thead>
+                        <tr class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">
+                            <th class="px-4 py-2">Mã yêu cầu</th>
+                            <th class="px-4 py-2">Số tiền</th>
+                            <th class="px-4 py-2">Thông tin nhận</th>
+                            <th class="px-4 py-2">Trạng thái</th>
+                            <th class="px-4 py-2 text-right">Ngày tạo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="wr : ${withdrawals}" class="bg-surface-container-lowest group hover:scale-[1.01] transition-transform duration-200">
+                            <td class="px-4 py-5 first:rounded-l-2xl">
+                                <span class="text-sm font-bold text-on-surface" th:text="'#' + ${wr.id}">#1</span>
+                            </td>
+                            <td class="px-4 py-5">
+                                <span class="text-sm font-bold text-rose-600" th:text="${#numbers.formatDecimal(wr.amount, 0, 'COMMA', 0, 'POINT') + ' ₫'}">10,000 ₫</span>
+                            </td>
+                            <td class="px-4 py-5">
+                                <p class="text-sm font-medium text-on-surface" th:text="${wr.bankName}"></p>
+                                <p class="text-xs text-on-surface-variant" th:text="${wr.accountNumber} + ' - ' + ${wr.accountHolder}"></p>
+                            </td>
+                            <td class="px-4 py-5">
+                                <span th:if="${wr.status.name() == 'PENDING'}" class="px-3 py-1 bg-amber-100 text-amber-800 text-[10px] font-bold uppercase rounded-full">PENDING</span>
+                                <span th:if="${wr.status.name() == 'APPROVED'}" class="px-3 py-1 bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase rounded-full">APPROVED</span>
+                                <span th:if="${wr.status.name() == 'REJECTED'}" class="px-3 py-1 bg-rose-100 text-rose-800 text-[10px] font-bold uppercase rounded-full">REJECTED</span>
+                                <p th:if="${wr.adminNote != null}" class="text-[10px] text-on-surface-variant mt-1" th:text="'Note: ' + ${wr.adminNote}"></p>
+                            </td>
+                            <td class="px-4 py-5 last:rounded-r-2xl text-right text-sm text-on-surface-variant" th:text="${#temporals.format(wr.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
 
-        <!-- Transaction History -->
-        <div class="history-card">
-            <h3 style="margin-top:0; margin-bottom: 1.5rem;">Lịch Sử Giao Dịch</h3>
-
-            <div th:if="${transactions.empty}" style="text-align: center; color: var(--muted); padding: 2rem;">
-                Chưa có giao dịch nào.
+        <!-- Section 4: Transaction History -->
+        <section class="bg-surface-container-low rounded-[32px] overflow-hidden">
+            <div class="p-8 pb-4 flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold tracking-tight text-primary-container">Lịch sử giao dịch</h2>
+                    <p class="text-sm text-on-surface-variant">Tất cả các biến động số dư trong ví của bạn</p>
+                </div>
+            </div>
+            
+            <div th:if="${transactions.empty}" class="p-16 text-center text-on-surface-variant font-medium">
+                Chưa có giao dịch nào phát sinh.
             </div>
 
-            <table class="table" th:unless="${transactions.empty}">
-                <thead>
-                    <tr>
-                        <th>Thời gian</th>
-                        <th>Loại Giao Dịch</th>
-                        <th style="text-align: right;">Số tiền</th>
-                        <th>Trạng Thái/Mô tả</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="tx : ${transactions}">
-                        <td th:text="${#temporals.format(tx.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
-                        <td>
-                            <strong th:class="'tx-type-' + ${tx.type.name()}"
-                                th:text="${tx.type.name() == 'DEPOSIT' ? '💰 Nạp tiền' :
-                                    (tx.type.name() == 'WITHDRAW' ? '💸 Rút tiền' :
-                                    (tx.type.name() == 'RENTAL_PAYMENT' ? '🚗 Thanh toán thuê xe' :
-                                    (tx.type.name() == 'BOOKING_PAYMENT' ? '🚕 Thanh toán lái hộ' :
-                                    (tx.type.name() == 'DRIVER_EARNING' ? '🤑 Thu nhập tài xế' :
-                                    (tx.type.name() == 'SYSTEM_FEE' ? '🏦 Phí hệ thống' :
-                                    (tx.type.name() == 'REFUND' ? '↩️ Hoàn tiền' :
-                                    (tx.type.name() == 'PREMIUM_UPGRADE' ? '⭐ Nâng cấp Premium' : tx.type.name())))))))}">
-                            </strong>
-                        </td>
-                        <td style="text-align: right;">
-                            <span th:if="${tx.balanceAfter > tx.balanceBefore}" style="color:var(--success);">+</span>
-                            <span th:if="${tx.balanceAfter < tx.balanceBefore}" style="color:var(--danger);">-</span>
-                            <span th:text="${#numbers.formatDecimal(tx.amount, 0, 'COMMA', 0, 'POINT')} + '₫'"></span>
-                        </td>
-                        <td th:text="${tx.description}"></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+            <div class="overflow-x-auto" th:unless="${transactions.empty}">
+                <table class="w-full text-left border-separate border-spacing-y-2 px-8 pb-8">
+                    <thead>
+                        <tr class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">
+                            <th class="px-4 py-2">Thời gian</th>
+                            <th class="px-4 py-2">Loại giao dịch</th>
+                            <th class="px-4 py-2">Mô tả</th>
+                            <th class="px-4 py-2 text-right">Biến động</th>
+                        </tr>
+                    </thead>
+                    <tbody class="space-y-4">
+                        <tr th:each="tx : ${transactions}" class="bg-surface-container-lowest group hover:scale-[1.01] transition-transform duration-200">
+                            <td class="px-4 py-5 first:rounded-l-2xl">
+                                <p class="text-sm font-bold text-on-surface" th:text="${#temporals.format(tx.createdAt, 'dd/MM/yyyy')}">12/10/2023</p>
+                                <p class="text-xs text-on-surface-variant" th:text="${#temporals.format(tx.createdAt, 'HH:mm')}">14:30</p>
+                            </td>
+                            <td class="px-4 py-5">
+                                <span th:if="${tx.type.name() == 'DEPOSIT'}" class="px-3 py-1 bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase rounded-full">DEPOSIT</span>
+                                <span th:if="${tx.type.name() == 'WITHDRAW'}" class="px-3 py-1 bg-rose-100 text-rose-800 text-[10px] font-bold uppercase rounded-full">WITHDRAW</span>
+                                <span th:if="${tx.type.name() == 'RENTAL_PAYMENT' || tx.type.name() == 'BOOKING_PAYMENT'}" class="px-3 py-1 bg-primary-fixed text-on-primary-fixed-variant text-[10px] font-bold uppercase rounded-full">PAYMENT</span>
+                                <span th:if="${tx.type.name() == 'DRIVER_EARNING'}" class="px-3 py-1 bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase rounded-full">EARNING</span>
+                                <span th:if="${tx.type.name() == 'SYSTEM_FEE'}" class="px-3 py-1 bg-rose-100 text-rose-800 text-[10px] font-bold uppercase rounded-full">FEE</span>
+                                <span th:if="${tx.type.name() == 'REFUND'}" class="px-3 py-1 bg-sky-100 text-sky-800 text-[10px] font-bold uppercase rounded-full">REFUND</span>
+                                <span th:if="${tx.type.name() == 'PREMIUM_UPGRADE'}" class="px-3 py-1 bg-amber-100 text-amber-800 text-[10px] font-bold uppercase rounded-full">PREMIUM</span>
+                            </td>
+                            <td class="px-4 py-5">
+                                <p class="text-sm font-medium text-on-surface" th:text="${tx.description}">Nạp tiền từ MoMo</p>
+                            </td>
+                            <td class="px-4 py-5 last:rounded-r-2xl text-right">
+                                <span th:class="${tx.balanceAfter > tx.balanceBefore ? 'text-sm font-bold text-emerald-600' : 'text-sm font-bold text-rose-600'}"
+                                      th:text="${(tx.balanceAfter > tx.balanceBefore ? '+' : '-') + #numbers.formatDecimal(tx.amount, 0, 'COMMA', 0, 'POINT') + ' ₫'}">
+                                    +500,000 VND
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </main>
 
     <script>

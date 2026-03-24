@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thông báo – VehicleBook</title>
+    <style th:replace="~{layout/base :: head}"></style>
+    <style>
+        .notif-main{max-width:720px;margin:0 auto;padding:0 1.5rem}
+        .notif-card{background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:1rem 1.25rem;margin-bottom:.75rem;transition:all .2s;cursor:pointer;position:relative}
+        .notif-card:hover{border-color:#4F46E5;box-shadow:0 2px 12px rgba(79,70,229,.1)}
+        .notif-card.unread{border-left:4px solid #4F46E5;background:#F8F7FF}
+        .notif-card .title{font-weight:600;font-size:.95rem;margin-bottom:.25rem}
+        .notif-card .body{font-size:.85rem;color:#64748B;line-height:1.5}
+        .notif-card .time{font-size:.75rem;color:#64748B;margin-top:.4rem}
+        .notif-card .dot{position:absolute;top:1rem;right:1rem;width:8px;height:8px;border-radius:50%;background:#4F46E5}
+        .empty-state{text-align:center;padding:3rem;color:#64748B}
+        .empty-state .big-icon{font-size:3rem;margin-bottom:.75rem}
+    </style>
+</head>
+
+<body class="bg-background text-on-surface">
+    <nav th:replace="~{layout/base :: navbar}"></nav>
+
+    <main class="notif-main pt-28 pb-16">
+        <div class="header-bar">
+            <h1><span>🔔</span> Thông báo <span class="badge" th:if="${unreadCount > 0}" th:text="${unreadCount}"></span></h1>
+            <button class="btn btn-outline" id="markAllRead" th:if="${unreadCount > 0}">✓ Đọc tất cả</button>
+        </div>
+
+        <div th:if="${!#lists.isEmpty(notifications)}">
+            <div th:each="n : ${notifications}"
+                 th:classappend="${!n.isRead ? ' unread' : ''}"
+                 class="notif-card"
+                 th:data-id="${n.id}">
+                <div th:if="${!n.isRead}" class="dot"></div>
+                <div class="title" th:text="${n.title}">—</div>
+                <div class="body" th:text="${n.body}">—</div>
+                <div class="time" th:text="${#temporals.format(n.createdAt, 'dd/MM/yyyy HH:mm')}">—</div>
+            </div>
+        </div>
+
+        <div class="empty-state" th:if="${#lists.isEmpty(notifications)}">
+            <div class="big-icon">🔕</div>
+            <p>Bạn chưa có thông báo nào.</p>
+        </div>
+    </main>
+
+    <script>
+        // Đánh dấu tất cả đã đọc
+        document.getElementById('markAllRead')?.addEventListener('click', async () => {
+            await fetch('/api/notifications/read-all', { method: 'POST' });
+            location.reload();
+        });
+
+        // Click vào thông báo → đánh dấu đã đọc
+        document.querySelectorAll('.notif-card.unread').forEach(card => {
+            card.addEventListener('click', async () => {
+                const id = card.dataset.id;
+                await fetch('/api/notifications/' + id + '/read', { method: 'POST' });
+                card.classList.remove('unread');
+                const dot = card.querySelector('.dot');
+                if (dot) dot.remove();
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,195 +1,431 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-
+<html class="light" lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng nhập – VehicleBook</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>SR-Booking - Đăng nhập &amp; Đăng ký</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
     <style>
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        :root {
-            --primary: #4F46E5;
-            --primary-dark: #3730A3;
-            --danger: #EF4444;
-            --success: #10B981;
-            --border: #E2E8F0;
-            --muted: #64748B;
-        }
-
         body {
-            font-family: 'Inter', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+            font-family: 'Be Vietnam Pro', sans-serif;
         }
-
-        .auth-card {
-            background: #fff;
-            border-radius: 16px;
-            padding: 2.5rem;
-            width: 100%;
-            max-width: 440px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, .2);
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
         }
-
-        .auth-logo {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .auth-logo span {
-            font-size: 2.5rem;
-        }
-
-        .auth-logo h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-top: .25rem;
-        }
-
-        .auth-logo p {
-            color: var(--muted);
-            font-size: .9rem;
-            margin-top: .25rem;
-        }
-
-        .form-group {
-            margin-bottom: 1.2rem;
-        }
-
-        .form-label {
-            display: block;
-            font-size: .85rem;
-            font-weight: 600;
-            margin-bottom: .45rem;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: .7rem 1rem;
-            border: 1.5px solid var(--border);
-            border-radius: 8px;
-            font-size: .95rem;
-            font-family: inherit;
-            transition: border-color .2s, box-shadow .2s;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, .15);
-        }
-
-        .btn-primary {
-            width: 100%;
-            padding: .8rem;
-            background: var(--primary);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background .2s, transform .15s;
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-1px);
-        }
-
-        .alert-danger {
-            background: #FEF2F2;
-            color: #991B1B;
-            border-left: 4px solid var(--danger);
-            padding: .75rem 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            font-size: .9rem;
-        }
-
-        .alert-success {
-            background: #F0FDF4;
-            color: #166534;
-            border-left: 4px solid var(--success);
-            padding: .75rem 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            font-size: .9rem;
-        }
-
-        .auth-footer {
-            text-align: center;
-            margin-top: 1.5rem;
-            font-size: .875rem;
-            color: var(--muted);
-        }
-
-        .auth-footer a {
-            color: var(--primary);
-            font-weight: 600;
-            text-decoration: none;
-        }
-
-        .auth-footer a:hover {
-            text-decoration: underline;
-        }
-
-        .divider {
-            border: none;
-            border-top: 1px solid var(--border);
-            margin: 1.5rem 0;
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
         }
     </style>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "inverse-on-surface": "#f2f0f6",
+                        "surface": "#faf8ff",
+                        "primary-fixed": "#dce1ff",
+                        "on-tertiary-fixed": "#00201b",
+                        "surface-container": "#efedf3",
+                        "background": "#faf8ff",
+                        "outline": "#757681",
+                        "on-tertiary-container": "#409f90",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-dim": "#dbd9df",
+                        "error-container": "#ffdad6",
+                        "inverse-primary": "#b5c4ff",
+                        "primary-container": "#0a2463",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed-dim": "#7ad7c6",
+                        "outline-variant": "#c5c6d2",
+                        "on-tertiary-fixed-variant": "#005047",
+                        "on-secondary-container": "#5d1900",
+                        "on-secondary-fixed": "#390c00",
+                        "secondary-container": "#fe6a34",
+                        "secondary": "#ab3500",
+                        "on-tertiary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "secondary-fixed": "#ffdbd0",
+                        "on-surface-variant": "#444650",
+                        "primary": "#00103e",
+                        "surface-variant": "#e3e2e8",
+                        "on-background": "#1b1b20",
+                        "tertiary": "#001814",
+                        "on-secondary-fixed-variant": "#832600",
+                        "secondary-fixed-dim": "#ffb59d",
+                        "surface-tint": "#475b9c",
+                        "surface-bright": "#faf8ff",
+                        "on-primary-container": "#7a8ed2",
+                        "inverse-surface": "#303035",
+                        "on-primary-fixed": "#00164d",
+                        "surface-container-low": "#f5f3f9",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "on-primary-fixed-variant": "#2e4382",
+                        "tertiary-container": "#002f29",
+                        "on-secondary": "#ffffff",
+                        "surface-container-highest": "#e3e2e8",
+                        "on-surface": "#1b1b20",
+                        "surface-container-high": "#e9e7ed",
+                        "on-primary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#97f3e2"
+                    },
+                    fontFamily: {
+                        "headline": ["Be Vietnam Pro"],
+                        "body": ["Be Vietnam Pro"],
+                        "label": ["Be Vietnam Pro"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
 </head>
+<body class="bg-surface text-on-surface min-h-screen flex items-center justify-center p-4 md:p-8">
 
-<body>
-    <div class="auth-card">
-        <div class="auth-logo">
-            <span>🚗</span>
-            <h1>VehicleBook</h1>
-            <p>Đăng nhập vào tài khoản của bạn</p>
+<!-- Auth Container: Bento Grid Layout -->
+<main class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-6 bg-surface-container-low p-6 rounded-[2rem] shadow-[0_24px_48px_rgba(0,16,62,0.06)] overflow-hidden relative">
+
+    <!-- Global Success Message -->
+    <div th:if="${success}" class="absolute top-4 right-4 bg-emerald-50 text-emerald-600 border border-emerald-200 px-4 py-3 rounded-xl shadow-lg z-50 flex items-center gap-3">
+        <span class="material-symbols-outlined">check_circle</span>
+        <span th:text="${success}" class="text-sm font-semibold"></span>
+    </div>
+
+    <!-- Left Column: Branding & Kinetic Visuals -->
+    <section class="lg:col-span-5 relative overflow-hidden rounded-[1.5rem] min-h-[400px] lg:min-h-full flex flex-col justify-between p-10 bg-primary-container text-white cursor-pointer" onclick="window.location.href='/'">
+        <!-- Background Decoration -->
+        <div class="absolute top-0 right-0 w-64 h-64 bg-secondary-container opacity-20 blur-[100px] rounded-full -mr-32 -mt-32"></div>
+        <div class="absolute bottom-0 left-0 w-48 h-48 bg-on-primary-container opacity-10 blur-[80px] rounded-full -ml-24 -mb-24"></div>
+        <div class="relative z-10">
+            <h1 class="text-3xl font-extrabold tracking-tighter mb-2">SR-Booking</h1>
+            <p class="text-on-primary-container text-sm font-medium tracking-wide uppercase">Kinetic Mobility Solutions</p>
+        </div>
+        <div class="relative z-10 mt-12">
+            <h2 class="text-4xl lg:text-5xl font-bold leading-tight mb-6">Di chuyển thông minh hơn mỗi ngày.</h2>
+            <div class="space-y-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-secondary-container">verified_user</span>
+                    </div>
+                    <p class="text-on-primary-container text-sm font-medium">An toàn tuyệt đối cho hành khách và tài xế.</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-secondary-container">electric_car</span>
+                    </div>
+                    <p class="text-on-primary-container text-sm font-medium">Công nghệ điều phối hành trình hiện đại.</p>
+                </div>
+            </div>
+        </div>
+        <div class="relative z-10 pt-10 border-t border-white/10 flex items-center gap-3">
+            <div class="flex -space-x-3">
+                <img class="w-8 h-8 rounded-full border-2 border-primary-container object-cover" data-alt="User avatar 1" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCX45-_NXcBOJKI5V1OvPWxCQfBANydfu8XgrX5pAZJMTGJeJ__A2FrarXX7UFoHA6-XsMioyADISNzraQLKYjUyFy5XGBLigkWuRIlM20m8lbATJ3NCDuWvwjpG2am9YFlMCCrxrcMMfZsNPtxQl31r-snV0fWQjCSCBMVRBP9z1MyzPGKuwCktKtycC0QAoCdEoFjD5WpaXijJfoWv2wu7hbIRuFGoEXkOdGiTsdRl_S6VXUky8M4RaFXog5JjrGoZZbr1ztMROU"/>
+                <img class="w-8 h-8 rounded-full border-2 border-primary-container object-cover" data-alt="User avatar 2" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqpMjQ7ITaDaznrScBH97q-5dZJooeGOpM3G2d7H9aTI03QaBV_O9XeEmZVZDtgKoNjSEuIP7DLxkFO4ux677zP62TilNYnH_e4WHZCrBdD2pTCqw0faz2nhug2NjLcHC99opuD6q1anFIj3-_UI0gORZFU-ED-myg0kwKc2kKGWBapFKmnsoJjv1PjwewHzcITYNWBx2oeY5RYoKSHTTi7pw6IpmzKqCt0ro-ee-q1rcDtkfrrOKjVF5j1YscJyBzWNL9pdjWvKQ"/>
+                <img class="w-8 h-8 rounded-full border-2 border-primary-container object-cover" data-alt="User avatar 3" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpjZ0ScbWs9KYWvbQ79ye6NrxPKCb7o_HzVO45UKaQAzzpE4J-kC8Q0itLb0u7mqLgAq7ZYX2mP2_uIkqy3n4WR5jPPO3z1yRDm8uTROCHp3qJ88XSqeUfYZzUZfr5BOmmry6VEPAaRntVzPHcObc4QmCDf0ywyXxx-1io-6JaL-ngIwrjrK-SUuWPKjrUSYzZ4c2-MZ_jiGC78DcpwyUxm2ONvkTtKFjDsI3-C0lsNywMOwj6QQG5r1I9bvlsFbqh18MyfF6-rm0"/>
+            </div>
+            <span class="text-xs text-on-primary-container font-medium">+20,000 người đã tham gia</span>
+        </div>
+    </section>
+
+    <!-- Right Column: Interactive Forms -->
+    <section class="lg:col-span-7 bg-surface-container-lowest rounded-[1.5rem] p-8 lg:p-12 relative">
+        
+        <!-- Login Error -->
+        <div th:if="${error}" class="mb-6 bg-red-50 text-red-600 border border-red-200 px-4 py-3 rounded-xl shadow-sm flex items-start gap-3">
+            <span class="material-symbols-outlined shrink-0 text-red-500">error</span>
+            <span th:text="${error}" class="text-sm font-semibold"></span>
         </div>
 
-        <div th:if="${error}" class="alert-danger" th:text="${error}"></div>
-        <div th:if="${success}" class="alert-success" th:text="${success}"></div>
+        <!-- Tabs Switcher -->
+        <div class="flex gap-8 mb-10 border-b border-outline-variant/30 pb-4">
+            <button class="text-[#FF6B35] font-bold text-lg relative after:content-[''] after:absolute after:-bottom-[17px] after:left-0 after:w-full after:h-1 after:bg-[#FF6B35] after:rounded-full">Đăng nhập</button>
+            <button onclick="document.getElementById('registerModal').classList.remove('hidden')" class="text-on-surface-variant font-medium text-lg hover:text-on-surface transition-colors" type="button">Đăng ký</button>
+        </div>
 
-        <form th:action="@{/auth/login}" method="post" th:object="${form}">
-            <!-- Pass redirect if present -->
-            <input type="hidden" name="redirect" th:value="${param.redirect}" />
-
-            <div class="form-group">
-                <label class="form-label" for="email">📧 Email</label>
-                <input type="email" id="email" class="form-control" name="email" th:value="*{email}"
-                    placeholder="example@email.com" required autofocus>
+        <!-- Login Form (Visible by Default) -->
+        <form th:action="@{/auth/login}" method="post" th:object="${loginForm}" class="space-y-6">
+            <div class="space-y-2">
+                <label class="text-sm font-semibold text-on-surface ml-1">Email</label>
+                <div class="relative group">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-secondary transition-colors">mail</span>
+                    <input th:field="*{email}" class="w-full pl-12 pr-4 py-4 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-secondary/20 transition-all text-on-surface placeholder:text-outline/50" placeholder="email@vinapulse.vn" type="email" required autofocus/>
+                    <div class="absolute bottom-0 left-0 w-0 h-0.5 bg-secondary group-focus-within:w-full transition-all duration-300"></div>
+                </div>
             </div>
-
-            <div class="form-group">
-                <label class="form-label" for="password">🔒 Mật khẩu</label>
-                <input type="password" id="password" class="form-control" name="password" placeholder="••••••••"
-                    required>
+            <div class="space-y-2">
+                <div class="flex justify-between items-center ml-1">
+                    <label class="text-sm font-semibold text-on-surface">Mật khẩu</label>
+                    <a class="text-xs font-bold text-secondary hover:underline" th:href="@{/auth/forgot-password}">Quên mật khẩu?</a>
+                </div>
+                <div class="relative group">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-secondary transition-colors">lock</span>
+                    <input th:field="*{password}" class="w-full pl-12 pr-4 py-4 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-secondary/20 transition-all text-on-surface placeholder:text-outline/50" placeholder="••••••••" type="password" required/>
+                    <div class="absolute bottom-0 left-0 w-0 h-0.5 bg-secondary group-focus-within:w-full transition-all duration-300"></div>
+                </div>
             </div>
-
-            <button type="submit" class="btn-primary">Đăng nhập →</button>
+            
+            <button class="w-full bg-primary-container text-white font-bold py-4 rounded-xl shadow-lg shadow-primary-container/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 group" type="submit">
+                Tiếp tục 
+                <span class="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform">arrow_forward</span>
+            </button>
         </form>
 
-        <hr class="divider">
-        <div class="auth-footer">
-            Chưa có tài khoản? <a th:href="@{/auth/register}">Đăng ký ngay</a>
+        <!-- Divider -->
+        <div class="flex items-center gap-4 my-6">
+            <div class="flex-1 h-px bg-outline-variant/30"></div>
+            <span class="text-xs text-outline font-semibold uppercase tracking-wider">hoặc</span>
+            <div class="flex-1 h-px bg-outline-variant/30"></div>
+        </div>
+
+        <!-- Google Sign-In Button (rendered by Google) -->
+        <div id="googleBtnContainer" class="flex justify-center"></div>
+
+        <script th:inline="javascript">
+            const GOOGLE_CLIENT_ID = /*[[${googleClientId}]]*/ '';
+        </script>
+        <script src="https://accounts.google.com/gsi/client"></script>
+        <script>
+            window.addEventListener('load', function() {
+                if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com') {
+                    document.getElementById('googleBtnContainer').innerHTML =
+                        '<p style="color:#999;font-size:12px;">Google Login chưa được cấu hình.</p>';
+                    return;
+                }
+                google.accounts.id.initialize({
+                    client_id: GOOGLE_CLIENT_ID,
+                    callback: handleGoogleResponse,
+                    ux_mode: 'popup'
+                });
+                google.accounts.id.renderButton(
+                    document.getElementById('googleBtnContainer'),
+                    {
+                        type: 'standard',
+                        theme: 'outline',
+                        size: 'large',
+                        text: 'signin_with',
+                        shape: 'rectangular',
+                        width: 400,
+                        logo_alignment: 'left'
+                    }
+                );
+            });
+            async function handleGoogleResponse(response) {
+                try {
+                    const res = await fetch('/auth/google', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ idToken: response.credential })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        window.location.href = data.redirect;
+                    } else {
+                        alert(data.error || 'Đăng nhập Google thất bại.');
+                    }
+                } catch (e) {
+                    alert('Lỗi kết nối. Vui lòng thử lại.');
+                }
+            }
+        </script>
+
+        <!-- Registration Form Hint -->
+        <div class="mt-12 p-6 rounded-2xl bg-secondary-fixed/30 border-l-4 border-secondary cursor-pointer hover:bg-secondary-fixed/50 transition-colors" onclick="document.getElementById('registerModal').classList.remove('hidden')">
+            <h3 class="font-bold text-on-secondary-fixed mb-2 flex items-center gap-2">
+                <span class="material-symbols-outlined">info</span>
+                Bạn là Tài xế mới?
+            </h3>
+            <p class="text-sm text-on-secondary-fixed-variant leading-relaxed">
+                Đăng ký ngay để trở thành <strong>Đối tác Vàng</strong> của SR-Booking và nhận chiết khấu 0% trong 3 tháng đầu tiên.
+            </p>
+        </div>
+    </section>
+</main>
+
+<!-- Modal for Registration -->
+<div id="registerModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary/40 backdrop-blur-sm overflow-y-auto">
+    <div class="bg-surface-container-lowest w-full max-w-3xl rounded-3xl shadow-2xl relative my-auto">
+        <button class="absolute top-6 right-6 text-outline hover:text-on-surface z-10" onclick="document.getElementById('registerModal').classList.add('hidden')" type="button">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+        <div class="p-8 md:p-12 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <header class="mb-8">
+                <h2 class="text-2xl font-bold text-on-surface">Bắt đầu cùng SR-Booking</h2>
+                <p class="text-on-surface-variant">Chỉ mất 2 phút để tạo tài khoản của bạn.</p>
+            </header>
+            
+            <!-- Register Error -->
+            <div th:if="${errorReg}" class="mb-6 bg-red-50 text-red-600 border border-red-200 px-4 py-3 rounded-xl shadow-sm flex items-start gap-3">
+                <span class="material-symbols-outlined shrink-0 text-red-500">error</span>
+                <span th:text="${errorReg}" class="text-sm font-semibold"></span>
+            </div>
+
+            <form th:action="@{/auth/register}" method="post" th:object="${registerForm}" class="grid grid-cols-1 md:grid-cols-2 gap-6" id="registrationForm">
+                
+                <div class="md:col-span-2 space-y-3 pb-2 border-b border-outline-variant/30">
+                    <label class="text-sm font-semibold text-on-surface">Bạn muốn tham gia với vai trò?</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <label class="relative flex items-center justify-center p-4 rounded-xl border-2 border-outline-variant/30 cursor-pointer hover:bg-surface-container-low transition-all has-[:checked]:border-secondary has-[:checked]:bg-secondary/5 group">
+                            <input th:field="*{role}" class="sr-only" name="role" type="radio" value="CUSTOMER" id="role_customer" checked/>
+                            <div class="text-center">
+                                <span class="material-symbols-outlined block mb-1 text-outline group-has-[:checked]:text-secondary">person</span>
+                                <span class="text-sm font-bold block text-on-surface-variant group-has-[:checked]:text-on-surface">Khách hàng</span>
+                            </div>
+                        </label>
+                        <label class="relative flex items-center justify-center p-4 rounded-xl border-2 border-outline-variant/30 cursor-pointer hover:bg-surface-container-low transition-all has-[:checked]:border-secondary has-[:checked]:bg-secondary/5 group">
+                            <input th:field="*{role}" class="sr-only" name="role" type="radio" value="DRIVER" id="role_driver"/>
+                            <div class="text-center">
+                                <span class="material-symbols-outlined block mb-1 text-outline group-has-[:checked]:text-secondary">local_taxi</span>
+                                <span class="text-sm font-bold block text-on-surface-variant group-has-[:checked]:text-on-surface">Tài xế</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-sm font-semibold text-on-surface">Họ tên</label>
+                    <input th:field="*{fullName}" class="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="Nguyễn Văn A" type="text" required minlength="2" maxlength="100"/>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-semibold text-on-surface">Số điện thoại</label>
+                    <input th:field="*{phone}" class="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="0901234567" type="tel" required maxlength="11" pattern="0[0-9]{9,10}" title="Số điện thoại phải bắt đầu bằng 0, gồm 10-11 chữ số"/>
+                </div>
+                <div class="md:col-span-2 space-y-2">
+                    <label class="text-sm font-semibold text-on-surface">Email</label>
+                    <input th:field="*{email}" class="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="example@gmail.com" type="email" required maxlength="100"/>
+                </div>
+                
+                <!-- Driver Specific Fields -->
+                <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 bg-surface-container-low/50 p-4 rounded-xl border border-outline-variant/30" id="driverFields" style="display: none;">
+                    <div class="md:col-span-2">
+                        <label class="text-sm font-bold text-secondary-container flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">assignment_ind</span> Thông tin tài xế bổ sung
+                        </label>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-on-surface" for="cccd">Số CCCD (12 số)</label>
+                        <input type="text" th:field="*{cccd}" id="cccd" class="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="Căn cước công dân" maxlength="12" pattern="[0-9]{12}" title="CCCD phải gồm đúng 12 chữ số">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-on-surface" for="driverLicense">Số Bằng Lái Xe</label>
+                        <input type="text" th:field="*{driverLicense}" id="driverLicense" class="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="Mã số GPLX" maxlength="12">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-on-surface" for="licenseExpiry">Ngày Hết Hạn Bằng Lái</label>
+                        <input type="date" th:field="*{licenseExpiry}" id="licenseExpiry" class="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-secondary/20 transition-all">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-on-surface" for="vehicleTypes">Loại Xe Lái Hộ</label>
+                        <select th:field="*{vehicleTypes}" id="vehicleTypes" class="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-secondary/20 transition-all cursor-pointer">
+                            <option value="">-- Chọn loại xe --</option>
+                            <option value="MOTORCYCLE">Xe máy</option>
+                            <option value="CAR_4">Xe 4 chỗ</option>
+                            <option value="CAR_7">Xe 7 chỗ</option>
+                            <option value="CAR_16">Xe 16 chỗ</option>
+                            <option value="CAR_29">Xe 29 chỗ</option>
+                            <option value="CAR_45">Xe 45 chỗ</option>
+                            <option value="TRUCK_SMALL">Xe tải nhỏ</option>
+                            <option value="TRUCK_MEDIUM">Xe tải trung</option>
+                            <option value="TRUCK_LARGE">Xe tải lớn</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-sm font-semibold text-on-surface">Mật khẩu</label>
+                    <input th:field="*{password}" class="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="Tối thiểu 6 ký tự" type="password" required minlength="6" maxlength="50"/>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-semibold text-on-surface">Xác nhận mật khẩu</label>
+                    <input th:field="*{confirmPassword}" class="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="Nhập lại mật khẩu" type="password" required/>
+                </div>
+
+                <div class="md:col-span-2 pt-4">
+                    <button class="w-full bg-secondary-container text-white font-bold py-4 rounded-xl shadow-lg shadow-secondary-container/20 hover:scale-[1.01] active:scale-[0.99] transition-all" type="submit">
+                        Đăng ký tài khoản
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
-</body>
+</div>
 
+<!-- Background Footer Credits -->
+<footer class="fixed bottom-6 w-full text-center pointer-events-none opacity-40">
+    <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">© 2026 SR-Booking Mobility. Kinetic Editorial Design.</p>
+</footer>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(0,0,0,0.1);
+        border-radius: 10px;
+    }
+    .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+        background: rgba(0,0,0,0.2);
+    }
+</style>
+
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+        // Auto-open modal if requested or on error
+        const showRegisterModal = /*[[${showRegister != null || errorReg != null}]]*/ false;
+        if (showRegisterModal) {
+            document.getElementById('registerModal').classList.remove('hidden');
+        }
+
+        // Driver fields toggle logic
+        const cccdGroup = document.getElementById('driverFields');
+        const cccdInput = document.getElementById('cccd');
+        const driverLicenseInput = document.getElementById('driverLicense');
+        const licenseExpiryInput = document.getElementById('licenseExpiry');
+        const vehicleTypesInput = document.getElementById('vehicleTypes');
+        const roleCustomer = document.getElementById('role_customer');
+        const roleDriver = document.getElementById('role_driver');
+
+        function toggleCccd() {
+            if (roleDriver.checked) {
+                cccdGroup.style.display = 'grid';
+                cccdInput.setAttribute('required', 'required');
+                driverLicenseInput.setAttribute('required', 'required');
+                licenseExpiryInput.setAttribute('required', 'required');
+                vehicleTypesInput.setAttribute('required', 'required');
+            } else {
+                cccdGroup.style.display = 'none';
+                cccdInput.removeAttribute('required');
+                driverLicenseInput.removeAttribute('required');
+                licenseExpiryInput.removeAttribute('required');
+                vehicleTypesInput.removeAttribute('required');
+            }
+        }
+
+        roleCustomer.addEventListener('change', toggleCccd);
+        roleDriver.addEventListener('change', toggleCccd);
+
+        // Check initial state (useful if form re-renders after validation error)
+        toggleCccd();
+        
+        // Form submission safety
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            if (!roleDriver.checked) { // Clear driver fields if not driver
+                cccdInput.value = '';
+                driverLicenseInput.value = '';
+                licenseExpiryInput.value = '';
+                vehicleTypesInput.value = '';
+            }
+        });
+    });
+</script>
+
+</body>
 </html>

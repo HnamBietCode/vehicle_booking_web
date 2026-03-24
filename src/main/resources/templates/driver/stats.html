@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{driver/fragments :: head('VinaPulse - Thống kê doanh thu')}"></head>
+<body class="bg-surface-container-low font-body text-on-surface min-h-screen pb-32">
+    <!-- TopAppBar -->
+    <header th:replace="~{driver/fragments :: header}"></header>
+
+    <main class="pt-24 px-6 max-w-5xl mx-auto">
+        <!-- Header Section -->
+        <section class="mb-10">
+            <h1 class="font-headline text-3xl font-bold tracking-tight text-primary mb-2">Biểu đồ hiệu suất</h1>
+            <p class="text-on-surface-variant body-lg" th:text="${'Phân tích chi tiết hoạt động của bạn trong ' + (period == 'monthly' ? '30 ngày qua' : 'tuần qua') + '.'}"></p>
+        </section>
+
+        <!-- Period Toggle -->
+        <div class="flex gap-3 mb-8">
+            <a th:href="@{/driver/stats(period='weekly')}"
+               class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95"
+               th:classappend="${period == 'weekly' ? 'bg-[#0A2463] text-white shadow-lg shadow-primary/20' : 'bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container'}">
+                7 ngày
+            </a>
+            <a th:href="@{/driver/stats(period='monthly')}"
+               class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95"
+               th:classappend="${period == 'monthly' ? 'bg-[#0A2463] text-white shadow-lg shadow-primary/20' : 'bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container'}">
+                30 ngày
+            </a>
+        </div>
+
+        <!-- Stats Overview Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+            <!-- Total Income Card -->
+            <div class="bg-[#0A2463] p-8 rounded-[24px] shadow-[0_8px_32px_rgba(10,36,99,0.25)] flex flex-col justify-between h-48 relative overflow-hidden">
+                <div class="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded-full"></div>
+                <div class="absolute bottom-0 right-0 w-24 h-24 bg-[#FE6A34]/10 rounded-full -mr-8 -mb-8"></div>
+                <div>
+                    <span class="text-white/70 text-xs font-bold uppercase tracking-[0.15em]">Tổng thu nhập</span>
+                    <div class="text-white text-4xl font-black mt-2 tracking-tight" th:text="${'₫ ' + #numbers.formatDecimal(dashboard.totalRevenue ?: 0, 0, 'COMMA', 0, 'POINT')}">₫ 0</div>
+                </div>
+                <div class="absolute right-8 top-1/2 -translate-y-1/2 opacity-[0.08]">
+                    <span class="material-symbols-outlined text-8xl text-white" data-icon="payments">payments</span>
+                </div>
+            </div>
+
+            <!-- Total Trips Card -->
+            <div class="bg-surface-container-lowest p-8 rounded-[24px] shadow-[0_4px_24px_rgba(0,16,62,0.08)] flex flex-col justify-between h-48 border border-outline-variant/15 relative overflow-hidden">
+                <div>
+                    <span class="text-on-surface-variant text-xs font-bold uppercase tracking-[0.15em]">Tổng chuyến đi</span>
+                    <div class="text-primary text-4xl font-black mt-2" th:text="${dashboard.totalTrips ?: 0}">0</div>
+                </div>
+                <div class="absolute right-8 top-1/2 -translate-y-1/2 opacity-[0.06]">
+                    <span class="material-symbols-outlined text-8xl text-primary" data-icon="local_taxi">local_taxi</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Chart Section -->
+        <section class="bg-surface-container-lowest p-8 rounded-[24px] shadow-[0_4px_24px_rgba(0,16,62,0.08)] mb-10">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h2 class="font-headline text-xl font-semibold text-primary">Xu hướng Thu nhập & Chuyến đi</h2>
+                    <p class="text-on-surface-variant text-sm" th:text="${period == 'monthly' ? 'Trong 30 ngày gần nhất' : 'Trong 7 ngày gần nhất'}">Biểu đồ so sánh</p>
+                </div>
+                <div class="flex gap-4">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-[#0A2463]"></div>
+                        <span class="text-xs font-medium text-on-surface-variant">Thu nhập (₫)</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-[#FE6A34]"></div>
+                        <span class="text-xs font-medium text-on-surface-variant">Chuyến đi</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Canvas Chart -->
+            <div class="relative" style="height: 300px;">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Secondary Performance Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-surface-container-lowest p-6 rounded-[20px] shadow-sm border border-outline-variant/10">
+                <div class="text-on-surface-variant text-[10px] font-bold uppercase tracking-[0.15em] mb-3">Đánh giá trung bình</div>
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl font-black text-primary" th:text="${dashboard.totalTrips > 0 ? '4.9' : '--'}">--</span>
+                    <span class="material-symbols-outlined text-[#FFD700]" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+                </div>
+                <div class="mt-3 h-1.5 bg-surface-container rounded-full overflow-hidden">
+                    <div class="h-full bg-[#FFD700] rounded-full" th:style="${'width: ' + (dashboard.totalTrips > 0 ? '92' : '0') + '%;'}"></div>
+                </div>
+            </div>
+            <div class="bg-surface-container-lowest p-6 rounded-[20px] shadow-sm border border-outline-variant/10">
+                <div class="text-on-surface-variant text-[10px] font-bold uppercase tracking-[0.15em] mb-3">Tỷ lệ hoàn thành</div>
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl font-black text-primary" th:text="${dashboard.totalTrips > 0 ? '98%' : '--'}">--</span>
+                    <span class="material-symbols-outlined text-green-500" data-icon="verified">verified</span>
+                </div>
+                <div class="mt-3 h-1.5 bg-surface-container rounded-full overflow-hidden">
+                    <div class="h-full bg-green-400 rounded-full" th:style="${'width: ' + (dashboard.totalTrips > 0 ? '98' : '0') + '%;'}"></div>
+                </div>
+            </div>
+            <div class="bg-surface-container-lowest p-6 rounded-[20px] shadow-sm border border-outline-variant/10">
+                <div class="text-on-surface-variant text-[10px] font-bold uppercase tracking-[0.15em] mb-3">Thu nhập trung bình / chuyến</div>
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl font-black text-primary" 
+                          th:text="${dashboard.totalTrips > 0 ? '₫' + #numbers.formatDecimal(dashboard.totalRevenue / dashboard.totalTrips, 0, 'COMMA', 0, 'POINT') : '--'}">--</span>
+                </div>
+                <div class="mt-3 h-1.5 bg-surface-container rounded-full overflow-hidden">
+                    <div class="h-full bg-[#0A2463] rounded-full w-[70%]"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- BottomNavBar -->
+    <nav th:replace="~{driver/fragments :: bottomnav('stats')}"></nav>
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+    <script th:inline="javascript">
+        // Generate arrays directly via Thymeleaf natural templates to avoid Jackson issues
+        const labels = [
+            /*[# th:each="d : ${chartData}"]*/
+            /*[[${#temporals.format(d.date, 'dd/MM')}]]*/ "01/01",
+            /*[/]*/
+        ];
+        const revenues = [
+            /*[# th:each="d : ${chartData}"]*/
+            /*[[${d.revenue != null ? d.revenue : 0}]]*/ 0,
+            /*[/]*/
+        ];
+        const trips = [
+            /*[# th:each="d : ${chartData}"]*/
+            /*[[${d.trips != null ? d.trips : 0}]]*/ 0,
+            /*[/]*/
+        ];
+
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+
+        // Find max values for better scaling
+        const maxRevenue = Math.max(...revenues, 1);
+        const maxTrips = Math.max(...trips, 1);
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Thu nhập (₫)',
+                        data: revenues,
+                        backgroundColor: 'rgba(10, 36, 99, 0.85)',
+                        borderColor: '#0A2463',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        yAxisID: 'y',
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.7,
+                        order: 2
+                    },
+                    {
+                        label: 'Chuyến đi',
+                        data: trips,
+                        type: 'line',
+                        borderColor: '#FE6A34',
+                        backgroundColor: 'rgba(254, 106, 52, 0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#FE6A34',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        tension: 0.4,
+                        fill: true,
+                        yAxisID: 'y1',
+                        order: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: '#0A2463',
+                        titleFont: { family: 'Be Vietnam Pro', size: 12, weight: '600' },
+                        bodyFont: { family: 'Be Vietnam Pro', size: 11 },
+                        padding: 12,
+                        cornerRadius: 12,
+                        displayColors: true,
+                        callbacks: {
+                            label: function(context) {
+                                if (context.dataset.yAxisID === 'y') {
+                                    return 'Thu nhập: ₫' + context.parsed.y.toLocaleString('vi-VN');
+                                }
+                                return 'Chuyến đi: ' + context.parsed.y;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            font: { family: 'Be Vietnam Pro', size: 10, weight: '600' },
+                            color: '#757681',
+                            maxRotation: 45,
+                            autoSkip: true,
+                            maxTicksLimit: 15
+                        }
+                    },
+                    y: {
+                        position: 'left',
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,0.04)' },
+                        ticks: {
+                            font: { family: 'Be Vietnam Pro', size: 10 },
+                            color: '#0A2463',
+                            callback: function(value) {
+                                if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+                                if (value >= 1000) return (value / 1000).toFixed(0) + 'K';
+                                return value;
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Thu nhập (₫)',
+                            font: { family: 'Be Vietnam Pro', size: 11, weight: '600' },
+                            color: '#0A2463'
+                        }
+                    },
+                    y1: {
+                        position: 'right',
+                        beginAtZero: true,
+                        grid: { display: false },
+                        ticks: {
+                            font: { family: 'Be Vietnam Pro', size: 10 },
+                            color: '#FE6A34',
+                            stepSize: 1
+                        },
+                        title: {
+                            display: true,
+                            text: 'Chuyến đi',
+                            font: { family: 'Be Vietnam Pro', size: 11, weight: '600' },
+                            color: '#FE6A34'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,506 +1,240 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Quản lý Xe – Admin</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Xe – SR-Booking Admin</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <style>
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        :root {
-            --primary: #4F46E5;
-            --primary-dark: #3730A3;
-            --danger: #EF4444;
-            --success: #10B981;
-            --accent: #F59E0B;
-            --bg: #F8FAFC;
-            --surface: #fff;
-            --border: #E2E8F0;
-            --text: #1E293B;
-            --muted: #64748B;
-            --radius: 12px;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-        }
-
-        .navbar {
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-            padding: 0 2rem;
-            display: flex;
-            align-items: center;
-            height: 64px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 1px 8px rgba(0, 0, 0, .06);
-        }
-
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.3rem;
-            color: var(--primary);
-            text-decoration: none;
-        }
-
-        .navbar-brand::before {
-            content: '🚗 ';
-        }
-
-        .navbar-nav {
-            display: flex;
-            align-items: center;
-            gap: .25rem;
-            margin-left: auto;
-            list-style: none;
-        }
-
-        .nav-link {
-            padding: .5rem .85rem;
-            border-radius: 8px;
-            text-decoration: none;
-            color: var(--muted);
-            font-size: .9rem;
-            font-weight: 500;
-            transition: all .2s;
-        }
-
-        .nav-link:hover,
-        .nav-link.active {
-            background: var(--primary);
-            color: #fff;
-        }
-
-        .main {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
-        }
-
-        .alert {
-            padding: .85rem 1.2rem;
-            border-radius: 8px;
-            margin-bottom: 1.2rem;
-            font-size: .9rem;
-            font-weight: 500;
-        }
-
-        .alert-danger {
-            background: #FEF2F2;
-            color: #991B1B;
-            border-left: 4px solid var(--danger);
-        }
-
-        .alert-success {
-            background: #F0FDF4;
-            color: #166534;
-            border-left: 4px solid var(--success);
-        }
-
-        .page-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1.5rem;
-        }
-
-        .page-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: .4rem;
-            padding: .55rem 1.1rem;
-            border: none;
-            border-radius: 8px;
-            font-size: .875rem;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all .2s;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: #fff;
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-dark);
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: #fff;
-        }
-
-        .btn-sm {
-            padding: .3rem .65rem;
-            font-size: .78rem;
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 1.5px solid var(--border);
-            color: var(--muted);
-        }
-
-        .btn-outline:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .stat-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 1.25rem;
-            text-align: center;
-        }
-
-        .stat-count {
-            font-size: 2rem;
-            font-weight: 800;
-            color: var(--primary);
-        }
-
-        .stat-label {
-            font-size: .8rem;
-            color: var(--muted);
-            font-weight: 500;
-            margin-top: .25rem;
-        }
-
-        .filter-bar {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 1rem 1.25rem;
-            margin-bottom: 1.5rem;
-            display: flex;
-            gap: .75rem;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .filter-bar select,
-        .filter-bar input {
-            padding: .5rem .9rem;
-            border: 1.5px solid var(--border);
-            border-radius: 8px;
-            font-size: .875rem;
-            font-family: inherit;
-        }
-
-        .table-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            overflow: hidden;
-        }
-
-        .table-wrap {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: .875rem;
-        }
-
-        th {
-            background: var(--bg);
-            font-weight: 600;
-            color: var(--muted);
-            padding: .75rem 1rem;
-            text-align: left;
-            border-bottom: 2px solid var(--border);
-            white-space: nowrap;
-        }
-
-        td {
-            padding: .75rem 1rem;
-            border-bottom: 1px solid var(--border);
-            vertical-align: middle;
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        tr:hover td {
-            background: #f8faff;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: .2rem .6rem;
-            border-radius: 999px;
-            font-size: .72rem;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-
-        .badge-motorcycle {
-            background: #FEF3C7;
-            color: #92400E;
-        }
-
-        .badge-car4,
-        .badge-car_4 {
-            background: #DBEAFE;
-            color: #1D4ED8;
-        }
-
-        .badge-car7,
-        .badge-car_7 {
-            background: #EDE9FE;
-            color: #5B21B6;
-        }
-
-        .badge-car_16,
-        .badge-car_29,
-        .badge-car_45 {
-            background: #FCE7F3;
-            color: #BE185D;
-        }
-
-        .badge-truck_small,
-        .badge-truck_medium,
-        .badge-truck_large {
-            background: #E0F2FE;
-            color: #0369A1;
-        }
-
-        .badge-available {
-            background: #D1FAE5;
-            color: #065F46;
-        }
-
-        .badge-on_trip {
-            background: #FEF3C7;
-            color: #92400E;
-        }
-
-        .badge-maintenance {
-            background: #FEE2E2;
-            color: #991B1B;
-        }
-
-        .action-group {
-            display: flex;
-            gap: .4rem;
-            flex-wrap: nowrap;
-        }
-
-        .stars {
-            color: #F59E0B;
-            font-size: .9rem;
-        }
-
-        .vehicle-img {
-            width: 44px;
-            height: 34px;
-            object-fit: cover;
-            border-radius: 6px;
-            background: var(--bg);
-        }
-
-        .search-box {
-            flex: 1;
-            padding: .55rem 1rem;
-            border: 1.5px solid var(--border);
-            border-radius: 8px;
-            font-size: .875rem;
-            font-family: inherit;
-        }
-
-        .search-box:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .table-toolbar {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem 1.25rem;
-            border-bottom: 1px solid var(--border);
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Be Vietnam Pro', sans-serif; background: #f5f3f9; color: #1b1b20; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .sidebar-link { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 12px; color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 600; transition: all .2s; }
+        .sidebar-link:hover { background: rgba(255,255,255,.1); color: white; }
+        .sidebar-link.active { background: #FE6A34; color: white; transform: scale(1.02); }
+        /* Badge */
+        .badge { display: inline-block; padding: .2rem .6rem; border-radius: 999px; font-size: .68rem; font-weight: 700; white-space: nowrap; }
+        .badge-motorcycle { background:#FEF3C7; color:#92400E; }
+        .badge-car_4 { background:#DBEAFE; color:#1D4ED8; }
+        .badge-car_7 { background:#EDE9FE; color:#5B21B6; }
+        .badge-car_16,.badge-car_29,.badge-car_45 { background:#FCE7F3; color:#BE185D; }
+        .badge-truck_small,.badge-truck_medium,.badge-truck_large { background:#E0F2FE; color:#0369A1; }
+        .badge-available { background:#D1FAE5; color:#065F46; }
+        .badge-on_trip   { background:#FEF3C7; color:#92400E; }
+        .badge-maintenance { background:#FEE2E2; color:#991B1B; }
+        /* Table */
+        table { width:100%; border-collapse:collapse; font-size:.85rem; }
+        th { background:#f8f7fc; font-weight:700; color:#64748b; padding:.65rem 1rem; text-align:left; border-bottom:1px solid #e9e7ed; white-space:nowrap; font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; }
+        td { padding:.75rem 1rem; border-bottom:1px solid #f0eef5; vertical-align:middle; }
+        tr:hover td { background:#faf9ff; }
+        /* Btn */
+        .btn { display:inline-flex; align-items:center; gap:.35rem; padding:.4rem .9rem; border:none; border-radius:8px; font-size:.8rem; font-weight:600; cursor:pointer; text-decoration:none; transition:all .2s; font-family:inherit; }
+        .btn-primary { background:#0A2463; color:#fff; }
+        .btn-primary:hover { background:#0d2d78; }
+        .btn-danger { background:#EF4444; color:#fff; }
+        .btn-danger:hover { opacity:.9; }
+        .btn-outline { background:transparent; border:1.5px solid #e9e7ed; color:#64748b; }
+        .btn-outline:hover { border-color:#0A2463; color:#0A2463; }
+        .btn-sm { padding:.3rem .6rem; font-size:.72rem; }
+        .filter-chip { padding:.35rem .8rem; border-radius:20px; text-decoration:none; font-size:.78rem; font-weight:600; color:#64748b; border:1.5px solid #e9e7ed; transition:all .2s; }
+        .filter-chip:hover,.filter-chip.active { background:#0A2463; color:#fff; border-color:#0A2463; }
+        /* Alert */
+        .alert { padding:.8rem 1.1rem; border-radius:10px; margin-bottom:16px; font-size:.875rem; font-weight:500; }
+        .alert-danger { background:#FEF2F2; color:#991B1B; border-left:3px solid #EF4444; }
+        .alert-success { background:#F0FDF4; color:#166534; border-left:3px solid #10B981; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+        .vehicle-img { width:48px; height:36px; object-fit:cover; border-radius:8px; background:#f5f3f9; }
     </style>
 </head>
-
 <body>
-    <nav th:replace="~{layout/base :: navbar}"></nav>
 
-    <main class="main">
-        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
-        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+<!-- Sidebar -->
+<aside style="position:fixed;left:0;top:0;height:100%;width:256px;background:#0A2463;display:flex;flex-direction:column;padding:24px 0;z-index:50;box-shadow:4px 0 24px rgba(0,16,62,.15);">
+    <div style="padding:0 24px;margin-bottom:32px;">
+        <h1 style="color:white;font-size:1.4rem;font-weight:800;font-style:italic;letter-spacing:-.02em;">SR-Booking</h1>
+        <p style="color:#93c5fd;font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;opacity:.7;">Mobility Admin</p>
+    </div>
+    <nav style="flex:1;padding:0 8px;display:flex;flex-direction:column;gap:2px;">
+        <a class="sidebar-link" href="/admin/dashboard"><span class="material-symbols-outlined" style="font-size:20px;">dashboard</span>Dashboard</a>
+        <a class="sidebar-link" href="/admin/users"><span class="material-symbols-outlined" style="font-size:20px;">group</span>Quản lý Users</a>
+        <a class="sidebar-link active" href="/admin/vehicles"><span class="material-symbols-outlined" style="font-size:20px;">directions_car</span>Quản lý Xe</a>
+        <a class="sidebar-link" href="/admin/sober-bookings"><span class="material-symbols-outlined" style="font-size:20px;">assignment</span>Quản lý Lái hộ</a>
+        <a class="sidebar-link" href="/admin/withdrawals"><span class="material-symbols-outlined" style="font-size:20px;">payments</span>Rút tiền</a>
+        <a class="sidebar-link" href="/admin/pickup-points"><span class="material-symbols-outlined" style="font-size:20px;">location_on</span>Điểm đón</a>
+            <a class="sidebar-link" href="/admin/ratings"><span class="material-symbols-outlined" style="font-size:20px;">star</span>Đánh giá</a>
+        <a class="sidebar-link" href="/admin/realtime">
+            <span class="material-symbols-outlined" style="font-size:20px;">monitoring</span>Realtime
+            <span style="margin-left:auto;width:8px;height:8px;background:#4ade80;border-radius:50%;animation:pulse 1.5s infinite;"></span>
+        </a>
+    </nav>
+    <div style="padding:0 8px;border-top:1px solid rgba(255,255,255,.1);padding-top:12px;margin-top:8px;">
+        <a class="sidebar-link" href="/auth/logout" style="color:#fca5a5;">
+            <span class="material-symbols-outlined" style="font-size:18px;">logout</span>Đăng xuất
+        </a>
+    </div>
+</aside>
 
-        <div class="page-header">
-            <h1 class="page-title">🚗 Quản lý danh mục xe</h1>
-            <a class="btn btn-primary" th:href="@{/admin/vehicles/add}">➕ Thêm xe mới</a>
+<!-- Header -->
+<header style="position:fixed;top:0;right:0;width:calc(100% - 256px);height:64px;background:rgba(255,255,255,.85);backdrop-filter:blur(16px);display:flex;justify-content:space-between;align-items:center;padding:0 32px;z-index:40;border-bottom:1px solid #f0eef5;">
+    <h2 style="font-weight:800;color:#0A2463;font-size:.95rem;">Quản lý Xe</h2>
+    <div style="display:flex;align-items:center;gap:10px;">
+        <a href="/admin/vehicles/add" class="btn btn-primary" style="border-radius:20px;">
+            <span class="material-symbols-outlined" style="font-size:16px;">add</span>Thêm xe mới
+        </a>
+        <div style="width:34px;height:34px;border-radius:50%;background:#0A2463;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:12px;">AD</div>
+    </div>
+</header>
+
+<!-- Main -->
+<main style="margin-left:256px;padding:88px 32px 48px;">
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+    <!-- Page title -->
+    <div style="margin-bottom:24px;">
+        <h1 style="font-size:1.6rem;font-weight:800;color:#0A2463;margin-bottom:4px;">🚗 Danh mục xe</h1>
+        <p style="color:#64748b;font-size:.875rem;">Toàn bộ phương tiện đang hoạt động trong hệ thống</p>
+    </div>
+
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px;margin-bottom:24px;">
+        <div style="background:white;border-radius:16px;padding:18px;text-align:center;border:1px solid #f0eef5;box-shadow:0 2px 8px rgba(0,16,62,.04);">
+            <div style="font-size:1.8rem;font-weight:800;color:#0A2463;" th:text="${vehicles.size()}">0</div>
+            <div style="font-size:.75rem;color:#64748b;font-weight:600;margin-top:4px;">Tổng xe</div>
         </div>
-
-        <!-- Stats -->
-        <div class="stats">
-            <div class="stat-card">
-                <div class="stat-count" th:text="${vehicles.size()}">0</div>
-                <div class="stat-label">Tổng xe</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-count" th:text="${#lists.size(vehicles.?[category.name() == 'MOTORCYCLE'])}">0</div>
-                <div class="stat-label">Xe máy</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-count" th:text="${#lists.size(vehicles.?[category.name() == 'CAR_4'])}">0</div>
-                <div class="stat-label">Ô tô 4 chỗ</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-count" th:text="${#lists.size(vehicles.?[category.name() == 'CAR_7'])}">0</div>
-                <div class="stat-label">Ô tô 7 chỗ</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-count" th:text="${#lists.size(vehicles.?[status.name() == 'AVAILABLE'])}">0</div>
-                <div class="stat-label">Trống (chưa có khách)</div>
-            </div>
+        <div style="background:white;border-radius:16px;padding:18px;text-align:center;border:1px solid #f0eef5;box-shadow:0 2px 8px rgba(0,16,62,.04);">
+            <div style="font-size:1.8rem;font-weight:800;color:#92400e;" th:text="${#lists.size(vehicles.?[category.name() == 'MOTORCYCLE'])}">0</div>
+            <div style="font-size:.75rem;color:#64748b;font-weight:600;margin-top:4px;">🏍️ Xe máy</div>
         </div>
-
-        <!-- Filter -->
-        <div class="filter-bar">
-            <span style="font-weight:600;font-size:.875rem;">Lọc loại xe:</span>
-            <a class="btn btn-sm" th:classappend="${selectedCategory == null ? 'btn-primary' : 'btn-outline'}"
-                th:href="@{/admin/vehicles}">Tất cả</a>
-            <a class="btn btn-sm" th:classappend="${selectedCategory == 'MOTORCYCLE' ? 'btn-primary' : 'btn-outline'}"
-                th:href="@{/admin/vehicles(category='MOTORCYCLE')}">🏍️ Xe máy</a>
-            <a class="btn btn-sm" th:classappend="${selectedCategory == 'CAR_4' ? 'btn-primary' : 'btn-outline'}"
-                th:href="@{/admin/vehicles(category='CAR_4')}">🚗 Ô tô 4 chỗ</a>
-            <a class="btn btn-sm" th:classappend="${selectedCategory == 'CAR_7' ? 'btn-primary' : 'btn-outline'}"
-                th:href="@{/admin/vehicles(category='CAR_7')}">🚐 Ô tô 7 chỗ</a>
-            <a class="btn btn-sm" th:classappend="${selectedCategory == 'CAR_16' ? 'btn-primary' : 'btn-outline'}"
-                th:href="@{/admin/vehicles(category='CAR_16')}">🚐 Ô tô 16 chỗ</a>
-            <a class="btn btn-sm" th:classappend="${selectedCategory == 'CAR_29' ? 'btn-primary' : 'btn-outline'}"
-                th:href="@{/admin/vehicles(category='CAR_29')}">🚌 Ô tô 29/45 chỗ</a>
-            <a class="btn btn-sm" th:classappend="${selectedCategory == 'TRUCK_SMALL' ? 'btn-primary' : 'btn-outline'}"
-                th:href="@{/admin/vehicles(category='TRUCK_SMALL')}">🚚 Xe tải</a>
+        <div style="background:white;border-radius:16px;padding:18px;text-align:center;border:1px solid #f0eef5;box-shadow:0 2px 8px rgba(0,16,62,.04);">
+            <div style="font-size:1.8rem;font-weight:800;color:#1d4ed8;" th:text="${#lists.size(vehicles.?[category.name() == 'CAR_4'])}">0</div>
+            <div style="font-size:.75rem;color:#64748b;font-weight:600;margin-top:4px;">🚗 Ô tô 4 chỗ</div>
         </div>
+        <div style="background:white;border-radius:16px;padding:18px;text-align:center;border:1px solid #f0eef5;box-shadow:0 2px 8px rgba(0,16,62,.04);">
+            <div style="font-size:1.8rem;font-weight:800;color:#5b21b6;" th:text="${#lists.size(vehicles.?[category.name() == 'CAR_7'])}">0</div>
+            <div style="font-size:.75rem;color:#64748b;font-weight:600;margin-top:4px;">🚐 Ô tô 7 chỗ</div>
+        </div>
+        <div style="background:white;border-radius:16px;padding:18px;text-align:center;border:1px solid #f0eef5;box-shadow:0 2px 8px rgba(0,16,62,.04);">
+            <div style="font-size:1.8rem;font-weight:800;color:#065f46;" th:text="${#lists.size(vehicles.?[status.name() == 'AVAILABLE'])}">0</div>
+            <div style="font-size:.75rem;color:#64748b;font-weight:600;margin-top:4px;">Trống</div>
+        </div>
+    </div>
 
-        <!-- Table -->
-        <div class="table-card">
-            <div class="table-toolbar">
-                <input type="text" class="search-box" placeholder="🔍 Tìm tên xe, biển số…"
-                    oninput="filterTable(this.value)" id="searchInput">
-            </div>
-            <div class="table-wrap">
-                <table id="vehiclesTable">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Ảnh</th>
-                            <th>Tên xe</th>
-                            <th>Biển số</th>
-                            <th>Loại</th>
-                            <th>Trạng thái</th>
-                            <th>Khu vực/Địa chỉ</th>
-                            <th>Giá/km (đ)</th>
-                            <th>Giá/giờ (đ)</th>
-                            <th>Đánh giá</th>
-                            <th>Tài xế</th>
-                            <th>Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="v, iter : ${vehicles}">
-                            <td th:text="${iter.count}">1</td>
-                            <td>
-                                <img th:if="${v.imageUrl != null}" th:src="${v.imageUrl}" class="vehicle-img" alt="xe"
-                                    onerror="this.style.display='none'">
-                                <span th:unless="${v.imageUrl != null}">—</span>
-                            </td>
-                            <td th:text="${v.name}">—</td>
-                            <td th:text="${v.licensePlate}">—</td>
-                            <td>
-                                <span class="badge"
-                                    th:classappend="${'badge-' + #strings.toLowerCase(v.category.name())}"
-                                    th:text="${v.category.name() == 'MOTORCYCLE' ? '🏍 Xe máy' : 
-                                    (v.category.name() == 'CAR_4' ? '🚗 4 chỗ' : 
-                                    (v.category.name() == 'CAR_7' ? '🚐 7 chỗ' : 
-                                    (v.category.name() == 'CAR_16' ? '🚐 16 chỗ' : 
-                                    (v.category.name() == 'CAR_29' ? '🚌 29 chỗ' : 
-                                    (v.category.name() == 'CAR_45' ? '🚌 45 chỗ' : 
-                                    (v.category.name() == 'TRUCK_SMALL' ? '🚚 Tải nhỏ' : 
-                                    (v.category.name() == 'TRUCK_MEDIUM' ? '🚚 Tải trung' : '🚛 Tải lớn')))))))}">—</span>
-                            </td>
-                            <td>
-                                <span class="badge"
-                                    th:classappend="${v.status.name() == 'AVAILABLE' ? 'badge-available' : (v.status.name() == 'ON_TRIP' ? 'badge-on_trip' : 'badge-maintenance')}"
-                                    th:text="${v.status.name() == 'AVAILABLE' ? 'Trống (chưa có khách)' : (v.status.name() == 'ON_TRIP' ? 'Đang hoạt động (có khách)' : 'Bảo trì')}">—</span>
-                            </td>
-                            <td style="max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
-                                th:title="${v.currentAddress}"
-                                th:text="${v.currentAddress != null ? v.currentAddress : '—'}">—</td>
-                            <td th:text="${#numbers.formatDecimal(v.pricePerKm, 0, 'COMMA', 0, 'POINT')}">—</td>
-                            <td th:text="${#numbers.formatDecimal(v.pricePerHour, 0, 'COMMA', 0, 'POINT')}">—</td>
-                            <td>
-                                <span class="stars">⭐</span>
-                                <span th:text="${v.avgRating}">0.00</span>
-                            </td>
-                            <td th:text="${v.driver != null ? v.driver.fullName : '—'}">—</td>
-                            <td>
-                                <div class="action-group">
-                                    <a class="btn btn-outline btn-sm"
-                                        th:href="@{/admin/vehicles/{id}(id=${v.id})}">👁</a>
-                                    <a class="btn btn-outline btn-sm"
-                                        th:href="@{/admin/vehicles/{id}/edit(id=${v.id})}">✏️</a>
-                                    <form th:action="@{/admin/vehicles/{id}/delete(id=${v.id})}" method="post"
-                                        style="display:inline;" onsubmit="return confirm('Xoá xe này?')">
-                                        <button type="submit" class="btn btn-danger btn-sm">🗑</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr th:if="${#lists.isEmpty(vehicles)}">
-                            <td colspan="11" style="text-align:center;color:var(--muted);padding:2rem;">Chưa có xe nào.
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+    <!-- Filter chips -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;">
+        <a class="filter-chip" th:href="@{/admin/vehicles}" th:classappend="${selectedCategory == null ? ' active' : ''}">Tất cả</a>
+        <a class="filter-chip" th:href="@{/admin/vehicles(category='MOTORCYCLE')}" th:classappend="${selectedCategory == 'MOTORCYCLE' ? ' active' : ''}">🏍️ Xe máy</a>
+        <a class="filter-chip" th:href="@{/admin/vehicles(category='CAR_4')}" th:classappend="${selectedCategory == 'CAR_4' ? ' active' : ''}">🚗 Ô tô 4 chỗ</a>
+        <a class="filter-chip" th:href="@{/admin/vehicles(category='CAR_7')}" th:classappend="${selectedCategory == 'CAR_7' ? ' active' : ''}">🚐 Ô tô 7 chỗ</a>
+        <a class="filter-chip" th:href="@{/admin/vehicles(category='CAR_16')}" th:classappend="${selectedCategory == 'CAR_16' ? ' active' : ''}">🚐 16 chỗ</a>
+        <a class="filter-chip" th:href="@{/admin/vehicles(category='CAR_29')}" th:classappend="${selectedCategory == 'CAR_29' ? ' active' : ''}">🚌 29/45 chỗ</a>
+        <a class="filter-chip" th:href="@{/admin/vehicles(category='TRUCK_SMALL')}" th:classappend="${selectedCategory == 'TRUCK_SMALL' ? ' active' : ''}">🚚 Xe tải</a>
+    </div>
+
+    <!-- Table Card -->
+    <div style="background:white;border-radius:20px;overflow:hidden;border:1px solid #f0eef5;box-shadow:0 4px 16px rgba(0,16,62,.05);">
+        <div style="padding:16px 20px;border-bottom:1px solid #f0eef5;display:flex;align-items:center;gap:12px;">
+            <div style="position:relative;flex:1;max-width:400px;">
+                <span class="material-symbols-outlined" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:18px;color:#94a3b8;">search</span>
+                <input type="text" id="searchInput" placeholder="Tìm tên xe, biển số…" oninput="filterTable(this.value)"
+                    style="width:100%;padding:.5rem .9rem .5rem 2.4rem;border:1.5px solid #e9e7ed;border-radius:10px;font-size:.875rem;font-family:inherit;outline:none;"
+                    onfocus="this.style.borderColor='#0A2463'" onblur="this.style.borderColor='#e9e7ed'">
             </div>
         </div>
-    </main>
+        <div style="overflow-x:auto;">
+            <table id="vehiclesTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Ảnh</th>
+                        <th>Tên xe</th>
+                        <th>Biển số</th>
+                        <th>Loại</th>
+                        <th>Trạng thái</th>
+                        <th>Khu vực</th>
+                        <th>Giá/km</th>
+                        <th>Giá/giờ</th>
+                        <th>Rating</th>
+                        <th>Tài xế</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="v, iter : ${vehicles}">
+                        <td style="color:#94a3b8;font-weight:600;" th:text="${iter.count}">1</td>
+                        <td>
+                            <img th:if="${v.imageUrl != null}" th:src="${v.imageUrl}" class="vehicle-img" alt="xe" onerror="this.style.display='none'">
+                            <div th:unless="${v.imageUrl != null}" style="width:48px;height:36px;background:#f5f3f9;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                                <span class="material-symbols-outlined" style="font-size:18px;color:#cbd5e1;">directions_car</span>
+                            </div>
+                        </td>
+                        <td style="font-weight:600;" th:text="${v.name}">—</td>
+                        <td>
+                            <span style="background:#f1f5f9;padding:.2rem .6rem;border-radius:6px;font-size:.8rem;font-weight:700;color:#0A2463;" th:text="${v.licensePlate}">—</span>
+                        </td>
+                        <td>
+                            <span class="badge" th:classappend="${'badge-' + #strings.toLowerCase(v.category.name())}" th:switch="${v.category.name()}">
+                                <span th:case="'MOTORCYCLE'">🏍 Xe máy</span>
+                                <span th:case="'CAR_4'">🚗 4 chỗ</span>
+                                <span th:case="'CAR_7'">🚐 7 chỗ</span>
+                                <span th:case="'CAR_16'">🚐 16 chỗ</span>
+                                <span th:case="'CAR_29'">🚌 29 chỗ</span>
+                                <span th:case="'CAR_45'">🚌 45 chỗ</span>
+                                <span th:case="'TRUCK_SMALL'">🚚 Tải nhỏ</span>
+                                <span th:case="'TRUCK_MEDIUM'">🚚 Tải trung</span>
+                                <span th:case="*">🚛 Tải lớn</span>
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge" th:switch="${v.status.name()}">
+                                <span th:case="'AVAILABLE'" class="badge-available">Trống</span>
+                                <span th:case="'ON_TRIP'" class="badge-on_trip">Đang chạy</span>
+                                <span th:case="*" class="badge-maintenance">Bảo trì</span>
+                            </span>
+                        </td>
+                        <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#64748b;font-size:.8rem;"
+                            th:title="${v.currentAddress}" th:text="${v.currentAddress != null ? v.currentAddress : '—'}">—</td>
+                        <td style="font-weight:600;color:#0A2463;" th:text="${#numbers.formatDecimal(v.pricePerKm, 0, 'COMMA', 0, 'POINT')} + 'đ'">—</td>
+                        <td style="font-weight:600;color:#0A2463;" th:text="${#numbers.formatDecimal(v.pricePerHour, 0, 'COMMA', 0, 'POINT')} + 'đ'">—</td>
+                        <td>
+                            <span style="color:#f59e0b;">⭐</span>
+                            <span style="font-weight:600;" th:text="${v.avgRating}">0.00</span>
+                        </td>
+                        <td style="color:#64748b;font-size:.82rem;" th:text="${v.driver != null ? v.driver.fullName : '—'}">—</td>
+                        <td>
+                            <div style="display:flex;gap:4px;flex-wrap:nowrap;">
+                                <a class="btn btn-outline btn-sm" th:href="@{/admin/vehicles/{id}(id=${v.id})}" title="Xem chi tiết">
+                                    <span class="material-symbols-outlined" style="font-size:14px;">visibility</span>
+                                </a>
+                                <a class="btn btn-outline btn-sm" th:href="@{/admin/vehicles/{id}/edit(id=${v.id})}" title="Sửa">
+                                    <span class="material-symbols-outlined" style="font-size:14px;">edit</span>
+                                </a>
+                                <form th:action="@{/admin/vehicles/{id}/delete(id=${v.id})}" method="post" style="display:inline;" onsubmit="return confirm('Xoá xe này?')">
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <span class="material-symbols-outlined" style="font-size:14px;">delete</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(vehicles)}">
+                        <td colspan="12" style="text-align:center;color:#94a3b8;padding:3rem;font-size:.9rem;">Chưa có xe nào.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
 
-    <script>
-        function filterTable(query) {
-            const q = query.toLowerCase();
-            document.querySelectorAll('#vehiclesTable tbody tr').forEach(tr => {
-                tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
-            });
-        }
-    </script>
+<script>
+function filterTable(query) {
+    const q = query.toLowerCase();
+    document.querySelectorAll('#vehiclesTable tbody tr').forEach(tr => {
+        tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+}
+</script>
 </body>
-
 </html>

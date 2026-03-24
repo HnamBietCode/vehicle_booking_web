@@ -2,8 +2,10 @@ package com.bookvehicle.example.sr.controller.driver;
 
 import com.bookvehicle.example.sr.config.SecurityUtil;
 import com.bookvehicle.example.sr.model.*;
+import com.bookvehicle.example.sr.dto.ReportDashboardDTO;
 import com.bookvehicle.example.sr.repository.DriverRepository;
 import com.bookvehicle.example.sr.repository.SoberBookingRepository;
+import com.bookvehicle.example.sr.service.DriverReportService;
 import com.bookvehicle.example.sr.service.SoberBookingService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/driver/sober-bookings")
@@ -27,6 +30,9 @@ public class DriverSoberBookingController {
     @Autowired
     private DriverRepository driverRepository;
 
+    @Autowired
+    private DriverReportService driverReportService;
+
     @GetMapping
     public String listBookings(HttpSession session, Model model, RedirectAttributes ra) {
         User loggedUser = SecurityUtil.getLoggedUser(session);
@@ -36,14 +42,24 @@ public class DriverSoberBookingController {
             return "redirect:/";
         }
 
-        Driver driver = driverRepository.findByUserId(loggedUser.getId())
-                .orElseThrow(() -> new RuntimeException("Driver not found"));
+        Optional<Driver> driverOpt = driverRepository.findByUserId(loggedUser.getId());
+        if (driverOpt.isEmpty()) {
+            ra.addFlashAttribute("error", "Không tìm thấy hồ sơ tài xế của bạn. Vui lòng liên hệ Admin.");
+            return "redirect:/profile";
+        }
+        Driver driver = driverOpt.get();
 
         List<SoberBooking> pendingBookings = soberBookingRepository.findPendingBookings();
         List<SoberBooking> myBookings = soberBookingRepository.findByDriverId(driver.getId());
+        List<SoberBooking> historyBookings = soberBookingRepository.findDriverHistory(driver.getId());
+
+        // Add daily stats for the dashboard header
+        ReportDashboardDTO todayStats = driverReportService.getDashboardData(loggedUser.getId(), "daily");
 
         model.addAttribute("pendingBookings", pendingBookings);
         model.addAttribute("myBookings", myBookings);
+        model.addAttribute("historyBookings", historyBookings);
+        model.addAttribute("todayStats", todayStats);
         model.addAttribute("driver", driver);
         model.addAttribute("loggedUser", loggedUser);
         

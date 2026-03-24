@@ -1,22 +1,17 @@
 package com.bookvehicle.example.sr.controller;
 
-import com.bookvehicle.example.sr.model.Transaction;
-import com.bookvehicle.example.sr.model.User;
-import com.bookvehicle.example.sr.model.Wallet;
-import com.bookvehicle.example.sr.model.WithdrawalRequest;
-import com.bookvehicle.example.sr.service.MomoService;
-import com.bookvehicle.example.sr.service.WalletService;
-import com.bookvehicle.example.sr.service.WithdrawalService;
+import com.bookvehicle.example.sr.model.*;
+import com.bookvehicle.example.sr.service.*;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.util.Map;
 import java.util.List;
 
 @Controller
@@ -30,6 +25,12 @@ public class WalletController {
 
     @Autowired
     private WithdrawalService withdrawalService;
+
+    @Autowired
+    private EmailService emailService;
+
+    @Autowired
+    private NotificationService notificationService;
 
     @GetMapping("/wallet")
     public String showWallet(HttpSession session, Model model) {
@@ -92,12 +93,32 @@ public class WalletController {
 
         boolean success = processPayment(loggedUser.getId(), amountStr, resultCode, orderIdMoMo);
         if (success) {
+            // Thông báo nạp tiền thành công
+            notificationService.createNotification(
+                    loggedUser.getId(), "Nạp tiền thành công",
+                    "Bạn đã nạp " + amountStr + "₫ vào ví qua MoMo.",
+                    NotificationType.DEPOSIT_SUCCESS,
+                    NotificationRefType.WALLET, null);
             return "redirect:/wallet?success=momo_deposit_success";
         }
         return "redirect:/wallet?error=momo_payment_failed";
     }
 
-    // ── Rút tiền ────────────────────────────────────────────────────
+    // ── Rút tiền (OTP qua Gmail) ────────────────────────────────────
+
+    @PostMapping("/wallet/withdraw/send-otp")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> sendWithdrawOtp(HttpSession session) {
+        User loggedUser = (User) session.getAttribute("loggedUser");
+        if (loggedUser == null) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "error", "Chưa đăng nhập."));
+        }
+        String error = emailService.sendWithdrawOtp(loggedUser.getId(), loggedUser.getEmail());
+        if (error != null) {
+            return ResponseEntity.ok(Map.of("success", false, "error", error));
+        }
+        return ResponseEntity.ok(Map.of("success", true, "message", "Mã OTP đã được gửi đến " + loggedUser.getEmail()));
+    }
 
     @PostMapping("/wallet/withdraw")
     public String withdraw(@RequestParam("amount") BigDecimal amount,
@@ -105,10 +126,22 @@ public class WalletController {
                             @RequestParam("accountNumber") String accountNumber,
                             @RequestParam("accountHolder") String accountHolder,
                             @RequestParam(name = "note", required = false) String note,
+                            @RequestParam(name = "otp", required = false) String otp,
                             HttpSession session,
                             RedirectAttributes ra) {
         User loggedUser = (User) session.getAttribute("loggedUser");
         if (loggedUser == null) return "redirect:/auth/login";
+
+        // Xác minh OTP trước khi rút tiền
+        if (otp == null || otp.isBlank()) {
+            ra.addFlashAttribute("error", "Vui lòng nhập mã OTP để xác nhận rút tiền.");
+            return "redirect:/wallet";
+        }
+        String otpError = emailService.verifyWithdrawOtp(loggedUser.getId(), otp);
+        if (otpError != null) {
+            ra.addFlashAttribute("error", otpError);
+            return "redirect:/wallet";
+        }
 
         String error = withdrawalService.createRequest(
                 loggedUser.getId(), amount, bankName, accountNumber, accountHolder, note);
@@ -116,6 +149,12 @@ public class WalletController {
             ra.addFlashAttribute("error", error);
         } else {
             ra.addFlashAttribute("success", "Yêu cầu rút tiền đã được tạo. Vui lòng chờ Admin xử lý.");
+            // Thông báo rút tiền
+            notificationService.createNotification(
+                    loggedUser.getId(), "Yêu cầu rút tiền",
+                    "Bạn đã tạo yêu cầu rút " + amount + "₫ về " + bankName + " " + accountNumber + ". Chờ Admin xử lý.",
+                    NotificationType.WITHDRAW_REQUEST,
+                    NotificationRefType.WALLET, null);
         }
         return "redirect:/wallet";
     }
