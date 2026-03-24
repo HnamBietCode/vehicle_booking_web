@@ -289,7 +289,57 @@
                         placeholder="Chia sẻ trải nghiệm của bạn..."></textarea>
                 </div>
 
-                <button type="submit" class="btn btn-primary">⭐ Gửi đánh giá</button>
+                <!-- Secondary Rating Section: VEHICLE if primary is DRIVER -->
+                <div th:if="${form.targetType == 'DRIVER' and associatedVehicle != null}" 
+                     class="mt-8 pt-6 border-t border-slate-100">
+                    <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:1rem;">
+                        <input type="checkbox" id="enableVehicleRating" style="width:1.2rem; height:1.2rem; cursor:pointer;" 
+                               onclick="document.getElementById('vehicleRatingForm').style.display = this.checked ? 'block' : 'none'">
+                        <label for="enableVehicleRating" style="font-size:0.9rem; font-weight:700; color:var(--primary); cursor:pointer;">
+                            🚗 Đánh giá cả xe <span th:text="${associatedVehicle.name}"></span>
+                        </label>
+                    </div>
+                    <div id="vehicleRatingForm" style="display:none; padding-left:1.5rem; border-left:3px solid var(--border);">
+                        <label class="form-label">⭐ Số sao cho xe</label>
+                        <select name="vehicleStars" class="form-control mb-3" style="margin-bottom:1rem;">
+                            <option value="">-- Chọn số sao --</option>
+                            <option value="5">5 sao - Xuất sắc</option>
+                            <option value="4">4 sao - Tốt</option>
+                            <option value="3">3 sao - Bình thường</option>
+                            <option value="2">2 sao - Tệ</option>
+                            <option value="1">1 sao - Rất tệ</option>
+                        </select>
+                        <label class="form-label">💬 Nhận xét về xe (tuỳ chọn)</label>
+                        <textarea name="vehicleComment" class="form-control" rows="2" placeholder="Chia sẻ về tình trạng xe..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Secondary Rating Section: DRIVER if primary is VEHICLE -->
+                <div th:if="${form.targetType == 'VEHICLE' and assignedDriver != null}" 
+                     class="mt-8 pt-6 border-t border-slate-100">
+                    <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:1rem;">
+                        <input type="checkbox" id="enableDriverRating" style="width:1.2rem; height:1.2rem; cursor:pointer;" 
+                               onclick="document.getElementById('driverRatingForm').style.display = this.checked ? 'block' : 'none'">
+                        <label for="enableDriverRating" style="font-size:0.9rem; font-weight:700; color:var(--primary); cursor:pointer;">
+                            🧑‍✈️ Đánh giá cả tài xế <span th:text="${assignedDriver.fullName}"></span>
+                        </label>
+                    </div>
+                    <div id="driverRatingForm" style="display:none; padding-left:1.5rem; border-left:3px solid var(--border);">
+                        <label class="form-label">⭐ Số sao cho tài xế</label>
+                        <select name="driverStars" class="form-control mb-3" style="margin-bottom:1rem;">
+                            <option value="">-- Chọn số sao --</option>
+                            <option value="5">5 sao - Xuất sắc</option>
+                            <option value="4">4 sao - Tốt</option>
+                            <option value="3">3 sao - Bình thường</option>
+                            <option value="2">2 sao - Tệ</option>
+                            <option value="1">1 sao - Rất tệ</option>
+                        </select>
+                        <label class="form-label">💬 Nhận xét về tài xế (tuỳ chọn)</label>
+                        <textarea name="driverComment" class="form-control" rows="2" placeholder="Chia sẻ về thái độ phục vụ..."></textarea>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="margin-top:2rem;">⭐ Gửi đánh giá</button>
             </form>
 
             <a class="btn btn-outline" onclick="history.back()">← Quay lại</a>

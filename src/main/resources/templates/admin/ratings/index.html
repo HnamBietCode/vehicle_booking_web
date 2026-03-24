@@ -154,7 +154,8 @@
                         <div class="ri-header">
                             <div>
                                 <span class="ri-target">
-                                    Tài xế #<span th:text="${r.targetId}">—</span>
+                                    <span th:each="d : ${drivers}" th:if="${d.id == r.targetId}" th:text="${d.fullName}">Tài xế</span> 
+                                    <span th:if="${#lists.isEmpty(drivers.?[id == __${r.targetId}__])}">Tài xế #<span th:text="${r.targetId}">ID</span></span>
                                 </span>
                                 <span class="badge badge-driver" th:text="${r.refType}">—</span>
                             </div>
@@ -169,8 +170,18 @@
                             <span th:if="${r.refId != null}"> · Đơn #<span th:text="${r.refId}">—</span></span>
                         </div>
                         <div class="ri-comment" th:if="${r.comment != null and !r.comment.isEmpty()}" th:text="${r.comment}">—</div>
+                        
+                        <!-- Admin Reply Preview -->
+                        <div th:if="${r.adminComment != null}" 
+                             style="margin-top:0.5rem; padding:0.5rem 0.75rem; background:#F0FDF4; border-radius:8px; border-left:3px solid var(--success); font-size:0.8rem;">
+                            <span style="display:block; font-size:0.7rem; font-weight:800; color:var(--success); text-transform:uppercase;">Phản hồi từ Admin</span>
+                            <p th:text="${r.adminComment}" style="margin:0;"></p>
+                        </div>
                     </div>
-                    <div class="ri-actions">
+                    <div class="ri-actions" style="display:flex; flex-direction:column; gap:0.4rem; align-items:flex-end;">
+                        <a th:href="@{/ratings/driver/{id}(id=${r.targetId})}" class="tab" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; border-color: var(--primary); color: var(--primary);">
+                            <span class="material-symbols-outlined" style="font-size:14px;">reply</span> Trả lời
+                        </a>
                         <form th:action="@{/admin/ratings/{id}/delete(id=${r.id})}" method="post"
                               onsubmit="return confirm('Xoá đánh giá này?')">
                             <button type="submit" class="btn-delete">
@@ -203,7 +214,8 @@
                         <div class="ri-header">
                             <div>
                                 <span class="ri-target">
-                                    Xe #<span th:text="${r.targetId}">—</span>
+                                    <span th:each="v : ${vehicles}" th:if="${v.id == r.targetId}" th:text="${v.name}">Xe</span>
+                                    <span th:if="${#lists.isEmpty(vehicles.?[id == __${r.targetId}__])}">Xe #<span th:text="${r.targetId}">ID</span></span>
                                 </span>
                                 <span class="badge badge-vehicle" th:text="${r.refType}">—</span>
                             </div>
@@ -218,8 +230,18 @@
                             <span th:if="${r.refId != null}"> · Đơn #<span th:text="${r.refId}">—</span></span>
                         </div>
                         <div class="ri-comment" th:if="${r.comment != null and !r.comment.isEmpty()}" th:text="${r.comment}">—</div>
+                        
+                        <!-- Admin Reply Preview -->
+                        <div th:if="${r.adminComment != null}" 
+                             style="margin-top:0.5rem; padding:0.5rem 0.75rem; background:#F0FDF4; border-radius:8px; border-left:3px solid var(--success); font-size:0.8rem;">
+                            <span style="display:block; font-size:0.7rem; font-weight:800; color:var(--success); text-transform:uppercase;">Phản hồi từ Admin</span>
+                            <p th:text="${r.adminComment}" style="margin:0;"></p>
+                        </div>
                     </div>
-                    <div class="ri-actions">
+                    <div class="ri-actions" style="display:flex; flex-direction:column; gap:0.4rem; align-items:flex-end;">
+                        <a th:href="@{/ratings/vehicle/{id}(id=${r.targetId})}" class="tab" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; border-color: var(--primary); color: var(--primary);">
+                            <span class="material-symbols-outlined" style="font-size:14px;">reply</span> Trả lời
+                        </a>
                         <form th:action="@{/admin/ratings/{id}/delete(id=${r.id})}" method="post"
                               onsubmit="return confirm('Xoá đánh giá này?')">
                             <button type="submit" class="btn-delete">

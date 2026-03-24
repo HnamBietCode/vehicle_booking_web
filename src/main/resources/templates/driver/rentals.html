@@ -93,9 +93,12 @@
                                             th:onclick="'openCompleteModal(' + ${rental.id} + ')'"
                                             class="bg-on-tertiary-container text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:scale-105 active:scale-95 transition-all">Hoàn thành</button>
                                     <!-- Cancel/Reject Button -->
-                                    <button th:if="${rental.status.name() == 'PENDING' or rental.status.name() == 'CONFIRMED' or rental.status.name() == 'ACTIVE'}" 
+                                    <button th:if="${rental.status.name() == 'PENDING' or rental.status.name() == 'CONFIRMED'}" 
                                             th:onclick="'openRejectModal(' + ${rental.id} + ')'"
                                             class="bg-red-500/10 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-500/20 active:scale-95 transition-all">Hủy đơn</button>
+                                    <button th:if="${rental.status.name() == 'ACTIVE'}" 
+                                            disabled
+                                            class="bg-surface-container-high text-outline px-3 py-1.5 rounded-lg text-xs font-bold cursor-not-allowed">Hủy đơn</button>
                                 </div>
                             </td>
                         </tr>

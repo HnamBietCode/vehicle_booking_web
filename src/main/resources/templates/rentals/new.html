@@ -24,6 +24,16 @@
         #addressSuggestions button:hover {
             background-color: #f5f3f9;
         }
+
+        /* Hide number input spinners */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
     </style>
 </head>
 
@@ -132,7 +142,7 @@
                         <div class="relative address-wrapper">
                             <input type="text" id="manualPickupAddress" class="w-full bg-surface-container-low border-none rounded-xl py-4 px-4 text-on-surface focus:ring-2 focus:ring-secondary transition-all shadow-sm" 
                                    placeholder="Địa chỉ cụ thể (Số nhà, tên đường...)">
-                            <div id="addressSuggestions" class="hidden absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-outline-variant z-50 overflow-hidden"></div>
+                            <div id="addressSuggestions" class="hidden absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-outline-variant z-[1000] overflow-hidden"></div>
                         </div>
                         <div id="map-preview"></div>
                         <input type="hidden" th:field="*{pickupAddress}">

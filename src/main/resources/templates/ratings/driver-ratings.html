@@ -218,8 +218,13 @@
             style="background:#FEF2F2;color:#991B1B;border-left:4px solid #EF4444;padding:.85rem 1.2rem;border-radius:8px;margin-bottom:1.2rem;font-size:.9rem;font-weight:500;"
             th:text="${error}"></div>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem;">
-            <a class="btn btn-outline" style="margin-bottom:0;" onclick="history.back()">← Quay lại</a>
-            <a th:if="${loggedUser == null || loggedUser.role.name() != 'DRIVER' || driver == null || driver.userId != loggedUser.id}"
+            <a class="btn btn-outline" style="margin-bottom:0;" 
+               th:href="@{/booking-history}"
+               onclick="if(document.referrer && document.referrer.includes('/admin/')) { window.location.href = document.referrer; return false; }">← Quay lại</a>
+            <!-- Only show Write Review button for non-admin, non-driver-of-this-profile users -->
+            <a th:if="${loggedUser != null
+                        and loggedUser.role.name() != 'ADMIN'
+                        and (loggedUser.role.name() != 'DRIVER' or driver == null or driver.userId != loggedUser.id)}"
                 th:href="@{/ratings/rate(targetType='DRIVER', targetId=${driver.id})}" class="btn btn-primary"
                 style="margin-bottom:0;">⭐ Viết đánh giá</a>
         </div>
@@ -256,6 +261,34 @@
                     th:text="${r.comment}">—</div>
                 <div style="font-size:.78rem;color:var(--muted);margin-top:.4rem;font-style:italic;"
                     th:unless="${r.comment != null and !r.comment.isBlank()}">(Không có nhận xét)</div>
+                <!-- Admin reply section -->
+                <div th:if="${r.adminComment != null or (loggedUser != null and loggedUser.role.name() == 'ADMIN')}" 
+                     style="margin-top:1rem; border-top:1px solid var(--border); padding-top:.75rem;">
+                    
+                    <!-- Display existing reply -->
+                    <div th:if="${r.adminComment != null}" 
+                         style="background: #F1F5F9; padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem; position: relative;">
+                        <span style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--primary); margin-bottom: 0.25rem; text-transform: uppercase;">Phản hồi từ Admin</span>
+                        <p style="font-size: 0.875rem; color: var(--text); line-height: 1.5; margin: 0;" th:text="${r.adminComment}">Phản hồi...</p>
+                        <span style="display: block; font-size: 0.7rem; color: var(--muted); margin-top: 0.5rem;" 
+                              th:text="${#temporals.format(r.repliedAt, 'dd/MM/yyyy HH:mm')}">Date</span>
+                    </div>
+
+                    <!-- Admin Reply Form -->
+                    <form th:if="${loggedUser != null and loggedUser.role.name() == 'ADMIN'}" 
+                          th:action="@{/ratings/reply}" method="post" style="margin-top:0.5rem;">
+                        <input type="hidden" name="ratingId" th:value="${r.id}" />
+                        <div style="display:flex; gap:.5rem; align-items:flex-end;">
+                            <textarea name="reply" rows="2"
+                                style="flex:1; padding:.45rem .75rem; border:1.5px solid var(--border); border-radius:8px; font-size:.85rem; font-family:inherit; resize:vertical;"
+                                th:placeholder="${r.adminComment != null ? 'Chỉnh sửa phản hồi...' : 'Viết phản hồi của Admin...'}"
+                                th:text="${r.adminComment}"></textarea>
+                            <button type="submit" class="btn btn-primary" style="white-space:nowrap; padding: 0.45rem 1rem; height: 38px;">
+                                <span th:text="${r.adminComment != null ? 'Cập nhật' : 'Gửi phản hồi'}">Gửi</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
