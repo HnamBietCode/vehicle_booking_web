@@ -27,6 +27,7 @@ public class VehicleRentalService {
     private final PushNotificationService pushNotificationService;
     private final BookingRealtimeService bookingRealtimeService;
     private final GeocodingService geocodingService;
+    private final NotificationService notificationService;
 
     public VehicleRentalService(
             VehicleRentalRepository vehicleRentalRepository,
@@ -38,7 +39,8 @@ public class VehicleRentalService {
             WalletService walletService,
             PushNotificationService pushNotificationService,
             BookingRealtimeService bookingRealtimeService,
-            GeocodingService geocodingService) {
+            GeocodingService geocodingService,
+            NotificationService notificationService) {
         this.vehicleRentalRepository = vehicleRentalRepository;
         this.vehicleRepository = vehicleRepository;
         this.driverRepository = driverRepository;
@@ -49,6 +51,7 @@ public class VehicleRentalService {
         this.pushNotificationService = pushNotificationService;
         this.bookingRealtimeService = bookingRealtimeService;
         this.geocodingService = geocodingService;
+        this.notificationService = notificationService;
     }
 
     @Transactional(readOnly = true)
@@ -196,6 +199,22 @@ public class VehicleRentalService {
         if (mode == VehicleRental.RentalMode.VEHICLE_ONLY) {
             notifyAvailableDriversForVehicleOnly(rental, vehicle);
         }
+        // In-app notification cho customer
+        try {
+            notificationService.createNotification(
+                    customerUserId, "Đặt xe thành công",
+                    "Bạn đã đặt xe " + vehicle.getName() + ". Chờ tài xế xác nhận.",
+                    NotificationType.RENTAL_CREATED,
+                    NotificationRefType.RENTAL, rental.getId());
+            // Thông báo cho tài xế nếu có
+            if (assignedDriver.isPresent()) {
+                notificationService.createNotification(
+                        assignedDriver.get().getUserId(), "Đơn thuê xe mới",
+                        "Bạn có đơn thuê xe mới. Kiểm tra và xác nhận ngay.",
+                        NotificationType.BOOKING_ASSIGNED,
+                        NotificationRefType.RENTAL, rental.getId());
+            }
+        } catch (Exception ignored) {}
         return ServiceResult.success("Dat xe thanh cong. Cho tai xe xac nhan.", rental.getId());
     }
 
@@ -396,6 +415,17 @@ public class VehicleRentalService {
                 "TRIP_COMPLETED",
                 "Chuyen di da hoan thanh."
         );
+        // In-app notification cho customer
+        try {
+            Customer customer = customerRepository.findById(rental.getCustomerId()).orElse(null);
+            if (customer != null) {
+                notificationService.createNotification(
+                        customer.getUserId(), "Chuyến đi hoàn thành",
+                        "Chuyến thuê xe #" + rental.getId() + " đã hoàn thành. Vui lòng thanh toán.",
+                        NotificationType.TRIP_COMPLETED,
+                        NotificationRefType.RENTAL, rental.getId());
+            }
+        } catch (Exception ignored) {}
         return ServiceResult.success("Da hoan thanh chuyen. Cho khach hang thanh toan.", rental.getId());
     }
 

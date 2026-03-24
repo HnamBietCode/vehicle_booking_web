@@ -1,0 +1,16 @@
+package com.bookvehicle.example.sr.model;
+
+public enum NotificationType {
+    BOOKING_ASSIGNED,
+    BOOKING_ACCEPTED,
+    TRIP_COMPLETED,
+    PAYMENT_DONE,
+    DRIVER_APPROVED,
+    DRIVER_REJECTED,
+    RENTAL_CREATED,
+    DEPOSIT_SUCCESS,
+    WITHDRAW_REQUEST,
+    WITHDRAW_APPROVED,
+    WITHDRAW_REJECTED,
+    GENERAL
+}

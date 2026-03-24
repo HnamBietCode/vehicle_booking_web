@@ -5,20 +5,29 @@ import com.bookvehicle.example.sr.dto.LoginForm;
 import com.bookvehicle.example.sr.dto.RegisterForm;
 import com.bookvehicle.example.sr.model.User;
 import com.bookvehicle.example.sr.service.AuthService;
+import com.bookvehicle.example.sr.service.GoogleAuthService;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.Map;
 
 @Controller
 @RequestMapping("/auth")
 public class AuthController {
 
     private final AuthService authService;
+    private final GoogleAuthService googleAuthService;
 
-    public AuthController(AuthService authService) {
+    @Value("${app.google.client-id}")
+    private String googleClientId;
+
+    public AuthController(AuthService authService, GoogleAuthService googleAuthService) {
         this.authService = authService;
+        this.googleAuthService = googleAuthService;
     }
 
     // ── Đăng ký ──────────────────────────────────────────────────
@@ -70,6 +79,7 @@ public class AuthController {
             return "redirect:/";
         model.addAttribute("loginForm", new LoginForm());
         model.addAttribute("registerForm", new RegisterForm());
+        model.addAttribute("googleClientId", googleClientId);
         if ("forbidden".equals(error))
             model.addAttribute("error", "Bạn không có quyền truy cập trang đó.");
         return "auth/login";
@@ -107,6 +117,29 @@ public class AuthController {
         SecurityUtil.clearSession(session);
         ra.addFlashAttribute("success", "Bạn đã đăng xuất thành công.");
         return "redirect:/auth/login";
+    }
+
+    // ── Google Login ────────────────────────────────────────────────
+
+    @PostMapping("/google")
+    @ResponseBody
+    public Map<String, Object> handleGoogleLogin(@RequestBody Map<String, String> body,
+                                                  HttpSession session) {
+        String idToken = body.get("idToken");
+        if (idToken == null || idToken.isBlank()) {
+            return Map.of("success", false, "error", "Token không hợp lệ.");
+        }
+        User user = googleAuthService.authenticateWithGoogle(idToken);
+        if (user == null) {
+            return Map.of("success", false, "error", "Xác thực Google thất bại.");
+        }
+        SecurityUtil.setLoggedUser(session, user);
+        String redirectUrl = switch (user.getRole()) {
+            case ADMIN -> "/admin/users";
+            case CUSTOMER -> "/profile";
+            case DRIVER -> "/driver/dashboard";
+        };
+        return Map.of("success", true, "redirect", redirectUrl);
     }
 
     // ── Forgot Password Flow ───────────────────────────────────────

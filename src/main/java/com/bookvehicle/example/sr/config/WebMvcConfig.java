@@ -16,7 +16,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addInterceptor(new SessionInterceptor())
                 .addPathPatterns("/**")
                 // Loại trừ: auth pages, static resources
-                .excludePathPatterns("/auth/**", "/css/**", "/js/**", "/images/**",
+                .excludePathPatterns("/auth/**", "/api/**", "/css/**", "/js/**", "/images/**",
                         "/uploads/**", "/favicon.ico", "/error");
     }
 
