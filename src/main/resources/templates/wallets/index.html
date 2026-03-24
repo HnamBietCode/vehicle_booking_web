@@ -226,12 +226,61 @@
                             <input name="note" class="w-full bg-surface-container border-none rounded-lg text-sm font-medium py-3 focus:ring-2 focus:ring-primary-container/20" placeholder="Tùy chọn" type="text"/>
                         </div>
                     </div>
-                    <button type="submit" class="w-full bg-primary-container text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all"
-                            onclick="return confirm('Bạn chắc chắn muốn rút tiền? Số tiền sẽ bị trừ ngay và chờ Admin chuyển khoản.')">
-                        <span class="material-symbols-outlined" data-icon="send">send</span>
+
+                    <!-- OTP Section (hiện sau khi gửi OTP) -->
+                    <div id="otpSection" style="display:none;" class="space-y-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                        <div class="flex items-center gap-2 text-sm font-bold text-blue-800">
+                            <span class="material-symbols-outlined text-lg">mail</span>
+                            <span id="otpMessage">Mã OTP đã được gửi đến email của bạn</span>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Nhập mã OTP (6 số)</label>
+                            <input name="otp" id="otpInput" class="w-full bg-white border-2 border-blue-300 rounded-lg text-center text-lg font-bold py-3 tracking-[8px] focus:ring-2 focus:ring-blue-400/40 focus:border-blue-500" type="text" maxlength="6" pattern="[0-9]{6}" placeholder="• • • • • •" required/>
+                        </div>
+                        <p class="text-xs text-blue-600">⏱ Mã có hiệu lực trong 5 phút. <button type="button" onclick="sendWithdrawOtp()" class="font-bold underline">Gửi lại</button></p>
+                    </div>
+
+                    <!-- Bước 1: Gửi OTP -->
+                    <button type="button" id="sendOtpBtn" onclick="sendWithdrawOtp()"
+                            class="w-full bg-secondary-container text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all">
+                        <span class="material-symbols-outlined">mail</span>
+                        Gửi mã OTP để xác nhận rút tiền
+                    </button>
+
+                    <!-- Bước 2: Xác nhận rút tiền (hiện sau khi nhập OTP) -->
+                    <button type="submit" id="confirmWithdrawBtn" style="display:none;"
+                            class="w-full bg-primary-container text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all">
+                        <span class="material-symbols-outlined">send</span>
                         Xác nhận rút tiền
                     </button>
                 </form>
+
+                <script>
+                    async function sendWithdrawOtp() {
+                        const btn = document.getElementById('sendOtpBtn');
+                        btn.textContent = 'Đang gửi OTP...';
+                        btn.disabled = true;
+                        try {
+                            const res = await fetch('/wallet/withdraw/send-otp', { method: 'POST' });
+                            const data = await res.json();
+                            if (data.success) {
+                                document.getElementById('otpSection').style.display = 'block';
+                                document.getElementById('otpMessage').textContent = data.message;
+                                btn.style.display = 'none';
+                                document.getElementById('confirmWithdrawBtn').style.display = 'flex';
+                                document.getElementById('otpInput').focus();
+                            } else {
+                                alert(data.error || 'Không thể gửi OTP.');
+                                btn.textContent = 'Gửi mã OTP để xác nhận rút tiền';
+                                btn.disabled = false;
+                            }
+                        } catch(e) {
+                            alert('Lỗi kết nối. Vui lòng thử lại.');
+                            btn.textContent = 'Gửi mã OTP để xác nhận rút tiền';
+                            btn.disabled = false;
+                        }
+                    }
+                </script>
             </section>
         </div>
 

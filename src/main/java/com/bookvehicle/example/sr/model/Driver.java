@@ -1,6 +1,7 @@
 package com.bookvehicle.example.sr.model;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -66,6 +67,9 @@ public class Driver {
 
     @Column(length = 100)
     private String ward;
+
+    @Column(name = "avg_rating", nullable = false)
+    private BigDecimal avgRating = BigDecimal.ZERO;
 
     @Column(name = "last_completed_at")
     private LocalDateTime lastCompletedAt;
@@ -136,6 +140,9 @@ public class Driver {
 
     public String getWard() { return ward; }
     public void setWard(String ward) { this.ward = ward; }
+
+    public BigDecimal getAvgRating() { return avgRating; }
+    public void setAvgRating(BigDecimal avgRating) { this.avgRating = avgRating; }
 
     public LocalDateTime getLastCompletedAt() { return lastCompletedAt; }
     public void setLastCompletedAt(LocalDateTime lastCompletedAt) { this.lastCompletedAt = lastCompletedAt; }

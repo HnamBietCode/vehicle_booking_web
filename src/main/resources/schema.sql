@@ -453,3 +453,21 @@ PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 -- Add pickup_lat/pickup_lng to vehicle_rentals for geocoded pickup location
 SET @s = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'vehicle_rentals' AND COLUMN_NAME = 'pickup_lat' AND TABLE_SCHEMA = DATABASE()) = 0, 'ALTER TABLE vehicle_rentals ADD COLUMN pickup_lat DOUBLE, ADD COLUMN pickup_lng DOUBLE', 'SELECT 1'));
 PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- ============================================================
+-- NEW FEATURES MIGRATION
+-- ============================================================
+
+-- Feature 1: Driver avg_rating
+SET @s = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'drivers' AND COLUMN_NAME = 'avg_rating' AND TABLE_SCHEMA = DATABASE()) = 0, 'ALTER TABLE drivers ADD COLUMN avg_rating DECIMAL(3,2) NOT NULL DEFAULT 0.00', 'SELECT 1'));
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- Feature 2: Google Login - google_id on users
+SET @s = (SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'users' AND COLUMN_NAME = 'google_id' AND TABLE_SCHEMA = DATABASE()) = 0, 'ALTER TABLE users ADD COLUMN google_id VARCHAR(100)', 'SELECT 1'));
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- Feature 2: Allow nullable password for Google-only users
+ALTER TABLE users MODIFY COLUMN password VARCHAR(255) NULL;
+
+-- Feature 4: Expand notification types
+ALTER TABLE notifications MODIFY COLUMN type ENUM('BOOKING_ASSIGNED','BOOKING_ACCEPTED','TRIP_COMPLETED','PAYMENT_DONE','DRIVER_APPROVED','DRIVER_REJECTED','RENTAL_CREATED','DEPOSIT_SUCCESS','WITHDRAW_REQUEST','WITHDRAW_APPROVED','WITHDRAW_REJECTED','GENERAL') NOT NULL;

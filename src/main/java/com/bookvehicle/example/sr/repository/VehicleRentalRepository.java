@@ -2,6 +2,7 @@ package com.bookvehicle.example.sr.repository;
 
 import com.bookvehicle.example.sr.model.VehicleRental;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -53,4 +54,10 @@ public interface VehicleRentalRepository extends JpaRepository<VehicleRental, Lo
     @Query("SELECT vr FROM VehicleRental vr " +
            "WHERE vr.status = 'PENDING'")
     List<VehicleRental> findAllPending();
+
+    @Modifying
+    @Query("UPDATE VehicleRental vr SET vr.driverId = NULL WHERE vr.driverId = :driverId")
+    void clearDriverId(@Param("driverId") Long driverId);
+
+    void deleteByCustomerId(Long customerId);
 }

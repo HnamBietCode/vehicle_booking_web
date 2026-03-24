@@ -498,6 +498,27 @@
                     <a th:href="@{/profile}" class="text-sm font-bold text-[#0A2463] hover:text-secondary-container transition-all flex items-center gap-2">
                         Hồ sơ cá nhân
                     </a>
+
+                    <!-- 🔔 Notification Bell -->
+                    <div class="relative" id="notifBellWrap" style="position:relative;">
+                        <button id="notifBell" onclick="toggleNotifDropdown()" style="background:none;border:none;cursor:pointer;font-size:1.5rem;position:relative;padding:4px 8px;">
+                            🔔
+                            <span id="notifBadge" style="display:none;position:absolute;top:0;right:0;background:#EF4444;color:#fff;font-size:.6rem;font-weight:700;min-width:16px;height:16px;border-radius:8px;padding:0 4px;line-height:16px;text-align:center;">0</span>
+                        </button>
+                        <div id="notifDropdown" style="display:none;position:absolute;right:0;top:100%;width:360px;max-height:420px;overflow-y:auto;background:#fff;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.12);z-index:999;padding:0;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #E2E8F0;">
+                                <span style="font-weight:700;font-size:.95rem;">Thông báo</span>
+                                <a href="/notifications" style="font-size:.8rem;color:#4F46E5;text-decoration:none;font-weight:600;">Xem tất cả →</a>
+                            </div>
+                            <div id="notifList" style="padding:4px 0;">
+                                <div style="text-align:center;padding:1.5rem;color:#94A3B8;font-size:.85rem;">Đang tải...</div>
+                            </div>
+                            <div style="padding:8px 16px;border-top:1px solid #E2E8F0;text-align:center;">
+                                <button onclick="markAllReadFromDropdown()" style="background:none;border:none;color:#4F46E5;font-size:.8rem;font-weight:600;cursor:pointer;">✓ Đánh dấu tất cả đã đọc</button>
+                            </div>
+                        </div>
+                    </div>
+
                     <a th:href="@{/auth/logout}" class="flex items-center text-rose-500 hover:text-rose-700 transition-all" title="Đăng xuất">
                         <span class="material-symbols-outlined text-2xl font-bold">logout</span>
                     </a>
@@ -511,9 +532,72 @@
         <!-- child page content fills here -->
     </main>
 
+    <!-- Notification bell script -->
+    <script>
+        function toggleNotifDropdown() {
+            const dd = document.getElementById('notifDropdown');
+            if (!dd) return;
+            const isHidden = dd.style.display === 'none';
+            dd.style.display = isHidden ? 'block' : 'none';
+            if (isHidden) loadLatestNotifs();
+        }
+        document.addEventListener('click', function(e) {
+            const wrap = document.getElementById('notifBellWrap');
+            const dd = document.getElementById('notifDropdown');
+            if (wrap && dd && !wrap.contains(e.target)) dd.style.display = 'none';
+        });
+        async function updateNotifCount() {
+            try {
+                const r = await fetch('/api/notifications/count');
+                if (!r.ok) return;
+                const d = await r.json();
+                const badge = document.getElementById('notifBadge');
+                if (badge) {
+                    if (d.count > 0) { badge.textContent = d.count > 99 ? '99+' : d.count; badge.style.display = ''; }
+                    else { badge.style.display = 'none'; }
+                }
+            } catch(e) {}
+        }
+        async function loadLatestNotifs() {
+            try {
+                const r = await fetch('/api/notifications/latest');
+                if (!r.ok) return;
+                const list = await r.json();
+                const container = document.getElementById('notifList');
+                if (!container) return;
+                if (list.length === 0) {
+                    container.innerHTML = '<div style="text-align:center;padding:1.5rem;color:#94A3B8;font-size:.85rem;">Không có thông báo</div>';
+                    return;
+                }
+                container.innerHTML = list.map(n => {
+                    const unread = !n.isRead;
+                    const time = new Date(n.createdAt).toLocaleString('vi-VN');
+                    return '<div onclick="markNotifRead('+n.id+', this)" style="padding:10px 16px;border-bottom:1px solid #F1F5F9;cursor:pointer;transition:background .2s;'+(unread?'background:#F8F7FF;border-left:3px solid #4F46E5;':'')+'">'
+                        + '<div style="font-weight:'+(unread?'700':'500')+';font-size:.85rem;color:#1E293B;">'+n.title+'</div>'
+                        + '<div style="font-size:.78rem;color:#64748B;margin-top:2px;line-height:1.4;">'+n.body+'</div>'
+                        + '<div style="font-size:.7rem;color:#94A3B8;margin-top:4px;">'+time+'</div>'
+                        + '</div>';
+                }).join('');
+            } catch(e) {}
+        }
+        async function markNotifRead(id, el) {
+            await fetch('/api/notifications/' + id + '/read', { method: 'POST' });
+            if (el) { el.style.background = ''; el.style.borderLeft = ''; }
+            updateNotifCount();
+        }
+        async function markAllReadFromDropdown() {
+            await fetch('/api/notifications/read-all', { method: 'POST' });
+            updateNotifCount();
+            loadLatestNotifs();
+        }
+        updateNotifCount();
+        setInterval(updateNotifCount, 30000);
+    </script>
+
 </body>
 
 </html>
+
 
 
 

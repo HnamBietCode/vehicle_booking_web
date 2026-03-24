@@ -2,6 +2,7 @@ package com.bookvehicle.example.sr.service;
 
 import com.bookvehicle.example.sr.dto.RatingForm;
 import com.bookvehicle.example.sr.model.*;
+import com.bookvehicle.example.sr.repository.DriverRepository;
 import com.bookvehicle.example.sr.repository.RatingRepository;
 import com.bookvehicle.example.sr.repository.VehicleRepository;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -18,11 +19,14 @@ public class RatingService {
 
     private final RatingRepository ratingRepository;
     private final VehicleRepository vehicleRepository;
+    private final DriverRepository driverRepository;
 
     public RatingService(RatingRepository ratingRepository,
-                         VehicleRepository vehicleRepository) {
+                         VehicleRepository vehicleRepository,
+                         DriverRepository driverRepository) {
         this.ratingRepository = ratingRepository;
         this.vehicleRepository = vehicleRepository;
+        this.driverRepository = driverRepository;
     }
 
     // ── Read ────────────────────────────────────────────────────────
@@ -98,6 +102,19 @@ public class RatingService {
             });
         }
 
+        // Cập nhật avg_rating cho tài xế nếu target là DRIVER
+        if (targetType == RatingTargetType.DRIVER) {
+            driverRepository.findById(form.getTargetId()).ifPresent(d -> {
+                Double avg = ratingRepository.findAvgStarsByTargetTypeAndTargetId(
+                        RatingTargetType.DRIVER, form.getTargetId());
+                if (avg != null) {
+                    d.setAvgRating(BigDecimal.valueOf(avg).setScale(2, RoundingMode.HALF_UP));
+                    driverRepository.save(d);
+                }
+            });
+        }
+
         return null;
     }
 }
+
