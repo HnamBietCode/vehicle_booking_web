@@ -154,6 +154,10 @@
                         <p class="text-sm text-outline-variant mb-4 font-mono tracking-widest font-semibold" th:text="${v.licensePlate}">BSX</p>
                         
                         <div class="flex items-center gap-4 mb-6 text-sm text-on-surface-variant font-medium flex-wrap">
+                            <div class="flex items-center gap-1 w-full" th:if="${mode == 'WITH_DRIVER'}">
+                                <span class="material-symbols-outlined text-base">person</span>
+                                <span th:text="${v.driver != null ? v.driver.fullName : 'Chưa có tài xế gán'}">Tài xế</span>
+                            </div>
                             <div class="flex items-center gap-1" th:if="${v.color}">
                                 <span class="material-symbols-outlined text-base">palette</span>
                                 <span th:text="${v.color}">Màu</span>
