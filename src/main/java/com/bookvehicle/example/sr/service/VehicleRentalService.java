@@ -17,6 +17,8 @@ import java.util.Optional;
 @Transactional
 public class VehicleRentalService {
 
+    private static final BigDecimal DRIVER_FEE_PER_HOUR = new BigDecimal("100000");
+
     private final VehicleRentalRepository vehicleRentalRepository;
     private final VehicleRepository vehicleRepository;
     private final DriverRepository driverRepository;
@@ -148,6 +150,7 @@ public class VehicleRentalService {
             }
         }
         BigDecimal basePrice = calculateBasePrice(vehicle, form.getRentalType(), form.getPlannedStart(), form.getPlannedEnd());
+        BigDecimal driverFee = calculateDriverFee(mode, form.getRentalType(), form.getPlannedStart(), form.getPlannedEnd());
 
         Long pickupPointId = null;
         String pickupAddress;
@@ -208,7 +211,7 @@ public class VehicleRentalService {
         rental.setBasePrice(basePrice);
         rental.setExtraFee(BigDecimal.ZERO);
         rental.setDiscountAmount(BigDecimal.ZERO);
-        rental.setTotalPrice(basePrice);
+        rental.setTotalPrice(basePrice.add(driverFee));
         rental.setStatus(VehicleRental.RentalStatus.PENDING);
         rental.setPaymentStatus(PaymentStatus.PENDING);
         rental.setNotes(form.getNotes());
@@ -350,9 +353,12 @@ public class VehicleRentalService {
                         "Hoàn tiền đơn thuê xe #" + rental.getId() + " do tài xế hủy"
                 );
                 // Thu lại tiền từ tài xế (nếu đã chia)
-                BigDecimal driverShare = rental.getTotalPrice()
-                        .multiply(new BigDecimal("0.60"))
-                        .setScale(2, java.math.RoundingMode.HALF_UP);
+                BigDecimal driverShare = calculateDriverFee(
+                        rental.getRentalMode(),
+                        rental.getRentalType(),
+                        rental.getPlannedStart(),
+                        rental.getPlannedEnd()
+                );
                 try {
                     walletService.debit(
                             driverUserId,
@@ -532,7 +538,14 @@ public class VehicleRentalService {
             return ServiceResult.error("Phi phat sinh khong hop le.");
         }
 
+        BigDecimal driverFee = calculateDriverFee(
+                rental.getRentalMode(),
+                rental.getRentalType(),
+                rental.getPlannedStart(),
+                rental.getPlannedEnd()
+        );
         BigDecimal totalPrice = rental.getBasePrice()
+                .add(driverFee)
                 .add(safeExtraFee)
                 .subtract(rental.getDiscountAmount() == null ? BigDecimal.ZERO : rental.getDiscountAmount());
         if (totalPrice.compareTo(BigDecimal.ZERO) < 0) {
@@ -553,34 +566,8 @@ public class VehicleRentalService {
         }
         rental.setStatus(VehicleRental.RentalStatus.COMPLETED);
 
-        // ── Tự động thanh toán khi hoàn thành (trường hợp trả tiền mặt) ──
         if (rental.getPaymentStatus() != PaymentStatus.PAID) {
-            rental.setPaymentStatus(PaymentStatus.PAID);
-
-            // Chia tiền: 60% tài xế, 40% hệ thống
-            if (totalPrice.compareTo(BigDecimal.ZERO) > 0) {
-                BigDecimal driverShare = totalPrice.multiply(new BigDecimal("0.60")).setScale(2, RoundingMode.HALF_UP);
-                BigDecimal systemShare = totalPrice.subtract(driverShare);
-
-                walletService.credit(
-                        driver.getUserId(),
-                        driverShare,
-                        TransactionType.DRIVER_EARNING,
-                        ReferenceType.RENTAL,
-                        rental.getId(),
-                        "Thu nhap tai xe tu don thue #" + rental.getId()
-                );
-                userRepository.findFirstByRole(Role.ADMIN).ifPresent(admin ->
-                        walletService.credit(
-                                admin.getId(),
-                                systemShare,
-                                TransactionType.SYSTEM_FEE,
-                                ReferenceType.RENTAL,
-                                rental.getId(),
-                                "He thong nhan phi tu don thue #" + rental.getId()
-                        )
-                );
-            }
+            rental.setPaymentStatus(PaymentStatus.PENDING);
         }
         vehicleRentalRepository.save(rental);
 
@@ -596,7 +583,7 @@ public class VehicleRentalService {
         bookingRealtimeService.publishRentalUpdate(
                 rental,
                 "TRIP_COMPLETED",
-                "Chuyen di da hoan thanh. Da thanh toan."
+                "Chuyen di da hoan thanh. Vui long thanh toan trong lich su."
         );
         // In-app notification cho customer
         try {
@@ -604,12 +591,12 @@ public class VehicleRentalService {
             if (customer != null) {
                 notificationService.createNotification(
                         customer.getUserId(), "Chuyến đi hoàn thành",
-                        "Chuyến thuê xe #" + rental.getId() + " đã hoàn thành và đã thanh toán.",
+                        "Chuyến thuê xe #" + rental.getId() + " đã hoàn thành. Vui lòng thanh toán trong lịch sử.",
                         NotificationType.TRIP_COMPLETED,
                         NotificationRefType.RENTAL, rental.getId());
             }
         } catch (Exception ignored) {}
-        return ServiceResult.success("Da hoan thanh chuyen va da thanh toan.", rental.getId());
+        return ServiceResult.success("Da hoan thanh chuyen. Cho khach thanh toan.", rental.getId());
     }
 
     public ServiceResult payRental(Long rentalId, Long customerUserId) {
@@ -646,8 +633,13 @@ public class VehicleRentalService {
             return ServiceResult.success("Thanh toan thanh cong.", rental.getId());
         }
 
-        BigDecimal driverShare = totalPrice.multiply(new BigDecimal("0.60")).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal systemShare = totalPrice.subtract(driverShare);
+        BigDecimal driverShare = calculateDriverFee(
+                rental.getRentalMode(),
+                rental.getRentalType(),
+                rental.getPlannedStart(),
+                rental.getPlannedEnd()
+        );
+        BigDecimal systemShare = totalPrice.subtract(driverShare).max(BigDecimal.ZERO);
 
         String debitErr = walletService.debit(
                 customer.getUserId(),
@@ -661,24 +653,28 @@ public class VehicleRentalService {
             return ServiceResult.error(debitErr);
         }
 
-        walletService.credit(
-                driver.getUserId(),
-                driverShare,
-                TransactionType.DRIVER_EARNING,
-                ReferenceType.RENTAL,
-                rental.getId(),
-                "Thu nhap tai xe tu don thue #" + rental.getId()
-        );
-        userRepository.findFirstByRole(Role.ADMIN).ifPresent(admin ->
-                walletService.credit(
-                        admin.getId(),
-                        systemShare,
-                        TransactionType.SYSTEM_FEE,
-                        ReferenceType.RENTAL,
-                        rental.getId(),
-                        "He thong nhan phi tu don thue #" + rental.getId()
-                )
-        );
+        if (driverShare.compareTo(BigDecimal.ZERO) > 0) {
+            walletService.credit(
+                    driver.getUserId(),
+                    driverShare,
+                    TransactionType.DRIVER_EARNING,
+                    ReferenceType.RENTAL,
+                    rental.getId(),
+                    "Thu nhap tai xe tu don thue #" + rental.getId()
+            );
+        }
+        if (systemShare.compareTo(BigDecimal.ZERO) > 0) {
+            userRepository.findFirstByRole(Role.ADMIN).ifPresent(admin ->
+                    walletService.credit(
+                            admin.getId(),
+                            systemShare,
+                            TransactionType.SYSTEM_FEE,
+                            ReferenceType.RENTAL,
+                            rental.getId(),
+                            "He thong nhan phi tu don thue #" + rental.getId()
+                    )
+            );
+        }
 
         rental.setPaymentStatus(PaymentStatus.PAID);
         vehicleRentalRepository.save(rental);
@@ -817,6 +813,33 @@ public class VehicleRentalService {
         long hours = (long) Math.ceil(minutes / 60d);
         hours = Math.max(1, hours);
         return vehicle.getPricePerHour().multiply(BigDecimal.valueOf(hours)).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal calculateDriverFee(
+            VehicleRental.RentalMode rentalMode,
+            VehicleRental.RentalType rentalType,
+            LocalDateTime plannedStart,
+            LocalDateTime plannedEnd) {
+        if (rentalMode != VehicleRental.RentalMode.WITH_DRIVER) {
+            return BigDecimal.ZERO;
+        }
+        if (plannedStart == null || plannedEnd == null) {
+            return BigDecimal.ZERO;
+        }
+        long minutes = Duration.between(plannedStart, plannedEnd).toMinutes();
+        if (minutes <= 0) {
+            return BigDecimal.ZERO;
+        }
+        long hours;
+        if (rentalType == VehicleRental.RentalType.DAILY) {
+            long days = (long) Math.ceil(minutes / 1440d);
+            days = Math.max(1, days);
+            hours = days * 10;
+        } else {
+            hours = (long) Math.ceil(minutes / 60d);
+            hours = Math.max(1, hours);
+        }
+        return DRIVER_FEE_PER_HOUR.multiply(BigDecimal.valueOf(hours)).setScale(2, RoundingMode.HALF_UP);
     }
 
     public record ServiceResult(boolean ok, String message, Long rentalId) {
