@@ -221,15 +221,6 @@
 
                     <!-- Action Buttons -->
                     <div class="mt-6 flex justify-end gap-3">
-                         <!-- Pay Button for COMPLETED + unpaid -->
-                         <form th:if="${r.status.name() == 'COMPLETED' and r.paymentStatus.name() != 'PAID'}"
-                               th:action="@{/booking-history/{id}/pay(id=${r.id})}" method="post"
-                               onsubmit="return confirm('Xác nhận thanh toán đơn thuê xe #' + this.closest('.booking-item').querySelector('.text-primary-container').textContent.trim() + '?')">
-                             <button type="submit" class="px-5 py-2.5 bg-emerald-500 text-white rounded-lg text-sm font-bold hover:bg-emerald-600 active:scale-95 transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20">
-                                 <span class="material-symbols-outlined text-sm">payments</span>
-                                 Thanh toán
-                             </button>
-                         </form>
                          <!-- Rate Driver Button: only for COMPLETED + PAID + has driver -->
                          <th:block th:if="${r.status.name() == 'COMPLETED' and r.paymentStatus.name() == 'PAID' and r.driverId != null}">
                              <a th:if="${!ratedRentalIds.contains(r.id)}"
@@ -259,15 +250,6 @@
                                  Đã đánh giá xe
                              </span>
                          </th:block>
-                         <!-- Cancel Button for PENDING/CONFIRMED -->
-                         <form th:if="${r.status.name() == 'PENDING' or r.status.name() == 'CONFIRMED'}"
-                               th:action="@{/booking-history/{id}/cancel(id=${r.id})}" method="post"
-                               onsubmit="return confirm('Bạn có chắc muốn hủy đơn thuê xe #' + this.closest('.booking-item').querySelector('.text-primary-container').textContent.trim() + '?')">
-                             <button type="submit" class="px-5 py-2.5 bg-red-500 text-white rounded-lg text-sm font-bold hover:bg-red-600 active:scale-95 transition-all flex items-center gap-2 shadow-lg shadow-red-500/20">
-                                 <span class="material-symbols-outlined text-sm">cancel</span>
-                                 Hủy đơn
-                             </button>
-                         </form>
                         <!-- Track Button for CONFIRMED/ACTIVE -->
                         <a th:if="${r.status.name() == 'CONFIRMED' or r.status.name() == 'ACTIVE'}"
                            th:href="@{/tracking/rental/{id}(id=${r.id})}"
